@@ -1,0 +1,12 @@
+services:
+  narau:
+    build:
+      context: .
+    ports:
+      - "5178:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    restart: unless-stopped

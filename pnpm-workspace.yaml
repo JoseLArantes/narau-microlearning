@@ -1,0 +1,5 @@
+allowBuilds:
+  msw: true
+  esbuild: true
+  '@biomejs/biome': true
+  '@tailwindcss/oxide': true
