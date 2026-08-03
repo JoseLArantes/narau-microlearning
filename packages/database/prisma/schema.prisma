@@ -1,0 +1,304 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+enum UserStatus {
+  INVITED
+  ACTIVE
+  DISABLED
+}
+
+enum AreaStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum SubjectSource {
+  WIKIPEDIA
+  FALLBACK
+  MANUAL
+}
+
+enum SubjectStatus {
+  ACTIVE
+  UNDER_REVIEW
+  HIDDEN
+}
+
+enum CandidateStatus {
+  CANDIDATE
+  SELECTED
+  REJECTED
+  USED
+}
+
+enum DailySubjectStatus {
+  DRAFT
+  PUBLISHED
+  HIDDEN
+  REPLACED
+}
+
+enum UserDailyItemStatus {
+  PENDING
+  VIEWED
+  LEARNED
+  SKIPPED
+  MISSED
+  REPLACED
+}
+
+enum ReportReason {
+  INACCURATE
+  OUTDATED
+  OFFENSIVE
+  MISLEADING_SUMMARY
+  BROKEN_SOURCE
+  COPYRIGHT
+  OTHER
+}
+
+enum ReportStatus {
+  NEW
+  REVIEWING
+  RESOLVED
+  DISMISSED
+}
+
+model User {
+  id            String        @id @default(cuid())
+  name          String?
+  email         String        @unique
+  emailVerified DateTime?
+  image         String?
+  role          Role          @default(USER)
+  status        UserStatus    @default(ACTIVE)
+  timezone      String        @default("UTC")
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  accounts        Account[]
+  sessions        Session[]
+  userAreas       UserArea[]
+  dailyItems      UserDailyItem[]
+  reports         InaccuracyReport[]
+  auditLogs       AuditLog[]
+  analyticsEvents AnalyticsEvent[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Area {
+  id           String     @id @default(cuid())
+  name         String     @unique
+  slug         String     @unique
+  description  String?
+  iconUrl      String?
+  color        String?
+  status       AreaStatus @default(ACTIVE)
+  displayOrder Int        @default(0)
+  sourceConfig Json
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  userAreas      UserArea[]
+  candidates     AreaSubjectCandidate[]
+  dailySubjects  DailyAreaSubject[]
+  userDailyItems UserDailyItem[]
+}
+
+model Subject {
+  id               String        @id @default(cuid())
+  source           SubjectSource @default(WIKIPEDIA)
+  sourcePageId     String?
+  title            String
+  canonicalUrl     String        @unique
+  summary          String
+  hook             String?
+  imageUrl         String?
+  imageLicense     String?
+  imageAttribution String?
+  contentHash      String        @unique
+  language         String        @default("en")
+  revisionId       String?
+  retrievedAt      DateTime      @default(now())
+  license          String?
+  qualityScore     Float         @default(0)
+  safetyScore      Float         @default(100)
+  status           SubjectStatus @default(ACTIVE)
+  raw              Json?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  candidates     AreaSubjectCandidate[]
+  dailySubjects  DailyAreaSubject[]
+  userDailyItems UserDailyItem[]
+  reports        InaccuracyReport[]
+
+  @@index([source, sourcePageId])
+  @@index([status])
+}
+
+model AreaSubjectCandidate {
+  id               String          @id @default(cuid())
+  areaId           String
+  subjectId        String
+  generatedForDate DateTime        @db.Date
+  candidateScore   Float           @default(0)
+  status           CandidateStatus @default(CANDIDATE)
+  createdAt        DateTime        @default(now())
+
+  area    Area    @relation(fields: [areaId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([areaId, subjectId, generatedForDate])
+  @@index([areaId, generatedForDate, status])
+}
+
+model DailyAreaSubject {
+  id          String             @id @default(cuid())
+  contentDate DateTime           @db.Date
+  areaId      String
+  subjectId   String
+  status      DailySubjectStatus @default(PUBLISHED)
+  selectedBy  String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  area           Area            @relation(fields: [areaId], references: [id], onDelete: Cascade)
+  subject        Subject         @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  userDailyItems UserDailyItem[]
+
+  @@unique([contentDate, areaId])
+  @@index([contentDate, status])
+}
+
+model UserArea {
+  userId           String
+  areaId           String
+  preferenceWeight Float    @default(1)
+  assignedBy       String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  area Area @relation(fields: [areaId], references: [id], onDelete: Cascade)
+
+  @@id([userId, areaId])
+}
+
+model UserDailyItem {
+  id                 String              @id @default(cuid())
+  userId             String
+  contentDate        DateTime            @db.Date
+  userLocalDate      DateTime            @db.Date
+  areaId             String
+  subjectId          String
+  dailyAreaSubjectId String?
+  status             UserDailyItemStatus @default(PENDING)
+  assignedAt         DateTime            @default(now())
+  viewedAt           DateTime?
+  learnedAt          DateTime?
+  rating             Int?
+  ratingComment      String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  area             Area               @relation(fields: [areaId], references: [id], onDelete: Cascade)
+  subject          Subject            @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  dailyAreaSubject DailyAreaSubject?  @relation(fields: [dailyAreaSubjectId], references: [id], onDelete: SetNull)
+  reports          InaccuracyReport[]
+
+  @@unique([userId, contentDate])
+  @@index([userId, status, contentDate])
+}
+
+model InaccuracyReport {
+  id              String       @id @default(cuid())
+  userId          String?
+  userDailyItemId String?
+  subjectId       String
+  reason          ReportReason
+  details         String?
+  status          ReportStatus @default(NEW)
+  createdAt       DateTime     @default(now())
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  resolutionNote  String?
+
+  user          User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userDailyItem UserDailyItem? @relation(fields: [userDailyItemId], references: [id], onDelete: Cascade)
+  subject       Subject        @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String
+  entityType String
+  entityId   String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  userId    String?
+  name      String
+  payload   Json?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([name, createdAt])
+}

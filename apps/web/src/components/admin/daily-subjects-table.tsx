@@ -1,0 +1,102 @@
+"use client";
+
+import { Badge, Button, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dailycurio/ui";
+import { useState } from "react";
+import { OverrideDialog } from "./override-dialog";
+
+export interface DailySubjectRow {
+  areaId: string;
+  areaName: string;
+  subjectTitle: string | null;
+  subjectUrl: string | null;
+  status: "DRAFT" | "PUBLISHED" | "HIDDEN" | "REPLACED";
+  selectedBy: string | null;
+}
+
+export function DailySubjectsTable({
+  contentDate,
+  areas,
+  subjects,
+}: {
+  contentDate: Date;
+  areas: Array<{ id: string; name: string; status: "ACTIVE" | "DISABLED" }>;
+  subjects: DailySubjectRow[];
+}): React.ReactElement {
+  const [date, setDate] = useState(contentDate.toISOString().slice(0, 10));
+  const [error, setError] = useState<string | null>(null);
+
+  return (
+    <div className="space-y-4">
+      <form
+        className="flex items-end gap-3"
+        onSubmit={(event) => {
+          event.preventDefault();
+          window.location.href = `/admin/subjects?date=${encodeURIComponent(date)}`;
+        }}
+      >
+        <label className="block space-y-2">
+          <span className="text-sm font-medium">Date</span>
+          <input
+            type="date"
+            value={date}
+            onChange={(event) => setDate(event.target.value)}
+            className="flex h-9 rounded-[calc(var(--radius)-2px)] border border-input bg-card px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          />
+        </label>
+        <Button type="submit" variant="outline">Go</Button>
+      </form>
+
+      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Area</TableHead>
+            <TableHead>Subject</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="text-right">Override</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {subjects.map((row) => (
+            <TableRow key={row.areaId}>
+              <TableCell>{row.areaName}</TableCell>
+              <TableCell>
+                {row.subjectTitle ? (
+                  <a
+                    href={row.subjectUrl ?? "#"}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-primary underline-offset-2 hover:underline"
+                  >
+                    {row.subjectTitle}
+                  </a>
+                ) : (
+                  <span className="text-muted-foreground">Not picked yet</span>
+                )}
+              </TableCell>
+              <TableCell>
+                <Badge
+                  variant={
+                    row.status === "PUBLISHED" ? "secondary" : row.status === "HIDDEN" ? "destructive" : "outline"
+                  }
+                >
+                  {row.status}
+                </Badge>
+              </TableCell>
+              <TableCell className="text-right">
+                <OverrideDialog
+                  contentDate={contentDate}
+                  areaId={row.areaId}
+                  areas={areas}
+                  currentTitle={row.subjectTitle}
+                  onError={setError}
+                />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}

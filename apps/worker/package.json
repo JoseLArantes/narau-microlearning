@@ -1,0 +1,47 @@
+{
+  "name": "@dailycurio/worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsup src/index.ts src/cli.ts --format esm --target node20",
+    "start": "node dist/index.js",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "job:ingest": "tsx src/cli.ts ingest-area-candidates",
+    "job:select": "tsx src/cli.ts select-daily-subjects",
+    "job:assign": "tsx src/cli.ts assign-user-daily-items",
+    "job:remind": "tsx src/cli.ts send-daily-reminders"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.750.0",
+    "@dailycurio/content-normalizer": "workspace:*",
+    "@dailycurio/database": "workspace:*",
+    "@dailycurio/email": "workspace:*",
+    "@dailycurio/validation": "workspace:*",
+    "@dailycurio/wikipedia-client": "workspace:*",
+    "bullmq": "^5.34.0",
+    "cheerio": "^1.0.0",
+    "dotenv": "^16.4.7",
+    "ioredis": "^5.4.1",
+    "p-limit": "^6.2.0",
+    "p-retry": "^6.2.1",
+    "sanitize-html": "^2.14.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@dailycurio/config": "workspace:*",
+    "@types/node": "^22.13.0",
+    "@types/sanitize-html": "^2.13.0",
+    "eslint": "^9.22.0",
+    "tsup": "^8.3.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^3.0.8"
+  }
+}

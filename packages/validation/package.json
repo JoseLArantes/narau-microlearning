@@ -1,0 +1,23 @@
+{
+  "name": "@dailycurio/validation",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@dailycurio/config": "workspace:*",
+    "eslint": "^9.22.0",
+    "typescript": "^5.7.2",
+    "vitest": "^3.0.8"
+  }
+}

@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 25% 97%;
+    --foreground: 30 15% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 30 15% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 30 15% 12%;
+    --primary: 160 30% 22%;
+    --primary-foreground: 40 25% 97%;
+    --secondary: 40 12% 92%;
+    --secondary-foreground: 30 15% 20%;
+    --muted: 40 12% 92%;
+    --muted-foreground: 30 8% 38%;
+    --accent: 35 30% 88%;
+    --accent-foreground: 30 15% 15%;
+    --destructive: 4 55% 45%;
+    --destructive-foreground: 40 25% 97%;
+    --border: 35 15% 86%;
+    --input: 35 15% 82%;
+    --ring: 160 30% 30%;
+    --radius: 0.5rem;
+    --font-serif: Georgia, "Times New Roman", "Songti SC", serif;
+    --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-serif;
+    font-family: var(--font-serif);
+    text-wrap: balance;
+  }
+
+  ::selection {
+    @apply bg-primary/15 text-foreground;
+  }
+}
+
+@layer components {
+  .measure {
+    max-width: 68ch;
+  }
+
+  .hairline {
+    @apply border border-border;
+  }
+}

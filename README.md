@@ -1,125 +1,80 @@
-# app
+# Daily Curio
 
-Frontend starter for Narau applications. It is a React + TypeScript single-page application built with Vite, with routing, data fetching, styling, testing, API generation, and Docker Compose development already configured.
+One small, well-sourced thing to learn every day — a micro-learning app.
 
-## Tech stack
+A production-style monorepo: Next.js web app, a Node worker that ingests Wikipedia content and picks a daily subject per area, PostgreSQL + Prisma, Redis + BullMQ, Auth.js magic-link login, Mailpit locally, MinIO (S3-compatible) storage.
 
-- **React 19 + TypeScript** — UI and type-safe application code.
-- **Vite** — development server and production bundling.
-- **TanStack Router** — type-safe routing; `src/routeTree.gen.ts` is generated automatically.
-- **TanStack Query** — server-state fetching, caching, retries, and devtools.
-- **Tailwind CSS v4** — utility-first styling through `src/styles/globals.css`.
-- **Nuqs** — URL query-state management integrated with TanStack Router.
-- **Zod** — runtime schemas and validation.
-- **Zustand** — lightweight client state.
-- **MSW** — browser and Node request mocks.
-- **Hey API** — typed REST client generation from `openapi.json`.
-- **Biome** — formatting, linting, and import organization.
-- **Vitest + Testing Library** — unit and component tests.
-- **vite-plugin-pwa** — service worker and web app manifest generation.
-- **Sentry** — optional error monitoring through `VITE_SENTRY_DSN`.
-- **pnpm** — package manager.
-- **Docker Compose** — reproducible development environment.
+## Stack
 
-## Requirements
+- **Monorepo**: pnpm workspaces + Turborepo
+- **Web**: Next.js (App Router, RSC, Server Actions), React 19, TypeScript (strict), Tailwind CSS, shadcn-style Radix UI, TanStack Query, React Hook Form, Zod
+- **Worker**: Node, BullMQ, Wikipedia REST/API client, S3 storage
+- **Data**: PostgreSQL 16, Prisma, Redis 7
+- **Auth**: Auth.js magic-link emails via SMTP
+- **Infra**: Docker Compose (Postgres, Redis, Mailpit, MinIO), GitHub Actions CI
 
-- Docker Desktop or Docker Engine with Compose
-- Node.js 20+ and pnpm 10+ for host execution
-
-## Docker Compose
-
-Start the development environment:
+## Quick start
 
 ```bash
-docker compose up --build
+# 1. Infra (Postgres, Redis, Mailpit, MinIO)
+docker compose -f docker/docker-compose.yml up -d
+
+# 2. Env
+cp .env.example .env
+
+# 3. Install + generate client
+pnpm install
+
+# 4. Migrate + seed (admin@example.com / user@example.com)
+pnpm db:migrate
+pnpm db:seed
+
+# 5. Run everything
+pnpm dev        # web at http://localhost:3030
+pnpm worker:dev # queue worker
 ```
 
-Open [http://localhost:5173](http://localhost:5173). Source files are mounted into the container and Vite provides hot reload. Stop it with:
+Magic-link emails land in Mailpit at http://localhost:8025.
+
+## Worker jobs
+
+Run manually, or let the repeatables handle it:
 
 ```bash
-docker compose down
-```
-
-Run checks in the container:
-
-```bash
-docker compose run --rm narau pnpm lint
-docker compose run --rm narau pnpm test
+pnpm job:ingest   # pull Wikipedia categories for each area -> candidates
+pnpm job:select   # pick one high-quality subject per area per day
+pnpm job:assign   # assign each user their daily item
+pnpm job:remind   # send reminder emails for unread items
 ```
 
 ## Commands
 
-```bash
-pnpm install                 # install dependencies
-pnpm dev                     # start Vite locally
-pnpm build                   # production build
-pnpm preview                 # preview the production build
-pnpm typecheck              # TypeScript checks
-pnpm lint                   # lint and format check
-pnpm lint:fix               # apply lint fixes
-pnpm format                 # format supported files
-pnpm test                   # unit/component tests
-pnpm test:watch             # watch unit tests
+| Command | What it does |
+| --- | --- |
+| `pnpm dev` | Run the web app (port 3030) |
+| `pnpm worker:dev` | Run the queue worker |
+| `pnpm job:<name>` | Run a job once |
+| `pnpm db:migrate` / `db:seed` / `db:studio` | Prisma migrate, seed, studio |
+| `pnpm lint` / `typecheck` / `test` / `build` | Turbo across the monorepo |
+| `docker compose up -d --build` | Full self-contained stack (web + infra) |
+
+## Project layout
+
+```
+apps/
+  web/      Next.js application (users + admin backoffice)
+  worker/   BullMQ worker, job processors, Wikipedia client logic
+packages/
+  analytics  event names + tracking helper
+  config     shared eslint / tsconfig
+  content-normalizer  text cleaning, summary truncation, hashing
+  database   Prisma schema, client, seed
+  email      SMTP transport
+  ui         design tokens + Radix components
+  validation  zod schemas shared by web and worker
+  wikipedia-client  typed Wikipedia REST client
 ```
 
-Run `pnpm build`, `pnpm typecheck`, `pnpm lint`, and `pnpm test` before submitting changes.
+## License
 
-## API and environment
-
-Place the API contract at the project root as `openapi.json`, then run:
-
-```bash
-pnpm generate:api
-```
-
-Generated code is written to `src/shared/api/generated`. Copy `.env.example` to `.env` and set local values:
-
-```dotenv
-VITE_API_BASE_URL=/api
-VITE_SENTRY_DSN=
-```
-
-Only `VITE_` variables are exposed to browser code. Never commit secrets.
-
-## Folder structure
-
-```text
-.
-├── public/                      # static files and MSW worker
-├── src/
-│   ├── assets/                  # imported images and other assets
-│   ├── features/                # business/domain features
-│   ├── routes/                  # route modules and layouts
-│   ├── shared/
-│   │   ├── api/                 # API client and generated OpenAPI code
-│   │   ├── config/              # environment and application config
-│   │   ├── hooks/               # reusable React hooks
-│   │   ├── lib/                 # framework-agnostic utilities
-│   │   ├── media/               # shared media helpers
-│   │   ├── mocks/               # MSW setup and handlers
-│   │   ├── schema/              # shared Zod/domain schemas
-│   │   ├── test/                # test setup and unit tests
-│   │   └── ui/                  # reusable UI components
-│   ├── styles/                  # global Tailwind/CSS entrypoint
-│   ├── main.tsx                 # application bootstrap and providers
-│   └── routeTree.gen.ts         # generated by the Router plugin
-├── Dockerfile                   # development image
-├── docker-compose.yml           # Compose service and volumes
-├── vite.config.ts               # Vite and frontend plugins
-├── biome.json                   # formatter and linter configuration
-└── package.json                 # scripts and dependencies
-```
-
-Keep dependencies flowing one way: `routes → features → shared`. Put domain behavior in `features`, reusable infrastructure in `shared`, and keep routes focused on composition and navigation.
-
-## Testing
-
-Vitest uses jsdom and Testing Library for unit/component tests.
-
-## Production build
-
-```bash
-pnpm build
-```
-
-The bundle is written to `dist/`. The included Compose setup is for development; use your deployment platform's static hosting or production container strategy for releases.
+Content shown to users is Wikipedia content under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/), attributed with links to the source article. Code is MIT unless stated otherwise.
