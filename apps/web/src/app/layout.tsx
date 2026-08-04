@@ -42,7 +42,7 @@ OWN-WORLD: Manila index cards on an ivory desk; typewriter mono metadata; Litera
 STORY: A learner pulls today's card, reads a well-sourced gem, stamps it learned, and watches the card join the drawer of learned entries on their dashboard.
 FIRST VIEWPORT: One large manila card on the desk, a guide tab at its top edge naming the area, a typewriter metadata line, the title in Literata, the reading below, a SEE-ALSO source footer, and a rubber-stamp LEARNED control at the close.
 FORM: Library card catalog, candidate 4 of the grounded list, seed 27783a62.
-FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and docs/DESIGN.md
 */}
         <Providers>{children}</Providers>
       </body>

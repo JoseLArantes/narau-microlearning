@@ -1,4 +1,4 @@
-import { z } from "zod";
+import z from "zod";
 
 export const ratingSchema = z.object({
   itemId: z.string().min(1),

@@ -1,0 +1,16 @@
+.git/
+.github/
+.husky/
+.impeccable/
+.turbo/
+node_modules/
+**/node_modules/
+.next/
+**/.next/
+dist/
+**/dist/
+coverage/
+*.log
+.env
+.env.*
+.DS_Store

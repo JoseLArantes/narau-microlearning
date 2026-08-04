@@ -1,6 +1,6 @@
 import pLimit from "p-limit";
 import pRetry from "p-retry";
-import { z } from "zod";
+import z from "zod";
 import type { CategoryMember, CategoryOptions, PageDetails, PageSummary, WikipediaClient, WikipediaClientOptions } from "./types";
 import { chunk, encodeTitle, toCanonicalUrl } from "./utils";
 

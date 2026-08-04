@@ -1,5 +1,11 @@
 name: narau
 
+x-app-image: &app-image
+  image: narau-web
+  build:
+    context: ..
+    dockerfile: docker/Dockerfile
+
 services:
   db:
     image: postgres:16-alpine
@@ -61,6 +67,47 @@ services:
       mc anonymous set download local/narau;
       exit 0;
       "
+
+  migrate:
+    <<: *app-image
+    command: ["sh", "-c", "cd packages/database && bunx prisma migrate deploy && bun run prisma/seed.ts"]
+    environment:
+      DATABASE_URL: postgresql://app:app@db:5432/narau?schema=public
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  web:
+    <<: *app-image
+    ports:
+      - "3030:3030"
+    environment:
+      NODE_ENV: production
+      APP_URL: http://localhost:3030
+      DATABASE_URL: postgresql://app:app@db:5432/narau?schema=public
+      REDIS_URL: redis://redis:6379
+      AUTH_SECRET: dev-secret-change-me
+      AUTH_URL: http://localhost:3030
+      AUTH_TRUST_HOST: "true"
+      EMAIL_FROM: "Narau <no-reply@localhost>"
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      SMTP_USER: ""
+      SMTP_PASS: ""
+      SMTP_SECURE: "false"
+      STORAGE_ENABLED: "false"
+      WIKIPEDIA_USER_AGENT: "NarauBot/0.1 (container)"
+    volumes:
+      - ../apps/web/public:/app/apps/web/public
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
 
 volumes:
   db_data:

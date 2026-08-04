@@ -4,6 +4,7 @@ import { getEmailFrom } from "@narau/email";
 import NextAuth from "next-auth";
 import type { NextAuthConfig, Session } from "next-auth";
 import EmailProvider from "next-auth/providers/email";
+import { resolveUserIdFromToken } from "./session";
 
 function smtpSettings(): { host: string; port: number; auth?: { user: string; pass: string } } {
   return {
@@ -53,7 +54,10 @@ export const authConfig: NextAuthConfig = {
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id ?? "";
+        const userId = resolveUserIdFromToken(token);
+        if (userId) {
+          session.user.id = userId;
+        }
         session.user.role = token.role ?? "USER";
         session.user.tenantId = token.tenantId ?? "en";
         session.hasAreas = Boolean(token.hasAreas);

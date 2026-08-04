@@ -9,9 +9,16 @@ export function track(
   return trackEvent(name, payload, {
     userId,
     write: async (event) => {
+      const user = event.userId
+        ? await prisma.user.findUnique({
+            where: { id: event.userId },
+            select: { id: true },
+          })
+        : null;
+
       await prisma.analyticsEvent.create({
         data: {
-          userId: event.userId,
+          ...(user ? { userId: user.id } : {}),
           name: event.name,
           payload: (event.payload ?? undefined) as Prisma.InputJsonValue | undefined,
         },

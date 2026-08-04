@@ -1,4 +1,4 @@
-import { z } from "zod";
+import z from "zod";
 
 export const areaSourceConfigSchema = z.object({
   categories: z.array(z.string().min(1)).min(1),
