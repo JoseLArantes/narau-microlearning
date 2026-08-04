@@ -66,9 +66,11 @@ services:
     build:
       context: .
       target: base
-    command: ["sh", "-c", "cd packages/database && pnpm exec prisma migrate deploy"]
+    command: ["sh", "-c", "cd packages/database && pnpm exec prisma migrate deploy && pnpm exec tsx prisma/seed.ts"]
     environment:
       - DATABASE_URL=postgresql://app:app@db:5432/dailycurio?schema=public
+    volumes:
+      - ./packages/database:/app/packages/database
     depends_on:
       db:
         condition: service_healthy
@@ -95,6 +97,8 @@ services:
       - SMTP_SECURE=false
       - STORAGE_ENABLED=false
       - WIKIPEDIA_USER_AGENT=NarauBot/0.1 (container)
+    volumes:
+      - ./apps/web/public:/app/apps/web/public
     depends_on:
       db:
         condition: service_healthy

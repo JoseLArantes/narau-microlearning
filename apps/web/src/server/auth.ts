@@ -33,15 +33,21 @@ export const authConfig: NextAuthConfig = {
       if (user?.id) {
         const dbUser = await prisma.user.findUnique({
           where: { id: user.id },
-          select: { role: true, status: true },
+          select: { role: true, status: true, tenantId: true },
         });
         token.id = user.id;
         token.role = dbUser?.role ?? "USER";
+        token.tenantId = dbUser?.tenantId ?? "en";
         const areaCount = await prisma.userArea.count({ where: { userId: user.id } });
         token.hasAreas = areaCount > 0;
       }
-      if (trigger === "update" && session && "hasAreas" in session && typeof session.hasAreas === "boolean") {
-        token.hasAreas = session.hasAreas;
+      if (trigger === "update" && session) {
+        if ("hasAreas" in session && typeof session.hasAreas === "boolean") {
+          token.hasAreas = session.hasAreas;
+        }
+        if ("tenantId" in session && typeof session.tenantId === "string") {
+          token.tenantId = session.tenantId;
+        }
       }
       return token;
     },
@@ -49,6 +55,7 @@ export const authConfig: NextAuthConfig = {
       if (session.user) {
         session.user.id = token.id ?? "";
         session.user.role = token.role ?? "USER";
+        session.user.tenantId = token.tenantId ?? "en";
         session.hasAreas = Boolean(token.hasAreas);
       }
       return session;

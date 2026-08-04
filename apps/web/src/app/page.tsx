@@ -2,6 +2,7 @@ import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import type { ReactElement } from "react";
 import { Button } from "@narau/ui";
+import { Logo } from "@/components/layout/logo";
 
 function LandingCard(): ReactElement {
   return (
@@ -41,9 +42,12 @@ export default function LandingPage(): ReactElement {
     <main className="flex min-h-dvh flex-col">
       <header className="border-b border-border bg-secondary/60">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-2">
-          <p className="mono-meta text-muted-foreground">
-            NARAU <span aria-hidden>·</span> THE DAILY CARD <span aria-hidden>·</span> ONE WELL-SOURCED THING A DAY
-          </p>
+          <div className="flex items-center gap-3">
+            <Logo className="w-[80%] max-w-[140px] h-auto" />
+            <p className="mono-meta text-muted-foreground hidden sm:block">
+              <span aria-hidden>·</span> THE DAILY CARD <span aria-hidden>·</span> ONE WELL-SOURCED THING A DAY
+            </p>
+          </div>
           <Button asChild variant="outline" size="sm">
             <Link href="/login">Sign in</Link>
           </Button>

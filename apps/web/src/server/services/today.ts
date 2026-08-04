@@ -30,7 +30,7 @@ export const TodayService = {
     if (!user) return null;
 
     const userAreas = await prisma.userArea.findMany({
-      where: { userId, area: { status: "ACTIVE" } },
+      where: { userId, area: { status: "ACTIVE", tenantId: user.tenantId } },
       select: { areaId: true },
     });
     if (userAreas.length === 0) return null;

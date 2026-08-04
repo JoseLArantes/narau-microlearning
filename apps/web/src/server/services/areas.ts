@@ -5,9 +5,9 @@ export type AdminAreaRow = Prisma.AreaGetPayload<{
   include: { _count: { select: { userAreas: true; candidates: true } } };
 }>;
 
-export async function listActiveAreas(): Promise<Prisma.AreaGetPayload<Record<string, never>>[]> {
+export async function listActiveAreas(tenantId = "en"): Promise<Prisma.AreaGetPayload<Record<string, never>>[]> {
   return prisma.area.findMany({
-    where: { status: "ACTIVE" },
+    where: { status: "ACTIVE", tenantId },
     orderBy: { displayOrder: "asc" },
   });
 }

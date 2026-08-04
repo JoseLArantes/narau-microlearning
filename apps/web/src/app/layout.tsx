@@ -25,6 +25,11 @@ export const metadata: Metadata = {
     template: "%s · Narau",
   },
   description: "One small, well-sourced thing to learn every day.",
+  icons: {
+    icon: "/narau_icon.png",
+    shortcut: "/narau_icon.png",
+    apple: "/narau_icon.png",
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }): ReactElement {

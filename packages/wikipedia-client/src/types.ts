@@ -34,6 +34,7 @@ export interface CategoryOptions {
 export interface WikipediaClientOptions {
   userAgent: string;
   endpoint?: string;
+  language?: string;
   concurrency?: number;
   retries?: number;
   timeoutMs?: number;

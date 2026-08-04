@@ -47,7 +47,7 @@ export function MarkLearnedButton({
 
       {stamped ? (
         <div role="status" aria-live="assertive">
-          <span className="rubber-stamp whitespace-pre-line">
+          <span className="rubber-stamp whitespace-pre-line text-emerald-600 border-emerald-600">
             {`LEARNED\n${stampDate(contentDate)}`}
           </span>
         </div>

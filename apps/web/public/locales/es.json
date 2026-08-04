@@ -1,0 +1,66 @@
+{
+  "common": {
+    "appName": "Narau",
+    "tagline": "¿Qué aprendiste hoy?",
+    "loading": "Cargando...",
+    "error": "Ocurrió un error",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "tenant": "Idioma / Tenant",
+    "english": "English",
+    "spanish": "Español",
+    "portuguese": "Português"
+  },
+  "nav": {
+    "today": "Hoy",
+    "dashboard": "Panel",
+    "settings": "Ajustes",
+    "admin": "Administración",
+    "login": "Iniciar sesión",
+    "logout": "Cerrar sesión"
+  },
+  "landing": {
+    "title": "Una pequeña lección bien documentada cada día",
+    "subtitle": "Sin feeds, sin ruido. Solo un artículo curado de Wikipedia al día adaptado a tus intereses.",
+    "getStarted": "Empezar",
+    "signIn": "Iniciar sesión"
+  },
+  "today": {
+    "title": "¿Qué aprendiste hoy?",
+    "markLearned": "Marcar como aprendido",
+    "skip": "Omitir por hoy",
+    "alreadyLearned": "¡Aprendiste el artículo de hoy! Buen trabajo.",
+    "skipped": "Omitido por hoy. ¡Vuelve mañana!",
+    "noItem": "No hay ningún artículo disponible hoy. ¡Vuelve más tarde!",
+    "readMinutes": "{minutes} min de lectura",
+    "source": "Fuente",
+    "viewOnWikipedia": "Ver en Wikipedia",
+    "rateTitle": "¿Qué te pareció este artículo?",
+    "reportInaccuracy": "Reportar inexactitud"
+  },
+  "onboarding": {
+    "title": "Selecciona tus áreas de interés",
+    "subtitle": "Elige uno o más temas para personalizar tu resumen diario de microaprendizaje.",
+    "save": "Guardar preferencias"
+  },
+  "dashboard": {
+    "title": "Panel de aprendizaje",
+    "streak": "Racha actual",
+    "totalLearned": "Total aprendido",
+    "history": "Historial de aprendizaje"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "timezone": "Zona horaria",
+    "tenantLanguage": "Tenant e idioma",
+    "save": "Guardar ajustes"
+  },
+  "admin": {
+    "title": "Consola de administración",
+    "areas": "Áreas",
+    "candidates": "Candidatos",
+    "dailySubjects": "Temas diarios",
+    "reports": "Reportes",
+    "users": "Usuarios"
+  }
+}

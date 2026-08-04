@@ -66,6 +66,21 @@ model AppSettings {
   updatedAt            DateTime @updatedAt
 }
 
+model Tenant {
+  id        String   @id // "en", "es", "pt"
+  slug      String   @unique
+  name      String
+  language  String   // "en", "es", "pt"
+  domain    String?
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users    User[]
+  areas    Area[]
+  subjects Subject[]
+}
+
 enum ReportReason {
   INACCURATE
   OUTDATED
@@ -85,6 +100,7 @@ enum ReportStatus {
 
 model User {
   id            String        @id @default(cuid())
+  tenantId      String        @default("en")
   name          String?
   email         String        @unique
   emailVerified DateTime?
@@ -95,6 +111,7 @@ model User {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
+  tenant          Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   accounts        Account[]
   sessions        Session[]
   userAreas       UserArea[]
@@ -142,8 +159,9 @@ model VerificationToken {
 
 model Area {
   id           String     @id @default(cuid())
-  name         String     @unique
-  slug         String     @unique
+  tenantId     String     @default("en")
+  name         String
+  slug         String
   description  String?
   iconUrl      String?
   color        String?
@@ -153,24 +171,29 @@ model Area {
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
+  tenant         Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   userAreas      UserArea[]
   candidates     AreaSubjectCandidate[]
   dailySubjects  DailyAreaSubject[]
   userDailyItems UserDailyItem[]
+
+  @@unique([slug, tenantId])
+  @@unique([name, tenantId])
 }
 
 model Subject {
   id               String        @id @default(cuid())
+  tenantId         String        @default("en")
   source           SubjectSource @default(WIKIPEDIA)
   sourcePageId     String?
   title            String
-  canonicalUrl     String        @unique
+  canonicalUrl     String
   summary          String
   hook             String?
   imageUrl         String?
   imageLicense     String?
   imageAttribution String?
-  contentHash      String        @unique
+  contentHash      String
   language         String        @default("en")
   revisionId       String?
   retrievedAt      DateTime      @default(now())
@@ -182,11 +205,14 @@ model Subject {
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 
+  tenant         Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   candidates     AreaSubjectCandidate[]
   dailySubjects  DailyAreaSubject[]
   userDailyItems UserDailyItem[]
   reports        InaccuracyReport[]
 
+  @@unique([canonicalUrl, tenantId])
+  @@unique([contentHash, tenantId])
   @@index([source, sourcePageId])
   @@index([status])
 }

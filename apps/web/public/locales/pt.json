@@ -1,0 +1,66 @@
+{
+  "common": {
+    "appName": "Narau",
+    "tagline": "O que você aprendeu hoje?",
+    "loading": "Carregando...",
+    "error": "Ocorreu um erro",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "tenant": "Idioma / Tenant",
+    "english": "English",
+    "spanish": "Español",
+    "portuguese": "Português"
+  },
+  "nav": {
+    "today": "Hoje",
+    "dashboard": "Painel",
+    "settings": "Configurações",
+    "admin": "Administração",
+    "login": "Entrar",
+    "logout": "Sair"
+  },
+  "landing": {
+    "title": "Uma pequena lição bem fundamentada todos os dias",
+    "subtitle": "Sem feeds, sem barulho. Apenas um artigo curado da Wikipédia por dia adaptado aos seus interesses.",
+    "getStarted": "Começar",
+    "signIn": "Entrar"
+  },
+  "today": {
+    "title": "O que você aprendeu hoje?",
+    "markLearned": "Marcar como aprendido",
+    "skip": "Pular por hoje",
+    "alreadyLearned": "Você aprendeu o conteúdo de hoje! Parabéns.",
+    "skipped": "Pulado por hoje. Volte amanhã!",
+    "noItem": "Nenhum conteúdo disponível para hoje. Volte mais tarde!",
+    "readMinutes": "{minutes} min de leitura",
+    "source": "Fonte",
+    "viewOnWikipedia": "Ver na Wikipédia",
+    "rateTitle": "O que achou deste artigo?",
+    "reportInaccuracy": "Reportar imprecisão"
+  },
+  "onboarding": {
+    "title": "Selecione suas áreas de interesse",
+    "subtitle": "Escolha um ou mais tópicos para personalizar seu resumo diário de microaprendizagem.",
+    "save": "Salvar preferências"
+  },
+  "dashboard": {
+    "title": "Painel de aprendizagem",
+    "streak": "Sequência atual",
+    "totalLearned": "Total aprendido",
+    "history": "Histórico de aprendizagem"
+  },
+  "settings": {
+    "title": "Configurações",
+    "timezone": "Fuso horário",
+    "tenantLanguage": "Tenant e idioma",
+    "save": "Salvar configurações"
+  },
+  "admin": {
+    "title": "Painel administrativo",
+    "areas": "Áreas",
+    "candidates": "Candidatos",
+    "dailySubjects": "Tópicos diários",
+    "reports": "Relatórios",
+    "users": "Usuários"
+  }
+}

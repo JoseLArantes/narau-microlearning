@@ -51,6 +51,14 @@ pnpm job:assign   # assign each user their daily item
 pnpm job:remind   # send reminder emails for unread items
 ```
 
+## Multi-Tenant Architecture & Internationalization (i18n)
+
+Narau Microlearning is multi-tenant, organized by language locale:
+- **Tenants**: Represented by language codes (`en` base/default English, `es` Spanish, `pt` Portuguese).
+- **Content Isolation**: `Area`, `Subject`, and `User` entities are bound to `tenantId`. Composite unique keys (`@@unique([slug, tenantId])`, `@@unique([canonicalUrl, tenantId])`) enforce isolation per tenant.
+- **Multi-Tenant Content Engines**: Ingestion workers query Wikipedia API endpoints matching each tenant area's language (e.g. `es.wikipedia.org` for Spanish areas). Daily selection and user item assignments operate within each tenant.
+- **Persisted JSON i18n**: UI translation dictionaries are stored in JSON files (`apps/web/public/locales/en.json`, `es.json`, `pt.json`). Users can toggle their tenant/language via the header `TenantSwitcher`.
+
 ## Commands
 
 | Command | What it does |

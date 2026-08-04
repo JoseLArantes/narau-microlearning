@@ -35,10 +35,13 @@ async function downloadImage(url: string): Promise<{ buffer: Buffer; contentType
  * date. Idempotent: existing candidates for (area, subject, date) are left
  * untouched, and subjects are keyed by a stable content hash.
  */
-export async function ingestAreaCandidates(date: Date, client: WikipediaClient = createWikipediaClient({ userAgent: env.WIKIPEDIA_USER_AGENT })): Promise<IngestionResult> {
+export async function ingestAreaCandidates(
+  date: Date,
+  clientFactory?: (language: string) => WikipediaClient,
+): Promise<IngestionResult> {
   const result: IngestionResult = { areas: 0, candidatesCreated: 0, errors: [] };
   const since = new Date(date.getTime() - USED_WINDOW_DAYS * DAY_MS);
-  const areas = await prisma.area.findMany({ where: { status: "ACTIVE" } });
+  const areas = await prisma.area.findMany({ where: { status: "ACTIVE" }, include: { tenant: true } });
   result.areas = areas.length;
 
   for (const area of areas) {
@@ -49,12 +52,17 @@ export async function ingestAreaCandidates(date: Date, client: WikipediaClient =
         continue;
       }
 
-      const members = await client.getPagesFromCategories(config.data.categories, {
+      const tenantLang = area.tenant?.language ?? area.tenantId ?? "en";
+      const areaClient = clientFactory
+        ? clientFactory(tenantLang)
+        : createWikipediaClient({ userAgent: env.WIKIPEDIA_USER_AGENT, language: tenantLang });
+
+      const members = await areaClient.getPagesFromCategories(config.data.categories, {
         includeSubcategories: config.data.includeSubcategories,
         depth: config.data.depth,
         maxMembers: config.data.maxCandidates,
       });
-      const details = await client.getPageDetails(members.map((member) => member.pageId));
+      const details = await areaClient.getPageDetails(members.map((member) => member.pageId));
 
       const usedSubjectIds = new Set(
         (
@@ -82,11 +90,12 @@ export async function ingestAreaCandidates(date: Date, client: WikipediaClient =
           imageUrl: page.thumbnailUrl,
         });
         const contentHash = createContentHash({ title: normalized.title, summary: normalized.summary });
+        const canonicalUrl = `https://${tenantLang}.wikipedia.org/wiki/${page.title.replace(/ /g, "_")}`;
 
         let imageUrl = page.thumbnailUrl;
         const score = scoreCandidate({ ...features, hasImage: Boolean(imageUrl) });
         const subject = await prisma.subject.upsert({
-          where: { canonicalUrl: `https://en.wikipedia.org/wiki/${page.title.replace(/ /g, "_")}` },
+          where: { canonicalUrl_tenantId: { canonicalUrl, tenantId: area.tenantId } },
           update: {
             summary: normalized.summary,
             hook: normalized.hook,
@@ -96,10 +105,12 @@ export async function ingestAreaCandidates(date: Date, client: WikipediaClient =
             contentHash,
           },
           create: {
+            tenantId: area.tenantId,
+            language: tenantLang,
             source: "WIKIPEDIA",
             sourcePageId: String(page.pageId),
             title: normalized.title,
-            canonicalUrl: `https://en.wikipedia.org/wiki/${page.title.replace(/ /g, "_")}`,
+            canonicalUrl,
             summary: normalized.summary,
             hook: normalized.hook,
             imageUrl,

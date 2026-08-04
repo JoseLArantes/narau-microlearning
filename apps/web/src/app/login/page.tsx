@@ -5,6 +5,7 @@ import { signIn, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
+import { Logo } from "@/components/layout/logo";
 
 export default function LoginPage(): React.ReactElement {
   const router = useRouter();
@@ -79,8 +80,10 @@ export default function LoginPage(): React.ReactElement {
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-6">
       <div className="index-card px-8 py-10">
         <div className="space-y-2">
-          <span className="mono-meta text-muted-foreground">READER&apos;S SIGN-IN</span>
-          <h1 className="mt-2 font-serif text-3xl tracking-tight">Narau</h1>
+          <span className="mono-meta text-muted-foreground">LEARNER&apos;S SIGN-IN</span>
+          <div className="mt-2">
+            <Logo className="w-[80%] max-w-[200px] h-auto" />
+          </div>
           <p className="text-sm text-muted-foreground">
             Enter your email and we&apos;ll send a magic link to your inbox.
           </p>

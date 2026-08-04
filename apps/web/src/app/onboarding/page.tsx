@@ -8,7 +8,8 @@ export default async function OnboardingPage(): Promise<ReactElement> {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const areas = await listActiveAreas();
+  const tenantId = session?.user?.tenantId ?? "en";
+  const areas = await listActiveAreas(tenantId);
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col justify-center px-6 py-12">

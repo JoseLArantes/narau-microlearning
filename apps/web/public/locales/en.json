@@ -1,0 +1,66 @@
+{
+  "common": {
+    "appName": "Narau",
+    "tagline": "What did you learn today?",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "save": "Save",
+    "cancel": "Cancel",
+    "tenant": "Language / Tenant",
+    "english": "English",
+    "spanish": "Español",
+    "portuguese": "Português"
+  },
+  "nav": {
+    "today": "Today",
+    "dashboard": "Dashboard",
+    "settings": "Settings",
+    "admin": "Admin",
+    "login": "Sign In",
+    "logout": "Sign Out"
+  },
+  "landing": {
+    "title": "One small, well-sourced thing to learn every day",
+    "subtitle": "No feeds, no noise. Just one curated Wikipedia article per day tailored to your interests.",
+    "getStarted": "Get Started",
+    "signIn": "Sign In"
+  },
+  "today": {
+    "title": "What did you learn today?",
+    "markLearned": "Mark as Learned",
+    "skip": "Skip for Today",
+    "alreadyLearned": "You learned today's item! Great job.",
+    "skipped": "Skipped for today. Check back tomorrow!",
+    "noItem": "No reading item available for today. Check back later!",
+    "readMinutes": "{minutes} min read",
+    "source": "Source",
+    "viewOnWikipedia": "View on Wikipedia",
+    "rateTitle": "How was this item?",
+    "reportInaccuracy": "Report inaccuracy"
+  },
+  "onboarding": {
+    "title": "Select your areas of interest",
+    "subtitle": "Choose one or more topics to customize your daily microlearning digest.",
+    "save": "Save Preferences"
+  },
+  "dashboard": {
+    "title": "Learning Dashboard",
+    "streak": "Current Streak",
+    "totalLearned": "Total Learned",
+    "history": "Learning History"
+  },
+  "settings": {
+    "title": "Settings",
+    "timezone": "Timezone",
+    "tenantLanguage": "Tenant & Language",
+    "save": "Save Settings"
+  },
+  "admin": {
+    "title": "Admin Console",
+    "areas": "Areas",
+    "candidates": "Candidates",
+    "dailySubjects": "Daily Subjects",
+    "reports": "Reports",
+    "users": "Users"
+  }
+}

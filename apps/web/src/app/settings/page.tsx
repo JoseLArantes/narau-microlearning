@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@narau/ui";
 
 export default async function SettingsPage(): Promise<ReactElement> {
   const session = await requireUser();
-  const areas = await listActiveAreas();
+  const areas = await listActiveAreas(session.user.tenantId ?? "en");
   const userAreas = await getUserAreas(session.user.id);
 
   return (

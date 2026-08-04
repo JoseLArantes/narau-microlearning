@@ -7,6 +7,7 @@ export interface AssignableArea {
 
 export interface AssignableUser {
   id: string;
+  tenantId?: string;
   timezone: string;
   areas: AssignableArea[];
 }
@@ -15,6 +16,7 @@ export interface PublishedDailySubject {
   id: string;
   areaId: string;
   subjectId: string;
+  tenantId?: string;
 }
 
 export interface CreateItemInput {
@@ -49,20 +51,24 @@ export const prismaUserAssignmentRepository: UserAssignmentRepository = {
       },
       select: {
         id: true,
+        tenantId: true,
         timezone: true,
         userAreas: {
           where: { area: { status: "ACTIVE" } },
-          select: { areaId: true, preferenceWeight: true },
+          select: { areaId: true, preferenceWeight: true, area: { select: { tenantId: true } } },
         },
       },
     });
     return users.map((user) => ({
       id: user.id,
+      tenantId: user.tenantId,
       timezone: user.timezone,
-      areas: user.userAreas.map((userArea) => ({
-        id: userArea.areaId,
-        preferenceWeight: userArea.preferenceWeight,
-      })),
+      areas: user.userAreas
+        .filter((ua) => ua.area.tenantId === user.tenantId)
+        .map((userArea) => ({
+          id: userArea.areaId,
+          preferenceWeight: userArea.preferenceWeight,
+        })),
     }));
   },
 
@@ -74,8 +80,15 @@ export const prismaUserAssignmentRepository: UserAssignmentRepository = {
         status: "PUBLISHED",
         subject: { status: "ACTIVE" },
       },
-      select: { id: true, areaId: true, subjectId: true },
-    });
+      select: { id: true, areaId: true, subjectId: true, area: { select: { tenantId: true } } },
+    }).then((items) =>
+      items.map((item) => ({
+        id: item.id,
+        areaId: item.areaId,
+        subjectId: item.subjectId,
+        tenantId: item.area.tenantId,
+      })),
+    );
   },
 
   async loadLearnedSubjectIds(userId): Promise<string[]> {

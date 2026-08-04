@@ -13,7 +13,7 @@ const badgeVariants = cva(
         muted: "border-transparent bg-muted text-muted-foreground",
         destructive: "border-transparent bg-destructive text-destructive-foreground",
         stamped:
-          "-rotate-2 border-[hsl(var(--accent))] bg-transparent text-[hsl(var(--accent))]",
+          "-rotate-2 border-emerald-600 bg-transparent text-emerald-600 font-bold",
       },
     },
     defaultVariants: {

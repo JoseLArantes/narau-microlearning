@@ -61,7 +61,8 @@ const MEMBER_BATCH_SIZE = 500;
 const PAGE_BATCH_SIZE = 50;
 
 export function createWikipediaClient(options: WikipediaClientOptions): WikipediaClient {
-  const endpoint = options.endpoint ?? DEFAULT_ENDPOINT;
+  const endpoint =
+    options.endpoint ?? (options.language ? `https://${options.language}.wikipedia.org` : DEFAULT_ENDPOINT);
   const concurrency = options.concurrency ?? 4;
   const retries = options.retries ?? 3;
   const timeoutMs = options.timeoutMs ?? 15_000;

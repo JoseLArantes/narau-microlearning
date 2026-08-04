@@ -5,6 +5,7 @@ declare module "@auth/core/jwt" {
   interface JWT {
     id?: string;
     role?: Role;
+    tenantId?: string;
     hasAreas?: boolean;
   }
 }
@@ -14,6 +15,7 @@ declare module "@auth/core/types" {
     user: {
       id: string;
       role: Role;
+      tenantId?: string;
     } & DefaultSession["user"];
     hasAreas?: boolean;
   }

@@ -4,6 +4,8 @@ import { auth } from "@/server/auth";
 import { MobileNav } from "./mobile-nav";
 import { NavLink } from "./nav-link";
 import { SignOutButton } from "./sign-out-button";
+import { TenantSwitcher } from "../tenant-switcher";
+import { Logo } from "./logo";
 
 function mastheadDate(): string {
   return new Date().toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }).toUpperCase();
@@ -26,9 +28,7 @@ export async function AppHeader(): Promise<ReactElement> {
       </div>
       <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-6">
         <div className="flex items-center gap-8">
-          <Link href="/today" className="font-serif text-lg tracking-tight">
-            Narau
-          </Link>
+          <Logo className="w-[80%] max-w-[140px] h-auto" />
           <nav className="hidden items-center gap-1 sm:flex">
             <NavLink href="/today">Today</NavLink>
             <NavLink href="/dashboard">Dashboard</NavLink>
@@ -37,6 +37,7 @@ export async function AppHeader(): Promise<ReactElement> {
           </nav>
         </div>
         <div className="flex items-center gap-2 sm:gap-3">
+          <TenantSwitcher />
           <span className="hidden font-mono text-xs text-muted-foreground lg:inline">
             {session?.user?.email}
           </span>
