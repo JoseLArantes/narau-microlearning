@@ -1,6 +1,6 @@
 "use server";
 
-import { overrideDailySubjectSchema } from "@dailycurio/validation";
+import { overrideDailySubjectSchema } from "@narau/validation";
 import { requireAdmin } from "@/server/guards";
 import { overrideDailySubject } from "@/server/services/admin";
 import { parseUtcDate } from "@/lib/date";

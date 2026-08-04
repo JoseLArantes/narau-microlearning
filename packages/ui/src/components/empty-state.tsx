@@ -20,12 +20,12 @@ function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center gap-3 rounded-[calc(var(--radius)+2px)] border border-dashed border-border bg-card/50 px-6 py-16 text-center",
+        "flex flex-col items-center justify-center gap-3 rounded-[calc(var(--radius)+5px)] border border-dashed border-border bg-card/60 px-6 py-16 text-center",
         className,
       )}
       {...props}
     >
-      <div className="flex size-10 items-center justify-center rounded-full bg-secondary text-muted-foreground">
+      <div className="flex size-10 items-center justify-center rounded-[2px] border border-border bg-card text-muted-foreground shadow-sm">
         <Icon className="size-5" />
       </div>
       <div className="space-y-1">

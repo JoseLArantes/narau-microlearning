@@ -2,11 +2,11 @@
 const nextConfig = {
   output: "standalone",
   transpilePackages: [
-    "@dailycurio/ui",
-    "@dailycurio/validation",
-    "@dailycurio/analytics",
-    "@dailycurio/database",
-    "@dailycurio/email",
+    "@narau/ui",
+    "@narau/validation",
+    "@narau/analytics",
+    "@narau/database",
+    "@narau/email",
   ],
   serverExternalPackages: ["@prisma/client", "nodemailer"],
   eslint: { ignoreDuringBuilds: true },

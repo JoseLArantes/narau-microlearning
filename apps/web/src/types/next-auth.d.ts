@@ -1,4 +1,4 @@
-import type { Role } from "@dailycurio/database";
+import type { Role } from "@narau/database";
 import type { DefaultSession } from "@auth/core/types";
 
 declare module "@auth/core/jwt" {

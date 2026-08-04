@@ -1,12 +1,14 @@
 "use client";
 
-import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, Label } from "@dailycurio/ui";
+import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, Label } from "@narau/ui";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 import { useTransition } from "react";
 import { adminAssignAreas } from "@/server/actions/admin/users";
 import type { AreaOption, UserRow } from "./users-table";
 
 export function AssignAreasDialog({ user, areas }: { user: UserRow; areas: AreaOption[] }): React.ReactElement {
+  const router = useRouter();
   const [open, setOpen] = React.useState(false);
   const [selected, setSelected] = React.useState<string[]>(user.userAreas.map((entry) => entry.areaId));
   const [error, setError] = React.useState<string | null>(null);
@@ -27,6 +29,7 @@ export function AssignAreasDialog({ user, areas }: { user: UserRow; areas: AreaO
         return;
       }
       setOpen(false);
+      router.refresh();
     });
   }
 

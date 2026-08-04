@@ -1,5 +1,5 @@
 {
-  "name": "@dailycurio/analytics",
+  "name": "@narau/analytics",
   "version": "0.0.0",
   "private": true,
   "exports": {
@@ -12,7 +12,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "devDependencies": {
-    "@dailycurio/config": "workspace:*",
+    "@narau/config": "workspace:*",
     "@types/node": "^22.13.0",
     "eslint": "^9.22.0",
     "typescript": "^5.7.2",

@@ -1,6 +1,6 @@
 "use server";
 
-import { ratingSchema, reportSchema } from "@dailycurio/validation";
+import { ratingSchema, reportSchema } from "@narau/validation";
 import { requireUser } from "@/server/guards";
 import { createReport } from "@/server/services/reports";
 import { TodayService } from "@/server/services/today";
@@ -20,6 +20,17 @@ export async function markTodayLearned(itemId: string): Promise<ActionResult> {
   try {
     const session = await requireUser();
     const item = await TodayService.markLearned(session.user.id, itemId);
+    if (!item) return { ok: false, error: "That item is not available." };
+    return { ok: true, data: undefined };
+  } catch (error) {
+    return errorResult(error);
+  }
+}
+
+export async function skipTodayItem(itemId: string): Promise<ActionResult> {
+  try {
+    const session = await requireUser();
+    const item = await TodayService.markSkipped(session.user.id, itemId);
     if (!item) return { ok: false, error: "That item is not available." };
     return { ok: true, data: undefined };
   } catch (error) {

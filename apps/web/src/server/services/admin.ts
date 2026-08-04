@@ -1,4 +1,4 @@
-import { prisma, type Prisma } from "@dailycurio/database";
+import { prisma, type Prisma } from "@narau/database";
 import { track } from "@/server/tracking";
 
 export async function audit(
@@ -68,6 +68,7 @@ export async function listReports(): Promise<
   }>[]
 > {
   return prisma.inaccuracyReport.findMany({
+    where: { status: { in: ["NEW", "REVIEWING"] } },
     orderBy: { createdAt: "desc" },
     include: {
       user: { select: { id: true, email: true, name: true } },
@@ -113,4 +114,33 @@ export async function hideSubject(
   });
   await audit(actorId, "SUBJECT_HIDDEN", "Subject", subjectId);
   return subject;
+}
+
+export async function listCandidates(
+  areaId: string,
+  contentDate: Date,
+): Promise<Prisma.AreaSubjectCandidateGetPayload<{
+  include: { subject: { select: { id: true; title: true; canonicalUrl: true; qualityScore: true } } };
+}>[]> {
+  return prisma.areaSubjectCandidate.findMany({
+    where: { areaId, generatedForDate: contentDate },
+    include: {
+      subject: {
+        select: { id: true, title: true, canonicalUrl: true, qualityScore: true },
+      },
+    },
+    orderBy: { candidateScore: "desc" },
+  });
+}
+
+export async function rejectCandidate(
+  candidateId: string,
+  actorId: string,
+): Promise<Awaited<ReturnType<typeof prisma.areaSubjectCandidate.update>>> {
+  const candidate = await prisma.areaSubjectCandidate.update({
+    where: { id: candidateId },
+    data: { status: "REJECTED" },
+  });
+  await audit(actorId, "CANDIDATE_REJECTED", "AreaSubjectCandidate", candidateId);
+  return candidate;
 }

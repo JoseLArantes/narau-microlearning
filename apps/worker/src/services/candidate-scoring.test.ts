@@ -18,9 +18,9 @@ describe("scoreCandidate", () => {
     expect(score).toBeGreaterThanOrEqual(70);
   });
 
-  it("awards 40 points for a summary of 200-1200 characters", () => {
+  it("awards 40 points for a summary of 200-8000 characters", () => {
     expect(scoreCandidate({ ...base, summary: "x".repeat(200) })).toBeGreaterThanOrEqual(40);
-    expect(scoreCandidate({ ...base, summary: "x".repeat(1200) })).toBeGreaterThanOrEqual(40);
+    expect(scoreCandidate({ ...base, summary: "x".repeat(8000) })).toBeGreaterThanOrEqual(40);
     expect(scoreCandidate({ ...base, summary: "x".repeat(199) })).toBeLessThan(40);
   });
 

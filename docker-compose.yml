@@ -87,14 +87,14 @@ services:
       - AUTH_SECRET=dev-secret-change-me
       - AUTH_URL=http://localhost:3030
       - AUTH_TRUST_HOST=true
-      - EMAIL_FROM=Daily Curio <no-reply@localhost>
+      - EMAIL_FROM=Narau <no-reply@localhost>
       - SMTP_HOST=mailpit
       - SMTP_PORT=1025
       - SMTP_USER=
       - SMTP_PASS=
       - SMTP_SECURE=false
       - STORAGE_ENABLED=false
-      - WIKIPEDIA_USER_AGENT=DailyCurioBot/0.1 (container)
+      - WIKIPEDIA_USER_AGENT=NarauBot/0.1 (container)
     depends_on:
       db:
         condition: service_healthy

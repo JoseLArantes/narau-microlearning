@@ -1,5 +1,5 @@
-import { prisma } from "@dailycurio/database";
-import { sendEmail } from "@dailycurio/email";
+import { prisma } from "@narau/database";
+import { sendEmail } from "@narau/email";
 import { JOB_NAMES } from "../lib/queue";
 import { logger } from "../lib/logger";
 

@@ -32,7 +32,8 @@ export default async function AdminSubjectsPage({
   return (
     <div className="space-y-6">
       <header className="space-y-1">
-        <h1 className="font-serif text-3xl tracking-tight">Subjects</h1>
+        <span className="mono-meta text-muted-foreground">DAILY SELECTIONS</span>
+        <h1 className="mt-1 font-serif text-3xl tracking-tight">Subjects</h1>
         <p className="text-muted-foreground">
           The items picked for{" "}
           <time dateTime={contentDate.toISOString()}>

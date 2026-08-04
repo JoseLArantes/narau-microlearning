@@ -1,6 +1,6 @@
 "use server";
 
-import { createAreaSchema, updateAreaSchema } from "@dailycurio/validation";
+import { createAreaSchema, updateAreaSchema } from "@narau/validation";
 import { requireAdmin } from "@/server/guards";
 import { createArea, updateArea, disableArea } from "@/server/services/areas";
 import { audit } from "@/server/services/admin";

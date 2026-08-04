@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@dailycurio/database";
+import { prisma } from "@narau/database";
 import { auth } from "@/server/auth";
 
 export async function GET(request: Request): Promise<NextResponse> {

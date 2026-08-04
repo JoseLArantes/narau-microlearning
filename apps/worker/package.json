@@ -1,5 +1,5 @@
 {
-  "name": "@dailycurio/worker",
+  "name": "@narau/worker",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -20,11 +20,11 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.750.0",
-    "@dailycurio/content-normalizer": "workspace:*",
-    "@dailycurio/database": "workspace:*",
-    "@dailycurio/email": "workspace:*",
-    "@dailycurio/validation": "workspace:*",
-    "@dailycurio/wikipedia-client": "workspace:*",
+    "@narau/content-normalizer": "workspace:*",
+    "@narau/database": "workspace:*",
+    "@narau/email": "workspace:*",
+    "@narau/validation": "workspace:*",
+    "@narau/wikipedia-client": "workspace:*",
     "bullmq": "^5.34.0",
     "cheerio": "^1.0.0",
     "dotenv": "^16.4.7",
@@ -35,7 +35,7 @@
     "zod": "^4.0.0"
   },
   "devDependencies": {
-    "@dailycurio/config": "workspace:*",
+    "@narau/config": "workspace:*",
     "@types/node": "^22.13.0",
     "@types/sanitize-html": "^2.13.0",
     "eslint": "^9.22.0",

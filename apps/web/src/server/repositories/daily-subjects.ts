@@ -1,4 +1,4 @@
-import { prisma, type Prisma } from "@dailycurio/database";
+import { prisma, type Prisma } from "@narau/database";
 
 export type DailySubjectWithRelations = Prisma.DailyAreaSubjectGetPayload<{
   include: { subject: true; area: true };

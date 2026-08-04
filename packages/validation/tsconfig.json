@@ -1,5 +1,5 @@
 {
-  "extends": "@dailycurio/config/tsconfig",
+  "extends": "@narau/config/tsconfig",
   "compilerOptions": {
     "module": "ESNext",
     "moduleResolution": "Bundler"

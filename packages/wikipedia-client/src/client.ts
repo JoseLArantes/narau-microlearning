@@ -153,7 +153,7 @@ export function createWikipediaClient(options: WikipediaClientOptions): Wikipedi
           const url =
             `${endpoint}/w/api.php?action=query&prop=extracts|pageimages|info|revisions|categories` +
             `&pageids=${batch.join("|")}&explaintext=1&exintro=1&exlimit=max&cllimit=max&rvprop=ids` +
-            `&format=json&formatversion=2&redirects=1`;
+            `&pithumbsize=1200&format=json&formatversion=2&redirects=1`;
           const parsed = pageQueryResponseSchema.safeParse(await fetchJson(url));
           if (!parsed.success) return;
           for (const page of parsed.data.query?.pages ?? []) {

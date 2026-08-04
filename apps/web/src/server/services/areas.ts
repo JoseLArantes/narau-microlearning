@@ -1,5 +1,5 @@
-import { prisma, type Prisma } from "@dailycurio/database";
-import type { AreaSourceConfig, CreateAreaInput, UpdateAreaInput } from "@dailycurio/validation";
+import { prisma, type Prisma } from "@narau/database";
+import type { AreaSourceConfig, CreateAreaInput, UpdateAreaInput } from "@narau/validation";
 
 export type AdminAreaRow = Prisma.AreaGetPayload<{
   include: { _count: { select: { userAreas: true; candidates: true } } };

@@ -1,7 +1,7 @@
 "use client";
 
-import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@dailycurio/ui";
-import { reportReasonSchema } from "@dailycurio/validation";
+import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@narau/ui";
+import { reportReasonSchema } from "@narau/validation";
 import * as React from "react";
 import { useTransition } from "react";
 import { reportTodayItem } from "@/server/actions/today";

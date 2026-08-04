@@ -1,4 +1,4 @@
-import { prisma, type Prisma } from "@dailycurio/database";
+import { prisma, type Prisma } from "@narau/database";
 
 export async function getUserAreas(
   userId: string,

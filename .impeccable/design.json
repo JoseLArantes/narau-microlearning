@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-04T00:00:00.000Z",
+  "title": "Design System: Narau",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "Ink", "canonical": "#1F1A14", "tonalRamp": ["#0B0906", "#120F0A", "#1F1A14", "#2E2620", "#42382E", "#5C5043", "#7A6C5C", "#9C8B76"] },
+      "neutral-bg": { "role": "neutral", "displayName": "Desk Ivory", "canonical": "#F0ECE0", "tonalRamp": ["#241D12", "#40351F", "#5D4F30", "#7A6947", "#97845E", "#B3A27E", "#CFC2A1", "#F0ECE0"] },
+      "neutral-card": { "role": "neutral", "displayName": "Manila Card", "canonical": "#F9F7F0", "tonalRamp": ["#26211A", "#403A2E", "#5B5343", "#766C58", "#91866F", "#ACA18B", "#C8C0AE", "#F9F7F0"] },
+      "accent-stamp": { "role": "secondary", "displayName": "Stamp Red", "canonical": "#A33729", "tonalRamp": ["#2E0B06", "#50150C", "#722012", "#952B19", "#A33729", "#B85A45", "#D0937F", "#EED2C8"] },
+      "ink-muted": { "role": "neutral", "displayName": "Muted Ink", "canonical": "#6D6255", "tonalRamp": ["#221D16", "#3B3329", "#554B3D", "#6D6255", "#8A7E6F", "#A79C8D", "#C4BBAE", "#E2DED7"] },
+      "aged-paper": { "role": "neutral", "displayName": "Aged Paper", "canonical": "#E5E1D7", "tonalRamp": ["#262219", "#413C2E", "#5D5745", "#78725D", "#948E77", "#B0AA93", "#CCC7B5", "#E5E1D7"] },
+      "hairline": { "role": "neutral", "displayName": "Hairline", "canonical": "#D3CBBB", "tonalRamp": ["#2A2417", "#453C28", "#60543A", "#7C6D4D", "#978661", "#B3A07A", "#CFBD98", "#D3CBBB"] },
+      "focus-ink-blue": { "role": "tertiary", "displayName": "Focus Ink-Blue", "canonical": "#41609F", "tonalRamp": ["#131A2D", "#222F52", "#324477", "#41609F", "#5A7DBD", "#7E9BD0", "#A6BBE2", "#D4DFF2"] },
+      "destructive": { "role": "tertiary", "displayName": "Destructive", "canonical": "#A93B2D", "tonalRamp": ["#2F0B06", "#53150C", "#772014", "#9A2B1D", "#A93B2D", "#BF5C48", "#D49182", "#EED2CA"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Landing hero headline only." },
+      "body": { "displayName": "Body / Reading", "purpose": "The daily card's prose and long-form text; max 66ch." },
+      "label": { "displayName": "Catalog Label", "purpose": "All metadata: dates, area names, CARD, SEE ALSO, stamps, table heads, badges." }
+    },
+    "shadows": [
+      { "name": "card-contact", "value": "0 1px 2px rgba(48,34,12,0.1), 0 16px 36px -18px rgba(48,34,12,0.35)", "purpose": "Standard manila card on the ivory desk." },
+      { "name": "stamp-lift", "value": "0 2px 6px rgba(150,40,20,0.18)", "purpose": "Under the rubber stamp only." }
+    ],
+    "motion": [
+      { "name": "stamp-slam", "value": "cubic-bezier(0.22, 1, 0.36, 1) 0.6s", "purpose": "LEARNED stamp: scale 2.4 -> 1 with a settle and -5deg rotation; disabled under prefers-reduced-motion." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The ink imprint — the main action.",
+      "html": "<button class=\"ds-btn-primary\">Start learning</button>",
+      "css": ".ds-btn-primary { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 14px; font-weight: 500; color: #F9F7F0; background: #1F1A14; border: none; border-radius: 5px; padding: 11px 24px; box-shadow: 0 1px 2px rgba(34,24,10,0.35); cursor: pointer; transition: background 0.15s, transform 0.05s; } .ds-btn-primary:hover { background: #17130e; } .ds-btn-primary:active { transform: translateY(1px); } .ds-btn-primary:focus-visible { outline: 2px solid #41609F; outline-offset: 2px; }"
+    },
+    {
+      "name": "Stamp Control",
+      "kind": "button",
+      "refersTo": "badge-stamped",
+      "description": "The signature rubber-stamp LEARNED control.",
+      "html": "<button class=\"ds-stamp\">I learned this</button>",
+      "css": ".ds-stamp { font-family: 'Courier Prime', 'Courier New', monospace; font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #A33729; background: transparent; border: 3px solid #A33729; border-radius: 3px; padding: 8px 16px; transform: rotate(-2deg); cursor: pointer; transition: transform 0.15s; } .ds-stamp:hover { transform: rotate(-1deg) scale(1.03); } .ds-stamp:focus-visible { outline: 2px solid #41609F; outline-offset: 2px; }"
+    },
+    {
+      "name": "Index Card with Guide Tab",
+      "kind": "card",
+      "refersTo": "card-index",
+      "description": "The daily manila card with its area guide tab.",
+      "html": "<article class=\"ds-card\"><span class=\"ds-card-tab\">Science</span><p class=\"ds-card-meta\">CARD · AUG 4, 2026 · 1 MIN READ</p><h3 class=\"ds-card-title\">The quiet invention of the card catalogue</h3><p class=\"ds-card-body\">One well-sourced reading, brief enough to finish with your coffee.</p></article>",
+      "css": ".ds-card { position: relative; font-family: ui-sans-serif, system-ui, sans-serif; color: #1F1A14; background: #F9F7F0; border: 1px solid #D3CBBB; border-radius: 11px; padding: 40px; box-shadow: 0 1px 2px rgba(48,34,12,0.1), 0 16px 36px -18px rgba(48,34,12,0.35); } .ds-card-tab { position: absolute; left: 24px; top: 0; transform: translateY(-52%) rotate(-1deg); font-family: 'Courier Prime', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #6D6255; background: #F9F7F0; border: 1px solid #D3CBBB; border-bottom: 0; border-radius: 4px 4px 0 0; padding: 4px 10px 2px; } .ds-card-meta { margin: 0 0 16px; font-family: 'Courier Prime', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #6D6255; } .ds-card-title { margin: 0 0 12px; font-family: Literata, Georgia, serif; font-size: 34px; line-height: 1.1; font-weight: 400; } .ds-card-body { margin: 0; font-family: Literata, Georgia, serif; font-size: 16.8px; line-height: 1.75; max-width: 66ch; color: #1F1A14; }"
+    },
+    {
+      "name": "Stamped Badge",
+      "kind": "chip",
+      "refersTo": "badge-stamped",
+      "description": "The catalog stamp for a learned entry.",
+      "html": "<span class=\"ds-badge-stamp\">LEARNED · AUG 4, 2026</span>",
+      "css": ".ds-badge-stamp { display: inline-block; font-family: 'Courier Prime', 'Courier New', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #A33729; background: transparent; border: 1px solid #A33729; border-radius: 2px; padding: 2px 8px; transform: rotate(-2deg); }"
+    },
+    {
+      "name": "Input Field",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "The paper sign-in slip field.",
+      "html": "<input class=\"ds-input\" type=\"email\" placeholder=\"you@example.com\">",
+      "css": ".ds-input { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 14px; color: #1F1A14; background: #F9F7F0; border: 1px solid #B9B09C; border-radius: 5px; padding: 8px 12px; height: 36px; box-shadow: inset 0 1px 2px rgba(48,34,12,0.06); } .ds-input::placeholder { color: #6D6255; } .ds-input:focus-visible { outline: 2px solid #41609F; outline-offset: 2px; border-color: #41609F; }"
+    },
+    {
+      "name": "Masthead Navigation",
+      "kind": "nav",
+      "refersTo": "button-outline",
+      "description": "The masthead strip and active link.",
+      "html": "<nav class=\"ds-nav\"><p class=\"ds-nav-mast\">THE DAILY CARD · VOL. I <span>ONE WELL-SOURCED THING A DAY</span> TUE, AUG 4</p><a class=\"ds-nav-link is-active\" href=\"#\">Today</a><a class=\"ds-nav-link\" href=\"#\">Dashboard</a></nav>",
+      "css": ".ds-nav { font-family: ui-sans-serif, system-ui, sans-serif; } .ds-nav-mast { margin: 0 0 8px; font-family: 'Courier Prime', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #6D6255; background: #E5E1D7; border-bottom: 1px solid #D3CBBB; padding: 6px 16px; } .ds-nav-mast span { display: none; } .ds-nav-link { font-size: 14px; color: #6D6255; text-decoration: none; padding: 6px 12px; border-radius: 3px; } .ds-nav-link:hover { background: #E5E1D7; color: #1F1A14; } .ds-nav-link.is-active { color: #1F1A14; font-weight: 500; text-decoration: underline; text-decoration-color: #1F1A14; text-decoration-thickness: 2px; text-underline-offset: 8px; } .ds-nav-link:focus-visible { outline: 2px solid #41609F; outline-offset: 2px; }"
+    },
+    {
+      "name": "Catalog Table Head",
+      "kind": "custom",
+      "refersTo": "button-outline",
+      "description": "Typewriter table headers in the librarian's catalog.",
+      "html": "<table class=\"ds-table\"><thead><tr><th class=\"ds-th\">Area</th><th class=\"ds-th\">Status</th></tr></thead><tbody><tr><td class=\"ds-td\">Science</td><td class=\"ds-td\">ACTIVE</td></tr></tbody></table>",
+      "css": ".ds-table { width: 100%; border-collapse: collapse; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 14px; color: #1F1A14; } .ds-th { text-align: left; height: 40px; padding: 0 16px; font-family: 'Courier Prime', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #6D6255; } .ds-td { padding: 16px; border-top: 1px solid #D3CBBB; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Library Card Catalog",
+    "overview": "Narau renders the daily-learning ritual as a quiet personal library. One manila index card sits on an ivory desk each morning — a single well-sourced Wikipedia reading, its metadata typed in Courier Prime, its prose set in Literata. Marking it learned is not a click but a rubber stamp: a red stamp slams onto the card and the entry joins the drawer on the dashboard. The whole system is the physical apparatus of a card catalog — classification labels, guide tabs, hairline rules, and a rubber stamp — rendered with restraint so the metaphor never obstructs the task.\n\nThe palette is deliberately narrow and disciplined. Near-black ink does the everyday work of text and actions; a single rubber-stamp red is reserved for the LEARNED moment and urgent flags, so its rarity is the point. Depth comes from paper itself: manila cards carry a hairline edge and a soft contact shadow on the desk. Type is the personality — a typewriter mono for every catalog datum (dates, areas, call numbers, stamps) against a literary serif for reading. Light surfaces chosen from the use scene: a reader at a desk in daylight.",
+    "keyCharacteristics": [
+      "One authored moment per surface (the stamp); everything else stays calm.",
+      "Classification labels in typewriter mono are the world's header grammar, not decorative eyebrows.",
+      "Cards are paper: hairline edge + soft shadow, never a ghost-panel border.",
+      "The accent is rare: rubber-stamp red only on LEARNED, urgent, and destructive states.",
+      "Motion is damped and physical when it appears; `prefers-reduced-motion` is respected."
+    ],
+    "rules": [
+      { "name": "The Rarity Rule", "body": "Rubber-stamp red appears on at most one control per surface. When two red elements would sit together, one is wrong.", "section": "colors" },
+      { "name": "The Paper Rule", "body": "Text surfaces are paper: an edge and a soft shadow, never a hard offset block shadow and never a border under a wide soft shadow.", "section": "colors" },
+      { "name": "The One Voice Rule", "body": "Typewriter mono is for catalog data and labels only; prose is always the serif. Mono used as decoration on body text is off-brand.", "section": "typography" },
+      { "name": "The One Depth Rule", "body": "Elevation is declared once per surface — an edge or a shadow, never both doing the same job. Cards are paper, so they keep a hairline edge and a contact shadow as one material fact.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do set the daily card's metadata in Courier Prime and its prose in Literata.",
+      "Do reserve rubber-stamp red for LEARNED, urgent, and destructive states.",
+      "Do give the signature stamp its slam and rotation; it is the one authored motion.",
+      "Do let the guide tab name the area on cards that carry one."
+    ],
+    "donts": [
+      "Don't use a second accent or gradient text; emphasis comes from weight, size, and the rare red.",
+      "Don't use hard offset block shadows — depth is paper contact, not neobrutalism.",
+      "Don't render the stamp effect on every interaction; its rarity is the point.",
+      "Don't type body prose in the mono; it is a catalog label face.",
+      "Don't introduce cream-with-terracotta 'editorial' chrome; the incumbent look is the anti-reference this world replaced."
+    ]
+  }
+}

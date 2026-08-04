@@ -1,5 +1,5 @@
-import { prisma, type Prisma } from "@dailycurio/database";
-import { trackEvent, type AnalyticsEventName } from "@dailycurio/analytics";
+import { prisma, type Prisma } from "@narau/database";
+import { trackEvent, type AnalyticsEventName } from "@narau/analytics";
 
 export function track(
   userId: string | undefined,

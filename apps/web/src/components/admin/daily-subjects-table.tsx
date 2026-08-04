@@ -1,6 +1,6 @@
 "use client";
 
-import { Badge, Button, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dailycurio/ui";
+import { Badge, Button, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@narau/ui";
 import { useState } from "react";
 import { OverrideDialog } from "./override-dialog";
 

@@ -3,7 +3,7 @@ import { createContentHash } from "./hash";
 import { firstSentence, truncateToSentence } from "./normalize";
 
 export const SUMMARY_MIN_WORDS = 60;
-export const SUMMARY_MAX_WORDS = 120;
+export const SUMMARY_MAX_WORDS = 2100;
 
 export interface NormalizeInput {
   title: string;

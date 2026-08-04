@@ -1,4 +1,4 @@
-import { prisma } from "@dailycurio/database";
+import { prisma } from "@narau/database";
 import { localDateForTimezone, startOfUtcDay } from "@/lib/date";
 import { track } from "@/server/tracking";
 import { findPublishedDailySubjects } from "@/server/repositories/daily-subjects";
@@ -81,6 +81,18 @@ export const TodayService = {
       data: { status: "LEARNED", learnedAt: new Date() },
     });
     await track(userId, "ITEM_MARKED_LEARNED", { itemId, subjectId: item.subjectId });
+    return updated;
+  },
+
+  async markSkipped(userId: string, itemId: string) {
+    const item = await findUserItemForDate(userId, startOfUtcDay());
+    if (!item || item.id !== itemId) return null;
+    if (item.status === "LEARNED" || item.status === "SKIPPED") return item;
+    const updated = await prisma.userDailyItem.update({
+      where: { id: itemId },
+      data: { status: "SKIPPED", viewedAt: item.viewedAt ?? new Date() },
+    });
+    await track(userId, "ITEM_SKIPPED", { itemId, subjectId: item.subjectId });
     return updated;
   },
 

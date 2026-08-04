@@ -1,6 +1,7 @@
 "use client";
 
-import { Badge, Button, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dailycurio/ui";
+import { Badge, Button, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@narau/ui";
+import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { adminDisableArea } from "@/server/actions/admin/areas";
 
@@ -16,6 +17,7 @@ export interface AreaRow {
 }
 
 export function AreasTable({ areas }: { areas: AreaRow[] }): React.ReactElement {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
 
   return (
@@ -58,7 +60,8 @@ export function AreasTable({ areas }: { areas: AreaRow[] }): React.ReactElement 
                   disabled={pending}
                   onClick={() => {
                     startTransition(async () => {
-                      await adminDisableArea(area.id);
+                      const result = await adminDisableArea(area.id);
+                      if (result.ok) router.refresh();
                     });
                   }}
                 >

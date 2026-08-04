@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn } from "@dailycurio/ui";
+import { cn } from "@narau/ui";
 
 export function NavLink({ href, children }: { href: string; children: React.ReactNode }): React.ReactElement {
   const pathname = usePathname();
@@ -12,7 +12,9 @@ export function NavLink({ href, children }: { href: string; children: React.Reac
       href={href}
       className={cn(
         "rounded-sm px-3 py-1.5 text-sm transition-colors hover:bg-secondary hover:text-foreground",
-        active ? "text-foreground" : "text-muted-foreground",
+        active
+          ? "font-medium text-foreground underline decoration-primary decoration-2 underline-offset-8"
+          : "text-muted-foreground",
       )}
     >
       {children}

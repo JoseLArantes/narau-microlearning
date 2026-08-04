@@ -1,8 +1,9 @@
 "use client";
 
-import { Badge, Button, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dailycurio/ui";
+import { Badge, Button, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@narau/ui";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { adminDismissReport, adminResolveReport } from "@/server/actions/admin/reports";
+import { adminDismissReport, adminHideSubject, adminResolveReport } from "@/server/actions/admin/reports";
 
 export interface ReportRow {
   id: string;
@@ -12,11 +13,26 @@ export interface ReportRow {
   status: "NEW" | "REVIEWING" | "RESOLVED" | "DISMISSED";
   createdAt: Date;
   user: { email: string } | null;
-  subject: { title: string; canonicalUrl: string };
+  subject: { title: string; canonicalUrl: string; id: string };
   item: { contentDate: Date } | null;
 }
 
+const REASON_LABELS: Record<string, string> = {
+  INACCURATE: "Inaccurate",
+  OUTDATED: "Outdated",
+  OFFENSIVE: "Offensive",
+  MISLEADING_SUMMARY: "Misleading summary",
+  BROKEN_SOURCE: "Broken source",
+  COPYRIGHT: "Copyright",
+  OTHER: "Something else",
+};
+
+function reportDate(date: Date): string {
+  return date.toLocaleDateString("en-US", { timeZone: "UTC", month: "short", day: "numeric", year: "numeric" });
+}
+
 export function ReportsTable({ reports }: { reports: ReportRow[] }): React.ReactElement {
+  const router = useRouter();
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
@@ -28,6 +44,7 @@ export function ReportsTable({ reports }: { reports: ReportRow[] }): React.React
       const result = await action();
       setPendingId(null);
       if (!result.ok) setError(result.error ?? "Something went wrong.");
+      else router.refresh();
     });
   }
 
@@ -41,6 +58,7 @@ export function ReportsTable({ reports }: { reports: ReportRow[] }): React.React
             <TableHead>Reason</TableHead>
             <TableHead>Details</TableHead>
             <TableHead>Reporter</TableHead>
+            <TableHead>Filed</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
@@ -59,12 +77,13 @@ export function ReportsTable({ reports }: { reports: ReportRow[] }): React.React
                 </a>
               </TableCell>
               <TableCell>
-                <Badge variant="outline">{report.reason}</Badge>
+                <Badge variant="outline">{REASON_LABELS[report.reason] ?? report.reason}</Badge>
               </TableCell>
-              <TableCell className="max-w-[280px]">
+              <TableCell className="max-w-[240px]">
                 <p className="line-clamp-2 text-xs text-muted-foreground">{report.details ?? "—"}</p>
               </TableCell>
               <TableCell className="text-xs text-muted-foreground">{report.user?.email ?? "Anonymous"}</TableCell>
+              <TableCell className="mono-meta text-muted-foreground">{reportDate(report.createdAt)}</TableCell>
               <TableCell>
                 <Badge variant={report.status === "NEW" ? "default" : "muted"}>{report.status}</Badge>
               </TableCell>
@@ -84,6 +103,16 @@ export function ReportsTable({ reports }: { reports: ReportRow[] }): React.React
                     <Button
                       size="sm"
                       variant="outline"
+                      disabled={pendingId === report.id}
+                      onClick={() =>
+                        run(() => adminHideSubject(report.subject.id), report.id)
+                      }
+                    >
+                      Hide subject
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
                       disabled={pendingId === report.id}
                       onClick={() =>
                         run(() => adminDismissReport(report.id), report.id)

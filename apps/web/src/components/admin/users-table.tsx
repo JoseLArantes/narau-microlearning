@@ -1,6 +1,6 @@
 "use client";
 
-import { Badge, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dailycurio/ui";
+import { Badge, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@narau/ui";
 import { AssignAreasDialog } from "./assign-areas-dialog";
 
 export interface UserRow {

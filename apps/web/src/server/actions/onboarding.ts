@@ -1,7 +1,7 @@
 "use server";
 
-import { prisma } from "@dailycurio/database";
-import { onboardingAreasSchema } from "@dailycurio/validation";
+import { prisma } from "@narau/database";
+import { onboardingAreasSchema } from "@narau/validation";
 import { requireUser } from "@/server/guards";
 import { setUserAreas } from "@/server/repositories/user-areas";
 import { track } from "@/server/tracking";

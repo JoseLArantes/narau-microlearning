@@ -1,7 +1,8 @@
 "use client";
 
-import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@dailycurio/ui";
-import { createUserSchema } from "@dailycurio/validation";
+import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@narau/ui";
+import { createUserSchema } from "@narau/validation";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 import { useTransition } from "react";
 import { adminCreateUser } from "@/server/actions/admin/users";
@@ -10,6 +11,7 @@ const ROLES = ["USER", "MODERATOR", "ADMIN"] as const;
 const STATUSES = ["ACTIVE", "INVITED", "DISABLED"] as const;
 
 export function CreateUserDialog(): React.ReactElement {
+  const router = useRouter();
   const [open, setOpen] = React.useState(false);
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
@@ -36,6 +38,7 @@ export function CreateUserDialog(): React.ReactElement {
       setEmail("");
       setRole("USER");
       setStatus("ACTIVE");
+      router.refresh();
     });
   }
 

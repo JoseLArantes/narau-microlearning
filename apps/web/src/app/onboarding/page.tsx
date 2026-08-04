@@ -13,8 +13,8 @@ export default async function OnboardingPage(): Promise<ReactElement> {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col justify-center px-6 py-12">
       <div className="space-y-2">
-        <p className="font-serif text-lg tracking-tight">Daily Curio</p>
-        <h1 className="font-serif text-3xl tracking-tight">What should we read to you?</h1>
+        <span className="mono-meta text-muted-foreground">CHOOSE YOUR TABS</span>
+        <h1 className="mt-2 font-serif text-3xl tracking-tight">What should we read to you?</h1>
         <p className="text-muted-foreground">
           Choose at least one area. You&apos;ll get one item from a randomly selected
           area every day, and you can change this later.

@@ -1,7 +1,8 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, Input } from "@dailycurio/ui";
+import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, Input } from "@narau/ui";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 import { useState, useTransition } from "react";
 import { adminOverrideDailySubject } from "@/server/actions/admin/daily-subjects";
@@ -25,6 +26,7 @@ export function OverrideDialog({
   currentTitle: string | null;
   onError: (message: string | null) => void;
 }): React.ReactElement {
+  const router = useRouter();
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
@@ -63,6 +65,7 @@ export function OverrideDialog({
       setOpen(false);
       setSelected(null);
       setQuery("");
+      router.refresh();
     });
   }
 

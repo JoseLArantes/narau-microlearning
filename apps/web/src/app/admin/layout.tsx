@@ -15,7 +15,9 @@ export default async function AdminLayout({ children }: { children: ReactNode })
           <NavLink href="/admin/users">Users</NavLink>
           <NavLink href="/admin/areas">Areas</NavLink>
           <NavLink href="/admin/subjects">Subjects</NavLink>
+          <NavLink href="/admin/candidates">Candidates</NavLink>
           <NavLink href="/admin/reports">Reports</NavLink>
+          <NavLink href="/admin/settings">Settings</NavLink>
         </nav>
       </div>
       <main className="mx-auto w-full max-w-5xl px-6 py-10">{children}</main>

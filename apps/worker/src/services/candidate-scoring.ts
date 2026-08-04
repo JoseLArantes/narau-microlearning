@@ -40,7 +40,7 @@ export function isStubLike(summary: string): boolean {
 
 /**
  * Scores a Wikipedia candidate following the ingestion rules:
- * +40 for a 200-1200 char summary, +20 for an image, +10 for a definitional
+ * +40 for a 200-8000 char summary, +20 for an image, +10 for a definitional
  * first sentence, +10 for categories, -50 for disambiguation-like pages,
  * -50 for list-like pages, -30 for stub-like pages. Clamped to 0..100.
  */
@@ -48,7 +48,7 @@ export function scoreCandidate(input: CandidateScoringInput): number {
   let score = 0;
   const summaryLength = input.summary.length;
 
-  if (summaryLength >= 200 && summaryLength <= 1200) score += 40;
+  if (summaryLength >= 200 && summaryLength <= 8000) score += 40;
   if (input.hasImage === true) score += 20;
   if (isDefinitional(input.summary)) score += 10;
   if (input.categories.length > 0) score += 10;

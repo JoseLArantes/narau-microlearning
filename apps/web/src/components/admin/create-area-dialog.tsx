@@ -1,12 +1,14 @@
 "use client";
 
-import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@dailycurio/ui";
-import { createAreaSchema } from "@dailycurio/validation";
+import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@narau/ui";
+import { createAreaSchema } from "@narau/validation";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 import { useTransition } from "react";
 import { adminCreateArea } from "@/server/actions/admin/areas";
 
 export function CreateAreaDialog(): React.ReactElement {
+  const router = useRouter();
   const [open, setOpen] = React.useState(false);
   const [name, setName] = React.useState("");
   const [slug, setSlug] = React.useState("");
@@ -19,7 +21,9 @@ export function CreateAreaDialog(): React.ReactElement {
     const parsed = createAreaSchema.safeParse({
       name,
       slug,
-      categories: categories.split(",").map((item) => item.trim()).filter(Boolean),
+      sourceConfig: {
+        categories: categories.split(",").map((item) => item.trim()).filter(Boolean),
+      },
     });
     if (!parsed.success) {
       setError("Enter a name, a slug, and at least one category.");
@@ -35,6 +39,7 @@ export function CreateAreaDialog(): React.ReactElement {
       setName("");
       setSlug("");
       setCategories("");
+      router.refresh();
     });
   }
 

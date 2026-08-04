@@ -1,6 +1,7 @@
 "use client";
 
-import { Button, Label } from "@dailycurio/ui";
+import { Button, Label } from "@narau/ui";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 import { useTransition } from "react";
 import { updateUserAreas } from "@/server/actions/settings";
@@ -18,6 +19,7 @@ export function AreasForm({
   areas: AreaOption[];
   currentAreaIds: string[];
 }): React.ReactElement {
+  const router = useRouter();
   const [selected, setSelected] = React.useState<string[]>(currentAreaIds);
   const [message, setMessage] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
@@ -39,6 +41,7 @@ export function AreasForm({
         return;
       }
       setMessage("Areas updated.");
+      router.refresh();
     });
   }
 
@@ -57,13 +60,13 @@ export function AreasForm({
           return (
             <Label
               key={area.id}
-              className="flex cursor-pointer items-center gap-3 rounded-[calc(var(--radius)-2px)] border border-border bg-card px-3 py-2.5 text-sm shadow-sm transition-colors hover:bg-secondary/50 has-[:checked]:border-primary/40 has-[:checked]:bg-primary/5"
+              className="flex cursor-pointer items-center gap-3 rounded-[calc(var(--radius)+2px)] border border-border bg-card px-3 py-2.5 text-sm shadow-sm transition-colors hover:border-[hsl(var(--ring))/40] has-[:checked]:border-[hsl(var(--primary))] has-[:checked]:bg-primary/[0.04]"
             >
               <input
                 type="checkbox"
                 checked={checked}
                 onChange={() => toggle(area.id)}
-                className="size-4 accent-[hsl(var(--primary))]"
+                className="size-4 accent-[hsl(var(--accent))]"
               />
               {area.name}
             </Label>

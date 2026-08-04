@@ -51,7 +51,7 @@ describe("truncateToSentence", () => {
 });
 
 describe("normalizeWikipediaContent", () => {
-  it("produces a summary between 60 and 120 words when input is long", () => {
+  it("produces a summary between 60 and 2100 words when input is long", () => {
     const words = Array.from({ length: 200 }, (_, i) => `word${i}`).join(" ");
     const result = normalizeWikipediaContent({
       title: "Example",
@@ -59,7 +59,7 @@ describe("normalizeWikipediaContent", () => {
     });
     const count = result.summary.split(" ").length;
     expect(count).toBeGreaterThanOrEqual(60);
-    expect(count).toBeLessThanOrEqual(120);
+    expect(count).toBeLessThanOrEqual(2100);
   });
 
   it("extracts a hook from the first sentence", () => {

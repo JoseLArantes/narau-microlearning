@@ -2,7 +2,7 @@
 
 import { signOut } from "next-auth/react";
 import { LogOut } from "lucide-react";
-import { Button } from "@dailycurio/ui";
+import { Button } from "@narau/ui";
 
 export function SignOutButton(): React.ReactElement {
   return (

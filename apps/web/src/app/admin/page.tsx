@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReactElement } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@dailycurio/ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@narau/ui";
 import { requireAdmin } from "@/server/guards";
 import { adminOverview } from "@/server/services/admin";
 
@@ -18,18 +18,17 @@ export default async function AdminPage(): Promise<ReactElement> {
   return (
     <div className="space-y-8">
       <header className="space-y-2">
-        <h1 className="font-serif text-3xl tracking-tight">Overview</h1>
+        <span className="mono-meta text-muted-foreground">LIBRARIAN&apos;S CATALOG</span>
+        <h1 className="mt-2 font-serif text-3xl tracking-tight">Overview</h1>
         <p className="text-muted-foreground">The daily machine at a glance.</p>
       </header>
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
           <Link key={stat.label} href={stat.href} className="transition-opacity hover:opacity-80">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-4xl font-normal">{stat.value}</CardTitle>
-                <CardTitle className="text-base">{stat.label}</CardTitle>
-              </CardHeader>
+            <Card className="px-6 py-6">
+              <p className="mono-meta text-muted-foreground">{stat.label.toUpperCase()}</p>
+              <p className="mt-3 font-serif text-4xl font-normal tracking-tight">{stat.value}</p>
             </Card>
           </Link>
         ))}

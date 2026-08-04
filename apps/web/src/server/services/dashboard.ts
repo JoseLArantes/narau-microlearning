@@ -1,4 +1,4 @@
-import { prisma } from "@dailycurio/database";
+import { prisma } from "@narau/database";
 import { startOfUtcDay } from "@/lib/date";
 
 export interface AreaHistory {

@@ -34,7 +34,7 @@ export function getSmtpSettings(): SmtpSettings {
 }
 
 export function getEmailFrom(): string {
-  return process.env.EMAIL_FROM ?? "Daily Curio <no-reply@localhost>";
+  return process.env.EMAIL_FROM ?? "Narau <no-reply@localhost>";
 }
 
 /**

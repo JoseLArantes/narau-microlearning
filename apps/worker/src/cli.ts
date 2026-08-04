@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { prisma } from "@dailycurio/database";
+import { prisma } from "@narau/database";
 import { parseUtcDate } from "./lib/date";
 import { logger } from "./lib/logger";
 import { ingestAreaCandidates } from "./services/wikipedia-ingestion";

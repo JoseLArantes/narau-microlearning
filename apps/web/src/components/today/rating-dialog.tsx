@@ -1,10 +1,10 @@
 "use client";
 
-import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@dailycurio/ui";
+import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@narau/ui";
 import { Star } from "lucide-react";
 import * as React from "react";
 import { useTransition } from "react";
-import { cn } from "@dailycurio/ui";
+import { cn } from "@narau/ui";
 import { rateTodayItem } from "@/server/actions/today";
 
 export function RatingDialog({ itemId }: { itemId: string }): React.ReactElement {

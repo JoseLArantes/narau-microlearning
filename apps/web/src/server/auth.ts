@@ -1,6 +1,6 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import { prisma } from "@dailycurio/database";
-import { getEmailFrom } from "@dailycurio/email";
+import { prisma } from "@narau/database";
+import { getEmailFrom } from "@narau/email";
 import NextAuth from "next-auth";
 import type { NextAuthConfig, Session } from "next-auth";
 import EmailProvider from "next-auth/providers/email";

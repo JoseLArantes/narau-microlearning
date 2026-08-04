@@ -1,5 +1,5 @@
-import { prisma, type Prisma } from "@dailycurio/database";
-import type { Role, UserStatus } from "@dailycurio/database";
+import { prisma, type Prisma } from "@narau/database";
+import type { Role, UserStatus } from "@narau/database";
 import { setUserAreas } from "@/server/repositories/user-areas";
 
 export interface AdminCreateUserInput {

@@ -1,4 +1,4 @@
-# Daily Curio
+# Narau
 
 One small, well-sourced thing to learn every day — a micro-learning app.
 
@@ -15,26 +15,30 @@ A production-style monorepo: Next.js web app, a Node worker that ingests Wikiped
 
 ## Quick start
 
+The whole app runs through the root `docker-compose.yml` — web (production build), Postgres, Redis, Mailpit, and MinIO — no local dev server needed.
+
 ```bash
-# 1. Infra (Postgres, Redis, Mailpit, MinIO)
-docker compose -f docker/docker-compose.yml up -d
+# 1. Build and start the full stack (web on http://localhost:3030)
+docker compose up -d --build
 
-# 2. Env
-cp .env.example .env
-
-# 3. Install + generate client
-pnpm install
-
-# 4. Migrate + seed (admin@example.com / user@example.com)
-pnpm db:migrate
-pnpm db:seed
-
-# 5. Run everything
-pnpm dev        # web at http://localhost:3030
-pnpm worker:dev # queue worker
+# 2. One-time data setup (only when the stack's database is fresh):
+pnpm db:seed       # demo users + 5 areas
+pnpm job:ingest    # pull Wikipedia candidates
+pnpm job:select    # pick today's subject per area
+pnpm job:assign    # assign each user today's item
 ```
 
 Magic-link emails land in Mailpit at http://localhost:8025.
+
+For local development instead, run the infra + dev server:
+
+```bash
+docker compose -f docker/docker-compose.yml up -d   # Postgres, Redis, Mailpit, MinIO
+cp .env.example .env
+pnpm install
+pnpm db:migrate && pnpm db:seed
+pnpm dev         # web at http://localhost:3030
+```
 
 ## Worker jobs
 

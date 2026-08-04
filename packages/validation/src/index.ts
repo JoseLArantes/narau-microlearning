@@ -19,3 +19,6 @@ export type { ReportInput } from "./report";
 
 export { overrideDailySubjectSchema, dateStringSchema } from "./admin";
 export type { OverrideDailySubjectInput } from "./admin";
+
+export { appSettingsSchema } from "./admin";
+export type { AppSettingsInput } from "./admin";

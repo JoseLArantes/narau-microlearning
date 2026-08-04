@@ -1,5 +1,5 @@
 {
-  "name": "@dailycurio/validation",
+  "name": "@narau/validation",
   "version": "0.0.0",
   "private": true,
   "exports": {
@@ -15,7 +15,7 @@
     "zod": "^4.0.0"
   },
   "devDependencies": {
-    "@dailycurio/config": "workspace:*",
+    "@narau/config": "workspace:*",
     "eslint": "^9.22.0",
     "typescript": "^5.7.2",
     "vitest": "^3.0.8"

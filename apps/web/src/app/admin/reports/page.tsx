@@ -16,6 +16,7 @@ export default async function AdminReportsPage(): Promise<ReactElement> {
     createdAt: report.createdAt,
     user: report.user ? { email: report.user.email } : null,
     subject: {
+      id: report.subject.id,
       title: report.subject.title,
       canonicalUrl: report.subject.canonicalUrl,
     },
@@ -25,7 +26,8 @@ export default async function AdminReportsPage(): Promise<ReactElement> {
   return (
     <div className="space-y-6">
       <header className="space-y-1">
-        <h1 className="font-serif text-3xl tracking-tight">Reports</h1>
+        <span className="mono-meta text-muted-foreground">RETURN &amp; REVIEW</span>
+        <h1 className="mt-1 font-serif text-3xl tracking-tight">Reports</h1>
         <p className="text-muted-foreground">
           {rows.length} open report{rows.length === 1 ? "" : "s"}
         </p>

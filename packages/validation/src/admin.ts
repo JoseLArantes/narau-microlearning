@@ -9,3 +9,9 @@ export const overrideDailySubjectSchema = z.object({
 });
 
 export type OverrideDailySubjectInput = z.infer<typeof overrideDailySubjectSchema>;
+
+export const appSettingsSchema = z.object({
+  defaultReadingMinutes: z.number().int().min(1).max(10),
+});
+
+export type AppSettingsInput = z.infer<typeof appSettingsSchema>;

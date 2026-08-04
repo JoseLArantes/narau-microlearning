@@ -1,5 +1,5 @@
-import { prisma } from "@dailycurio/database";
-import type { ReportInput } from "@dailycurio/validation";
+import { prisma } from "@narau/database";
+import type { ReportInput } from "@narau/validation";
 import { track } from "@/server/tracking";
 
 export async function createReport(

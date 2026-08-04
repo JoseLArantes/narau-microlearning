@@ -1,4 +1,4 @@
-import { prisma } from "@dailycurio/database";
+import { prisma } from "@narau/database";
 
 export interface AssignableArea {
   id: string;

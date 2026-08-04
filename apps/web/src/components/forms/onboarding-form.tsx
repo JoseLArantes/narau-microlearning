@@ -1,7 +1,7 @@
 "use client";
 
-import { Button, Label } from "@dailycurio/ui";
-import { onboardingAreasSchema } from "@dailycurio/validation";
+import { Button, Label } from "@narau/ui";
+import { onboardingAreasSchema } from "@narau/validation";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
@@ -49,17 +49,17 @@ export function OnboardingForm({ areas }: { areas: AreaOption[] }): React.ReactE
           <Label
             key={area.id}
             htmlFor={area.id}
-            className="flex cursor-pointer items-start gap-4 rounded-[calc(var(--radius)+2px)] border border-border bg-card p-4 shadow-sm transition-colors hover:bg-secondary/50 has-[:checked]:border-primary/40 has-[:checked]:bg-primary/5"
+            className="flex cursor-pointer items-start gap-4 rounded-[calc(var(--radius)+3px)] border border-border bg-card px-5 py-4 shadow-sm transition-colors hover:border-[hsl(var(--ring))/40] has-[:checked]:border-[hsl(var(--primary))] has-[:checked]:bg-primary/[0.04]"
           >
             <input
               type="checkbox"
               id={area.id}
               value={area.id}
               {...register("areaIds")}
-              className="mt-1 size-4 accent-[hsl(var(--primary))]"
+              className="mt-1.5 size-4 accent-[hsl(var(--accent))]"
             />
             <span className="space-y-0.5">
-              <span className="block font-medium">{area.name}</span>
+              <span className="block font-serif text-lg tracking-tight">{area.name}</span>
               {area.description ? (
                 <span className="block text-sm text-muted-foreground">{area.description}</span>
               ) : null}

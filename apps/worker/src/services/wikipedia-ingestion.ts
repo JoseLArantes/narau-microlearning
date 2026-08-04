@@ -1,7 +1,7 @@
-import { createContentHash, normalizeWikipediaContent } from "@dailycurio/content-normalizer";
-import { prisma } from "@dailycurio/database";
-import { areaSourceConfigSchema } from "@dailycurio/validation";
-import { createWikipediaClient, type WikipediaClient } from "@dailycurio/wikipedia-client";
+import { createContentHash, normalizeWikipediaContent } from "@narau/content-normalizer";
+import { prisma } from "@narau/database";
+import { areaSourceConfigSchema } from "@narau/validation";
+import { createWikipediaClient, type WikipediaClient } from "@narau/wikipedia-client";
 import { env } from "../lib/env";
 import { storeImage } from "../lib/storage";
 import { isDisambiguationLike, isListLike, scoreCandidate } from "./candidate-scoring";
@@ -82,19 +82,18 @@ export async function ingestAreaCandidates(date: Date, client: WikipediaClient =
           imageUrl: page.thumbnailUrl,
         });
         const contentHash = createContentHash({ title: normalized.title, summary: normalized.summary });
-        const existingSubject = await prisma.subject.findUnique({ where: { contentHash } });
-        if (existingSubject && usedSubjectIds.has(existingSubject.id)) continue;
 
         let imageUrl = page.thumbnailUrl;
         const score = scoreCandidate({ ...features, hasImage: Boolean(imageUrl) });
         const subject = await prisma.subject.upsert({
-          where: { contentHash },
+          where: { canonicalUrl: `https://en.wikipedia.org/wiki/${page.title.replace(/ /g, "_")}` },
           update: {
             summary: normalized.summary,
             hook: normalized.hook,
             imageUrl,
             revisionId: page.lastRevisionId,
             qualityScore: score,
+            contentHash,
           },
           create: {
             source: "WIKIPEDIA",
@@ -122,6 +121,8 @@ export async function ingestAreaCandidates(date: Date, client: WikipediaClient =
             }
           }
         }
+
+        if (usedSubjectIds.has(subject.id)) continue;
 
         const candidate = await prisma.areaSubjectCandidate.upsert({
           where: {
