@@ -34,7 +34,7 @@ Curation over algorithm. Where feeds optimize engagement, Narau is the anti-scro
 - Content is licensed CC BY-SA 4.0 and must be attributed with links to source articles. This is a binding constraint: every reading item links back to its Wikipedia source.
 - Reading content is the article's lead section (the most reliably clean plain text Wikipedia exposes); the global default reading time trims it down but cannot extend a short lead. The admin sets the default (3/5/10 minutes).
 - Card images are high-resolution Wikipedia thumbnails (1200px), attributed in the card's caption.
-- Web app + Node worker in a pnpm/Turborepo monorepo. Docker Compose local stack (Postgres, Redis, Mailpit, MinIO).
+- Web app + Node/Bun worker in a Bun/Turborepo monorepo. Docker Compose local stack (Postgres, Redis, Mailpit, MinIO).
 - Roles: USER, ADMIN, MODERATOR.
 
 ## Brand Commitments

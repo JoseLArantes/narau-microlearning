@@ -1,7 +1,7 @@
 import { Queue } from "bullmq";
 import { createRedisConnection } from "./redis";
 
-export const QUEUE_NAME = "dailycurio";
+export const QUEUE_NAME = "narau";
 
 export const JOB_NAMES = {
   INGEST: "ingest.area-candidates",

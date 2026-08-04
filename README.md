@@ -2,13 +2,13 @@
 
 One small, well-sourced thing to learn every day — a micro-learning app.
 
-A production-style monorepo: Next.js web app, a Node worker that ingests Wikipedia content and picks a daily subject per area, PostgreSQL + Prisma, Redis + BullMQ, Auth.js magic-link login, Mailpit locally, MinIO (S3-compatible) storage.
+A production-style monorepo: Next.js web app, a Node/Bun worker that ingests Wikipedia content and picks a daily subject per area, PostgreSQL + Prisma, Redis + BullMQ, Auth.js magic-link login, Mailpit locally, MinIO (S3-compatible) storage.
 
 ## Stack
 
-- **Monorepo**: pnpm workspaces + Turborepo
+- **Monorepo**: Bun workspaces + Turborepo
 - **Web**: Next.js (App Router, RSC, Server Actions), React 19, TypeScript (strict), Tailwind CSS, shadcn-style Radix UI, TanStack Query, React Hook Form, Zod
-- **Worker**: Node, BullMQ, Wikipedia REST/API client, S3 storage
+- **Worker**: Bun/Node, BullMQ, Wikipedia REST/API client, S3 storage
 - **Data**: PostgreSQL 16, Prisma, Redis 7
 - **Auth**: Auth.js magic-link emails via SMTP
 - **Infra**: Docker Compose (Postgres, Redis, Mailpit, MinIO), GitHub Actions CI
@@ -22,10 +22,10 @@ The whole app runs through the root `docker-compose.yml` — web (production bui
 docker compose up -d --build
 
 # 2. One-time data setup (only when the stack's database is fresh):
-pnpm db:seed       # demo users + 5 areas
-pnpm job:ingest    # pull Wikipedia candidates
-pnpm job:select    # pick today's subject per area
-pnpm job:assign    # assign each user today's item
+bun run db:seed       # demo users + areas
+bun run job:ingest    # pull Wikipedia candidates
+bun run job:select    # pick today's subject per area
+bun run job:assign    # assign each user today's item
 ```
 
 Magic-link emails land in Mailpit at http://localhost:8025.
@@ -35,9 +35,9 @@ For local development instead, run the infra + dev server:
 ```bash
 docker compose -f docker/docker-compose.yml up -d   # Postgres, Redis, Mailpit, MinIO
 cp .env.example .env
-pnpm install
-pnpm db:migrate && pnpm db:seed
-pnpm dev         # web at http://localhost:3030
+bun install
+bun run db:migrate && bun run db:seed
+bun run dev         # web at http://localhost:3030
 ```
 
 ## Worker jobs
@@ -45,10 +45,10 @@ pnpm dev         # web at http://localhost:3030
 Run manually, or let the repeatables handle it:
 
 ```bash
-pnpm job:ingest   # pull Wikipedia categories for each area -> candidates
-pnpm job:select   # pick one high-quality subject per area per day
-pnpm job:assign   # assign each user their daily item
-pnpm job:remind   # send reminder emails for unread items
+bun run job:ingest   # pull Wikipedia categories for each area -> candidates
+bun run job:select   # pick one high-quality subject per area per day
+bun run job:assign   # assign each user their daily item
+bun run job:remind   # send reminder emails for unread items
 ```
 
 ## Multi-Tenant Architecture & Internationalization (i18n)
@@ -63,11 +63,11 @@ Narau Microlearning is multi-tenant, organized by language locale:
 
 | Command | What it does |
 | --- | --- |
-| `pnpm dev` | Run the web app (port 3030) |
-| `pnpm worker:dev` | Run the queue worker |
-| `pnpm job:<name>` | Run a job once |
-| `pnpm db:migrate` / `db:seed` / `db:studio` | Prisma migrate, seed, studio |
-| `pnpm lint` / `typecheck` / `test` / `build` | Turbo across the monorepo |
+| `bun run dev` | Run the web app (port 3030) |
+| `bun run worker:dev` | Run the queue worker |
+| `bun run job:<name>` | Run a job once |
+| `bun run db:migrate` / `db:seed` / `db:studio` | Prisma migrate, seed, studio |
+| `bun run lint` / `typecheck` / `test` / `build` | Turbo across the monorepo |
 | `docker compose up -d --build` | Full self-contained stack (web + infra) |
 
 ## Project layout

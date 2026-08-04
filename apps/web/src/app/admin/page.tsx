@@ -40,9 +40,9 @@ export default async function AdminPage(): Promise<ReactElement> {
         </CardHeader>
         <CardContent className="space-y-2 text-sm leading-relaxed text-muted-foreground">
           <p>
-            Run the worker jobs in order: <code className="rounded bg-secondary px-1.5 py-0.5 font-mono text-xs">pnpm job:ingest</code>,{" "}
-            <code className="rounded bg-secondary px-1.5 py-0.5 font-mono text-xs">pnpm job:select</code>, then{" "}
-            <code className="rounded bg-secondary px-1.5 py-0.5 font-mono text-xs">pnpm job:assign</code>.
+            Run the worker jobs in order: <code className="rounded bg-secondary px-1.5 py-0.5 font-mono text-xs">bun run job:ingest</code>,{" "}
+            <code className="rounded bg-secondary px-1.5 py-0.5 font-mono text-xs">bun run job:select</code>, then{" "}
+            <code className="rounded bg-secondary px-1.5 py-0.5 font-mono text-xs">bun run job:assign</code>.
           </p>
           <p>Admin overrides in Subjects are never overwritten by the worker.</p>
         </CardContent>

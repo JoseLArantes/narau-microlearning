@@ -1,14 +1,13 @@
 {
   "name": "narau",
   "private": true,
-  "packageManager": "pnpm@9.0.0",
+  "packageManager": "bun@1.2.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "engines": {
     "node": ">=20"
-  },
-  "pnpm": {
-    "overrides": {
-      "esbuild": "0.27.7"
-    }
   },
   "scripts": {
     "dev": "turbo run dev",
@@ -19,18 +18,18 @@
     "format": "prettier --write .",
     "docker:up": "docker compose -f docker/docker-compose.yml up -d",
     "docker:down": "docker compose -f docker/docker-compose.yml down",
-    "db:migrate": "pnpm --filter @narau/database db:migrate",
-    "db:push": "pnpm --filter @narau/database db:push",
-    "db:generate": "pnpm --filter @narau/database db:generate",
-    "db:seed": "pnpm --filter @narau/database db:seed",
-    "db:studio": "pnpm --filter @narau/database db:studio",
-    "worker:dev": "pnpm --filter @narau/worker dev",
-    "worker:build": "pnpm --filter @narau/worker build",
-    "job:ingest": "pnpm --filter @narau/worker job:ingest",
-    "job:select": "pnpm --filter @narau/worker job:select",
-    "job:assign": "pnpm --filter @narau/worker job:assign",
-    "job:remind": "pnpm --filter @narau/worker job:remind",
-    "postinstall": "pnpm --filter @narau/database db:generate"
+    "db:migrate": "bun --filter @narau/database db:migrate",
+    "db:push": "bun --filter @narau/database db:push",
+    "db:generate": "bun --filter @narau/database db:generate",
+    "db:seed": "bun --filter @narau/database db:seed",
+    "db:studio": "bun --filter @narau/database db:studio",
+    "worker:dev": "bun --filter @narau/worker dev",
+    "worker:build": "bun --filter @narau/worker build",
+    "job:ingest": "bun --filter @narau/worker job:ingest",
+    "job:select": "bun --filter @narau/worker job:select",
+    "job:assign": "bun --filter @narau/worker job:assign",
+    "job:remind": "bun --filter @narau/worker job:remind",
+    "postinstall": "bun --filter @narau/database db:generate"
   },
   "devDependencies": {
     "@narau/config": "workspace:*",

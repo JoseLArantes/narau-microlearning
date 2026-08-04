@@ -99,7 +99,7 @@ export function OverrideDialog({
           <p className="text-sm text-muted-foreground">Loading subjects…</p>
         ) : filtered.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No subjects yet — run <code className="font-mono text-xs">pnpm job:ingest</code> first.
+            No subjects yet — run <code className="font-mono text-xs">bun run job:ingest</code> first.
           </p>
         ) : (
           <ul className="max-h-72 space-y-1 overflow-y-auto pr-1">

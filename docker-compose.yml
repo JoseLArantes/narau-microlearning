@@ -1,4 +1,4 @@
-name: dailycurio-app
+name: narau-app
 
 services:
   db:
@@ -7,13 +7,13 @@ services:
     environment:
       POSTGRES_USER: app
       POSTGRES_PASSWORD: app
-      POSTGRES_DB: dailycurio
+      POSTGRES_DB: narau
     ports:
       - "5434:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U app -d dailycurio"]
+      test: ["CMD-SHELL", "pg_isready -U app -d narau"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -57,8 +57,8 @@ services:
       /bin/sh -c "
       sleep 3;
       mc alias set local http://minio:9000 minioadmin minioadmin;
-      mc mb --ignore-existing local/dailycurio;
-      mc anonymous set download local/dailycurio;
+      mc mb --ignore-existing local/narau;
+      mc anonymous set download local/narau;
       exit 0;
       "
 
@@ -66,11 +66,11 @@ services:
     build:
       context: .
       target: base
-    command: ["sh", "-c", "cd packages/database && pnpm exec prisma migrate deploy && pnpm exec tsx prisma/seed.ts"]
+    command: ["sh", "-c", "cd packages/database && bunx prisma migrate deploy && bun run prisma/seed.ts"]
     environment:
-      - DATABASE_URL=postgresql://app:app@db:5432/dailycurio?schema=public
+      - DATABASE_URL=postgresql://app:app@db:5432/narau?schema=public
     volumes:
-      - ./packages/database:/app/packages/database
+      - ./packages/database/prisma:/app/packages/database/prisma
     depends_on:
       db:
         condition: service_healthy
@@ -84,7 +84,7 @@ services:
     environment:
       - NODE_ENV=production
       - APP_URL=http://localhost:3030
-      - DATABASE_URL=postgresql://app:app@db:5432/dailycurio?schema=public
+      - DATABASE_URL=postgresql://app:app@db:5432/narau?schema=public
       - REDIS_URL=redis://redis:6379
       - AUTH_SECRET=dev-secret-change-me
       - AUTH_URL=http://localhost:3030

@@ -8,7 +8,7 @@ import { assignUserItems, prismaUserAssignmentRepository } from "./services/user
 import { sendDailyReminders } from "./jobs/send-daily-reminders";
 
 const USAGE = `
-Usage: pnpm job:<name> [--date=YYYY-MM-DD]
+Usage: bun run job:<name> [--date=YYYY-MM-DD]
 
 Jobs:
   ingest-area-candidates   Ingest Wikipedia candidates for active areas

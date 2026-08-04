@@ -83,7 +83,7 @@ export function CandidatesTable({ candidates }: { candidates: CandidateRow[] }):
           {candidates.length === 0 ? (
             <TableRow>
               <TableCell colSpan={4} className="py-8 text-center font-mono text-xs text-muted-foreground">
-                NO CANDIDATES FOR THIS AREA AND DATE. RUN <span className="font-bold">pnpm job:ingest</span>.
+                NO CANDIDATES FOR THIS AREA AND DATE. RUN <span className="font-bold">bun run job:ingest</span>.
               </TableCell>
             </TableRow>
           ) : null}
