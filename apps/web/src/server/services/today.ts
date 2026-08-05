@@ -1,8 +1,9 @@
-import { prisma } from "@narau/database";
+import { chooseDailyCard, prisma } from "@narau/database";
 import { localDateForTimezone, startOfUtcDay } from "@/lib/date";
 import { track } from "@/server/tracking";
 import { findPublishedDailySubjects } from "@/server/repositories/daily-subjects";
 import { findUserItemForDate } from "@/server/repositories/user-items";
+import { getRootAreaId, isAreaEffectivelyActive } from "@/server/services/areas";
 
 export interface CurrentItemResult {
   item: NonNullable<Awaited<ReturnType<typeof findUserItemForDate>>>;
@@ -31,18 +32,30 @@ export const TodayService = {
 
     const userAreas = await prisma.userArea.findMany({
       where: { userId, area: { status: "ACTIVE", tenantId: user.tenantId } },
-      select: { areaId: true },
+      select: { areaId: true, area: { include: { parent: { include: { parent: true } } } } },
     });
-    if (userAreas.length === 0) return null;
+    const effectiveUserAreas = userAreas.filter((userArea) => isAreaEffectivelyActive(userArea.area));
+    if (effectiveUserAreas.length === 0) return null;
 
     const dailySubjects = await findPublishedDailySubjects(
       today,
-      userAreas.map((userArea) => userArea.areaId),
+      effectiveUserAreas.map((userArea) => userArea.areaId),
       user.tenantId,
     );
-    if (dailySubjects.length === 0) return null;
-
-    const pick = dailySubjects[Math.floor(Math.random() * dailySubjects.length)];
+    const pick = chooseDailyCard({
+      selections: effectiveUserAreas.map((userArea) => ({ nodeId: userArea.areaId, rootAreaId: getRootAreaId(userArea.area) })),
+      cards: dailySubjects.filter((dailySubject) => isAreaEffectivelyActive(dailySubject.area)).map((dailySubject) => ({
+        nodeId: dailySubject.areaId,
+        rootAreaId: getRootAreaId(dailySubject.area),
+        subjectId: dailySubject.subjectId,
+        dailyAreaSubjectId: dailySubject.id,
+      })),
+      learnedSubjectIds: new Set(
+        (await prisma.userDailyItem.findMany({ where: { userId, status: "LEARNED" }, select: { subjectId: true } })).map(
+          (item) => item.subjectId,
+        ),
+      ),
+    });
     if (!pick) return null;
 
     try {
@@ -52,9 +65,9 @@ export const TodayService = {
           userId,
           contentDate: today,
           userLocalDate: localDateForTimezone(today, user.timezone),
-          areaId: pick.areaId,
+          areaId: pick.nodeId,
           subjectId: pick.subjectId,
-          dailyAreaSubjectId: pick.id,
+          dailyAreaSubjectId: pick.dailyAreaSubjectId,
         },
         include: { subject: true, area: true, dailyAreaSubject: true },
       });

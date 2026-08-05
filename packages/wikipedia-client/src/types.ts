@@ -3,6 +3,13 @@ export interface CategoryMember {
   title: string;
 }
 
+export interface CategoryInfo {
+  title: string;
+  exists: boolean;
+  pageCount: number;
+  subcategoryCount: number;
+}
+
 export interface PageDetails {
   pageId: number;
   title: string;
@@ -43,6 +50,7 @@ export interface WikipediaClientOptions {
 }
 
 export interface WikipediaClient {
+  getCategoryInfo(categoryTitles: string[]): Promise<CategoryInfo[]>;
   getCategoryMembers(categoryTitle: string, options?: CategoryOptions): Promise<CategoryMember[]>;
   getPagesFromCategories(categories: string[], options?: CategoryOptions): Promise<CategoryMember[]>;
   getPageDetails(pageIds: number[]): Promise<Map<number, PageDetails>>;

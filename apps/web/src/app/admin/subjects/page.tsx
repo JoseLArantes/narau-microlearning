@@ -4,6 +4,7 @@ import { listAllAreas } from "@/server/services/areas";
 import { listDailySubjects } from "@/server/services/admin";
 import { DailySubjectsTable, type DailySubjectRow } from "@/components/admin/daily-subjects-table";
 import { parseUtcDate } from "@/lib/date";
+import { getAreaBreadcrumb } from "@/server/services/areas";
 
 export const metadata = { title: "Subjects" };
 
@@ -22,7 +23,7 @@ export default async function AdminSubjectsPage({
 
   const rows: DailySubjectRow[] = subjects.map((daily) => ({
     areaId: daily.areaId,
-    areaName: daily.area.name,
+    areaName: getAreaBreadcrumb(daily.area),
     subjectTitle: daily.subject?.title ?? null,
     subjectUrl: daily.subject?.canonicalUrl ?? null,
     status: daily.status,

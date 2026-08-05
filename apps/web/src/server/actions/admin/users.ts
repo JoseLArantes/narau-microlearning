@@ -1,6 +1,6 @@
 "use server";
 
-import { assignUserAreasSchema, createUserSchema } from "@narau/validation";
+import { assignLearningInterestsSchema, createUserSchema } from "@narau/validation";
 import { prisma } from "@narau/database";
 import { requireTenantAdmin } from "@/server/guards";
 import { createUser, updateUser, assignAreas } from "@/server/services/users";
@@ -43,21 +43,20 @@ export async function adminUpdateUser(
   }
 }
 
-export async function adminAssignAreas(input: { userId: string; areaIds: string[] }): Promise<ActionResult> {
+export async function adminAssignLearningInterests(input: { userId: string; selectedNodeIds: string[] }): Promise<ActionResult> {
   try {
-    const parsed = assignUserAreasSchema.safeParse(input);
+    const parsed = assignLearningInterestsSchema.safeParse(input);
     if (!parsed.success) {
-      return { ok: false, error: "Choose at least one area.", fieldErrors: parsed.error.flatten().fieldErrors };
+      return { ok: false, error: "Choose at least one area or topic.", fieldErrors: parsed.error.flatten().fieldErrors };
     }
     const { session, tenant } = await requireTenantAdmin();
     const user = await prisma.user.findFirst({ where: { id: parsed.data.userId, tenantId: tenant.id }, select: { id: true } });
-    const areas = await prisma.area.findMany({ where: { id: { in: parsed.data.areaIds }, tenantId: tenant.id, status: "ACTIVE" }, select: { id: true } });
-    if (!user || areas.length !== parsed.data.areaIds.length) {
+    if (!user) {
       return { ok: false, error: "The user and areas must belong to the current tenant." };
     }
-    await assignAreas(parsed.data.userId, tenant.id, parsed.data.areaIds, session.user.id);
-    await audit(session.user.id, "ADMIN_USER_AREAS_ASSIGNED", "User", parsed.data.userId, {
-      areaIds: parsed.data.areaIds,
+    await assignAreas(parsed.data.userId, tenant.id, parsed.data.selectedNodeIds, session.user.id);
+    await audit(session.user.id, "ADMIN_USER_INTERESTS_ASSIGNED", "User", parsed.data.userId, {
+      selectedNodeIds: parsed.data.selectedNodeIds,
     }, tenant.id);
     return { ok: true, data: undefined };
   } catch (error) {

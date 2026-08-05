@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   areaSourceConfigSchema,
-  assignUserAreasSchema,
+  assignLearningInterestsSchema,
   createAreaSchema,
   createUserSchema,
-  onboardingAreasSchema,
+  learningInterestSelectionSchema,
   overrideDailySubjectSchema,
   ratingSchema,
   reportSchema,
@@ -111,19 +111,18 @@ describe("updateAreaSchema", () => {
   });
 });
 
-describe("onboardingAreasSchema", () => {
-  it("accepts one or more areas", () => {
-    expect(onboardingAreasSchema.safeParse({ areaIds: ["area-1"] }).success).toBe(true);
-    expect(onboardingAreasSchema.safeParse({ areaIds: ["area-1", "area-2"] }).success).toBe(true);
+describe("learningInterestSelectionSchema", () => {
+  it("accepts one or more exact nodes", () => {
+    expect(learningInterestSelectionSchema.safeParse({ selectedNodeIds: ["area-1"] }).success).toBe(true);
+    expect(learningInterestSelectionSchema.safeParse({ selectedNodeIds: ["area-1", "topic-2"] }).success).toBe(true);
   });
 
-  it("rejects zero areas", () => {
-    expect(onboardingAreasSchema.safeParse({ areaIds: [] }).success).toBe(false);
-    expect(onboardingAreasSchema.safeParse({ areaIds: [] }).success).toBe(false);
+  it("rejects zero nodes", () => {
+    expect(learningInterestSelectionSchema.safeParse({ selectedNodeIds: [] }).success).toBe(false);
   });
 
-  it("rejects empty string area ids", () => {
-    expect(onboardingAreasSchema.safeParse({ areaIds: [""] }).success).toBe(false);
+  it("rejects empty node IDs", () => {
+    expect(learningInterestSelectionSchema.safeParse({ selectedNodeIds: [""] }).success).toBe(false);
   });
 });
 
@@ -213,13 +212,13 @@ describe("createUserSchema", () => {
   });
 });
 
-describe("assignUserAreasSchema", () => {
-  it("accepts a user with areas", () => {
-    expect(assignUserAreasSchema.safeParse({ userId: "user-1", areaIds: ["a", "b"] }).success).toBe(true);
+describe("assignLearningInterestsSchema", () => {
+  it("accepts a user with exact selections", () => {
+    expect(assignLearningInterestsSchema.safeParse({ userId: "user-1", selectedNodeIds: ["a", "b"] }).success).toBe(true);
   });
 
-  it("rejects empty area list", () => {
-    expect(assignUserAreasSchema.safeParse({ userId: "user-1", areaIds: [] }).success).toBe(false);
+  it("rejects empty selection list", () => {
+    expect(assignLearningInterestsSchema.safeParse({ userId: "user-1", selectedNodeIds: [] }).success).toBe(false);
   });
 });
 

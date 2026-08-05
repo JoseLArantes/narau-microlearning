@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { requireUser } from "@/server/guards";
-import { listActiveAreas } from "@/server/services/areas";
+import { listActiveAreaTree } from "@/server/services/areas";
 import { getUserAreas } from "@/server/repositories/user-areas";
 import { AppHeader } from "@/components/layout/app-header";
 import { AreasForm } from "@/components/forms/areas-form";
@@ -10,7 +10,7 @@ export default async function SettingsPage(): Promise<ReactElement> {
   const session = await requireUser();
   const tenantId = session.user.tenantId;
   if (!tenantId) throw new Error("User tenant is missing.");
-  const areas = await listActiveAreas(tenantId);
+  const areas = await listActiveAreaTree(tenantId);
   const userAreas = await getUserAreas(session.user.id, tenantId);
 
   return (
@@ -35,7 +35,7 @@ export default async function SettingsPage(): Promise<ReactElement> {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Areas of interest</CardTitle>
+          <CardTitle className="text-lg">Learning choices</CardTitle>
           </CardHeader>
           <CardContent>
             <AreasForm

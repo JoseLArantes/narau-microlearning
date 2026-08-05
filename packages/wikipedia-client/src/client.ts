@@ -1,7 +1,7 @@
 import pLimit from "p-limit";
 import pRetry from "p-retry";
 import z from "zod";
-import type { CategoryMember, CategoryOptions, PageDetails, PageSummary, WikipediaClient, WikipediaClientOptions } from "./types";
+import type { CategoryInfo, CategoryMember, CategoryOptions, PageDetails, PageSummary, WikipediaClient, WikipediaClientOptions } from "./types";
 import { chunk, encodeTitle, toCanonicalUrl } from "./utils";
 
 const categoryMembersResponseSchema = z.object({
@@ -54,6 +54,18 @@ const pageSummaryResponseSchema = z.object({
   content_urls: z
     .object({ desktop: z.object({ page: z.string() }).optional() })
     .optional(),
+});
+
+const categoryInfoResponseSchema = z.object({
+  query: z.object({
+    pages: z.array(
+      z.object({
+        title: z.string(),
+        missing: z.boolean().optional(),
+        categoryinfo: z.object({ pages: z.number(), subcats: z.number() }).optional(),
+      }),
+    ),
+  }),
 });
 
 const DEFAULT_ENDPOINT = "https://en.wikipedia.org";
@@ -190,6 +202,21 @@ export function createWikipediaClient(options: WikipediaClientOptions): Wikipedi
     return [...seen.values()];
   }
 
+  async function getCategoryInfo(categoryTitles: string[]): Promise<CategoryInfo[]> {
+    if (categoryTitles.length === 0) return [];
+    const url =
+      `${endpoint}/w/api.php?action=query&prop=categoryinfo&titles=${categoryTitles.map(encodeTitle).join("|")}` +
+      "&format=json&formatversion=2";
+    const parsed = categoryInfoResponseSchema.safeParse(await fetchJson(url));
+    if (!parsed.success) return [];
+    return parsed.data.query.pages.map((page) => ({
+      title: page.title,
+      exists: !page.missing,
+      pageCount: page.categoryinfo?.pages ?? 0,
+      subcategoryCount: page.categoryinfo?.subcats ?? 0,
+    }));
+  }
+
   async function getPagesFromCategories(categories: string[], options: CategoryOptions = {}): Promise<CategoryMember[]> {
     const results = await Promise.all(
       categories.map((category) => getCategoryMembers(category, options)),
@@ -247,5 +274,5 @@ export function createWikipediaClient(options: WikipediaClientOptions): Wikipedi
     };
   }
 
-  return { getCategoryMembers, getPagesFromCategories, getPageDetails, getPageSummary };
+  return { getCategoryInfo, getCategoryMembers, getPagesFromCategories, getPageDetails, getPageSummary };
 }

@@ -81,6 +81,8 @@ async function main(): Promise<void> {
         update: { name: area.name, status: AreaStatus.ACTIVE },
         create: {
           tenantId,
+          parentId: null,
+          level: "AREA",
           name: area.name,
           slug: area.slug,
           description: area.description,

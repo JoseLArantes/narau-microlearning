@@ -1,13 +1,13 @@
 import type { ReactElement } from "react";
 import { requireTenantAdmin } from "@/server/guards";
 import { listUsers } from "@/server/services/users";
-import { listActiveAreas } from "@/server/services/areas";
+import { listActiveAreaTree } from "@/server/services/areas";
 import { UsersTable } from "@/components/admin/users-table";
 import { CreateUserDialog } from "@/components/admin/create-user-dialog";
 
 export default async function AdminUsersPage(): Promise<ReactElement> {
   const { tenant } = await requireTenantAdmin();
-  const [users, areas] = await Promise.all([listUsers(tenant.id), listActiveAreas(tenant.id)]);
+  const [users, areas] = await Promise.all([listUsers(tenant.id), listActiveAreaTree(tenant.id)]);
 
   return (
     <div className="space-y-6">

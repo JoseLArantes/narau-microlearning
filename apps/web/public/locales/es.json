@@ -68,7 +68,18 @@
   "onboarding": {
     "title": "Selecciona tus áreas de interés",
     "subtitle": "Elige uno o más temas para personalizar tu resumen diario de microaprendizaje.",
-    "save": "Guardar preferencias"
+    "save": "Empezar a aprender",
+    "selectOne": "Elige al menos un área o tema."
+  },
+  "learning": {
+    "area": "Área",
+    "topic": "Tema",
+    "specialty": "Especialidad",
+    "refineQuestion": "¿Quieres aprender temas más específicos dentro de {name}?",
+    "keepBroad": "Mantener el área amplia",
+    "chooseSpecific": "Elegir temas específicos",
+    "specificityHint": "Puedes mantener un área amplia o elegir temas más específicos. Las elecciones específicas reemplazan el área general.",
+    "selected": "seleccionados"
   },
   "dashboard": {
     "title": "Panel de aprendizaje",
@@ -80,7 +91,8 @@
     "title": "Ajustes",
     "timezone": "Zona horaria",
     "tenantLanguage": "Tenant e idioma",
-    "save": "Guardar ajustes"
+    "save": "Guardar ajustes",
+    "saved": "Tus elecciones guiarán la ficha de mañana."
   },
   "admin": {
     "title": "Consola de administración",

@@ -1,5 +1,6 @@
 import { prisma, type Prisma } from "@narau/database";
 import { track } from "@/server/tracking";
+import { getAreaBreadcrumb, isAreaEffectivelyActive } from "@/server/services/areas";
 
 export async function audit(
   actorId: string | null,
@@ -34,10 +35,10 @@ export async function adminOverview(tenantId: string): Promise<{ users: number; 
 export async function listDailySubjects(
   tenantId: string,
   contentDate: Date,
-): Promise<Prisma.DailyAreaSubjectGetPayload<{ include: { area: true; subject: true } }>[]> {
+): Promise<Prisma.DailyAreaSubjectGetPayload<{ include: { area: { include: { parent: { include: { parent: true } } } }; subject: true } }>[]> {
   return prisma.dailyAreaSubject.findMany({
     where: { tenantId, contentDate },
-    include: { area: true, subject: true },
+    include: { area: { include: { parent: { include: { parent: true } } } }, subject: true },
     orderBy: { area: { displayOrder: "asc" } },
   });
 }
@@ -46,11 +47,23 @@ export async function overrideDailySubject(
   input: { tenantId: string; contentDate: Date; areaId: string; subjectId: string },
   actorId: string,
 ): Promise<Awaited<ReturnType<typeof prisma.dailyAreaSubject.upsert>>> {
-  const [area, subject] = await Promise.all([
-    prisma.area.findFirst({ where: { id: input.areaId, tenantId: input.tenantId }, select: { id: true } }),
-    prisma.subject.findFirst({ where: { id: input.subjectId, tenantId: input.tenantId, status: "ACTIVE" }, select: { id: true } }),
-  ]);
-  if (!area || !subject) throw new Error("The area and subject must belong to the current tenant.");
+  const area = await prisma.area.findFirst({
+    where: { id: input.areaId, tenantId: input.tenantId },
+    include: { parent: { include: { parent: true } } },
+  });
+  if (!area || !isAreaEffectivelyActive(area)) throw new Error("The selected area or topic is not currently active.");
+  const candidate = await prisma.areaSubjectCandidate.findFirst({
+    where: {
+      tenantId: input.tenantId,
+      areaId: input.areaId,
+      subjectId: input.subjectId,
+      generatedForDate: input.contentDate,
+      status: { in: ["CANDIDATE", "SELECTED"] },
+      subject: { status: "ACTIVE" },
+    },
+    select: { subjectId: true },
+  });
+  if (!candidate) throw new Error("The subject is not an active candidate for this area and date.");
   const daily = await prisma.dailyAreaSubject.upsert({
     where: { contentDate_areaId_tenantId: { contentDate: input.contentDate, areaId: input.areaId, tenantId: input.tenantId } },
     update: { subjectId: input.subjectId, selectedBy: `admin:${actorId}`, status: "PUBLISHED" },

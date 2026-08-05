@@ -6,6 +6,7 @@ import { MarkViewed } from "./mark-viewed";
 import { RatingDialog } from "./rating-dialog";
 import { ReportDialog } from "./report-dialog";
 import { SkipButton } from "./skip-button";
+import { getAreaBreadcrumb } from "@/server/services/areas";
 
 type Item = NonNullable<Awaited<ReturnType<typeof import("@/server/services/today").TodayService.getCurrentItem>>>;
 
@@ -44,6 +45,8 @@ export function DailyItem({
           <span>{cardDate(item.contentDate)}</span>
           <span aria-hidden>·</span>
           <span>{fitted.minutes} MIN READ</span>
+          <span aria-hidden>·</span>
+          <span className="normal-case tracking-normal">{getAreaBreadcrumb(item.area)}</span>
         </div>
         <h1 className="reader-title mt-4">{item.subject.title}</h1>
         {reading.standfirst ? <p className="reader-standfirst">{reading.standfirst}</p> : null}

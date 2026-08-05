@@ -11,14 +11,14 @@ function createRepo(overrides: Partial<UserAssignmentRepository> = {}): UserAssi
         tenantId: "tenant-en",
         timezone: "UTC",
         areas: [
-          { id: "area-1", preferenceWeight: 1 },
-          { id: "area-2", preferenceWeight: 1 },
+          { id: "area-1", rootAreaId: "area-1" },
+          { id: "area-2", rootAreaId: "area-2" },
         ],
       },
     ]),
     loadPublishedDailySubjects: vi.fn().mockResolvedValue([
-      { id: "daily-1", areaId: "area-1", subjectId: "subject-1" },
-      { id: "daily-2", areaId: "area-2", subjectId: "subject-2" },
+      { id: "daily-1", areaId: "area-1", subjectId: "subject-1", tenantId: "tenant-en", rootAreaId: "area-1" },
+      { id: "daily-2", areaId: "area-2", subjectId: "subject-2", tenantId: "tenant-en", rootAreaId: "area-2" },
     ]),
     loadLearnedSubjectIds: vi.fn().mockResolvedValue([]),
     hasItem: vi.fn().mockResolvedValue(false),
@@ -73,8 +73,8 @@ describe("assignUserItems", () => {
   it("continues when one user fails", async () => {
     const repo = createRepo({
       loadActiveUsersWithAreas: vi.fn().mockResolvedValue([
-        { id: "user-1", tenantId: "tenant-en", timezone: "UTC", areas: [{ id: "area-1", preferenceWeight: 1 }] },
-        { id: "user-2", tenantId: "tenant-en", timezone: "UTC", areas: [{ id: "area-1", preferenceWeight: 1 }] },
+        { id: "user-1", tenantId: "tenant-en", timezone: "UTC", areas: [{ id: "area-1", rootAreaId: "area-1" }] },
+        { id: "user-2", tenantId: "tenant-en", timezone: "UTC", areas: [{ id: "area-1", rootAreaId: "area-1" }] },
       ]),
       createItem: vi
         .fn()

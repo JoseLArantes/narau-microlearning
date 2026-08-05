@@ -68,7 +68,18 @@
   "onboarding": {
     "title": "Selecione suas áreas de interesse",
     "subtitle": "Escolha um ou mais tópicos para personalizar seu resumo diário de microaprendizagem.",
-    "save": "Salvar preferências"
+    "save": "Começar a aprender",
+    "selectOne": "Escolha pelo menos uma área ou tópico."
+  },
+  "learning": {
+    "area": "Área",
+    "topic": "Tópico",
+    "specialty": "Especialidade",
+    "refineQuestion": "Você quer aprender tópicos mais específicos dentro de {name}?",
+    "keepBroad": "Manter a área ampla",
+    "chooseSpecific": "Escolher tópicos específicos",
+    "specificityHint": "Você pode manter uma área ampla ou escolher tópicos mais específicos. As escolhas específicas substituem a área geral.",
+    "selected": "selecionados"
   },
   "dashboard": {
     "title": "Painel de aprendizagem",
@@ -80,7 +91,8 @@
     "title": "Configurações",
     "timezone": "Fuso horário",
     "tenantLanguage": "Tenant e idioma",
-    "save": "Salvar configurações"
+    "save": "Salvar configurações",
+    "saved": "Suas escolhas vão orientar o cartão de amanhã."
   },
   "admin": {
     "title": "Painel administrativo",

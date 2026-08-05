@@ -44,7 +44,22 @@ export async function ingestAreaCandidates(
   const result: IngestionResult = { areas: 0, candidatesCreated: 0, errors: [] };
   const since = new Date(date.getTime() - USED_WINDOW_DAYS * DAY_MS);
   const areas = await prisma.area.findMany({
-    where: { status: "ACTIVE", tenant: { status: "ACTIVE" } },
+    where: {
+      status: "ACTIVE",
+      tenant: { status: "ACTIVE" },
+      OR: [
+        { level: "AREA" },
+        { level: "TOPIC", parent: { status: "ACTIVE", level: "AREA" } },
+        {
+          level: "SPECIALTY",
+          parent: {
+            status: "ACTIVE",
+            level: "TOPIC",
+            parent: { status: "ACTIVE", level: "AREA" },
+          },
+        },
+      ],
+    },
     include: { tenant: true },
     orderBy: [{ tenant: { slug: "asc" } }, { displayOrder: "asc" }, { slug: "asc" }],
   });

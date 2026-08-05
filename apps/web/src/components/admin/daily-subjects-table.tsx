@@ -21,7 +21,7 @@ export function DailySubjectsTable({
   subjects,
 }: {
   contentDate: Date;
-  areas: Array<{ id: string; name: string; status: "ACTIVE" | "DISABLED" }>;
+  areas: Array<{ id: string; name: string; status: "DRAFT" | "ACTIVE" | "DISABLED" }>;
   subjects: DailySubjectRow[];
 }): React.ReactElement {
   const [date, setDate] = useState(contentDate.toISOString().slice(0, 10));

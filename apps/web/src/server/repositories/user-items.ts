@@ -1,8 +1,10 @@
 import { prisma, type Prisma } from "@narau/database";
 
 export type UserItemWithRelations = Prisma.UserDailyItemGetPayload<{
-  include: { subject: true; area: true; dailyAreaSubject: true };
+  include: { subject: true; area: { include: { parent: { include: { parent: true } } } }; dailyAreaSubject: true };
 }>;
+
+const areaInclude = { include: { parent: { include: { parent: true } } } } as const;
 
 export async function findUserItem(
   itemId: string,
@@ -11,7 +13,7 @@ export async function findUserItem(
 ): Promise<UserItemWithRelations | null> {
   return prisma.userDailyItem.findFirst({
     where: { id: itemId, userId, tenantId },
-    include: { subject: true, area: true, dailyAreaSubject: true },
+    include: { subject: true, area: areaInclude, dailyAreaSubject: true },
   });
 }
 
@@ -21,6 +23,6 @@ export async function findUserItemForDate(
 ): Promise<UserItemWithRelations | null> {
   return prisma.userDailyItem.findUnique({
     where: { userId_contentDate: { userId, contentDate } },
-    include: { subject: true, area: true, dailyAreaSubject: true },
+    include: { subject: true, area: areaInclude, dailyAreaSubject: true },
   });
 }

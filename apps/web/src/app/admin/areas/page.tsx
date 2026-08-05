@@ -12,10 +12,9 @@ export default async function AdminAreasPage(): Promise<ReactElement> {
     <div className="space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div className="space-y-1">
-          <span className="mono-meta text-muted-foreground">SHELF SECTIONS</span>
-          <h1 className="mt-1 font-serif text-3xl tracking-tight">Areas</h1>
+          <h1 className="font-serif text-3xl tracking-tight">Areas &amp; topics</h1>
           <p className="text-muted-foreground">
-            {areas.length} area{areas.length === 1 ? "" : "s"} in {tenant.name} feeding the daily machine
+            {areas.length} learning node{areas.length === 1 ? "" : "s"} in {tenant.name}
           </p>
         </div>
         <CreateAreaDialog />

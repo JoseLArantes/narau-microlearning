@@ -68,7 +68,18 @@
   "onboarding": {
     "title": "Select your areas of interest",
     "subtitle": "Choose one or more topics to customize your daily microlearning digest.",
-    "save": "Save Preferences"
+    "save": "Start learning",
+    "selectOne": "Choose at least one area or topic."
+  },
+  "learning": {
+    "area": "Area",
+    "topic": "Topic",
+    "specialty": "Specialty",
+    "refineQuestion": "Do you want to learn more specific topics under {name}?",
+    "keepBroad": "Keep it broad",
+    "chooseSpecific": "Choose specific topics",
+    "specificityHint": "You can keep an area broad or choose more specific topics. Specific choices replace the broader area.",
+    "selected": "selected"
   },
   "dashboard": {
     "title": "Learning Dashboard",
@@ -80,7 +91,8 @@
     "title": "Settings",
     "timezone": "Timezone",
     "tenantLanguage": "Tenant & Language",
-    "save": "Save Settings"
+    "save": "Save Settings",
+    "saved": "Your choices will guide tomorrow’s card."
   },
   "admin": {
     "title": "Admin Console",

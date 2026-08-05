@@ -30,6 +30,33 @@ describe("WikipediaClient Rate Limiting & Spacing", () => {
     }
   });
 
+  it("loads localized category information for preview", async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          query: {
+            pages: [
+              { pageid: 10, ns: 14, title: "Categoría:Ciencia", categoryinfo: { pages: 42, subcats: 3 } },
+              { pageid: -1, ns: 14, title: "Categoría:Missing", missing: true },
+            ],
+          },
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+
+    try {
+      const client = createWikipediaClient({ userAgent: "TestBot/1.0", language: "es", requestDelayMs: 0 });
+      await expect(client.getCategoryInfo(["Categoría:Ciencia", "Categoría:Missing"])).resolves.toEqual([
+        { title: "Categoría:Ciencia", exists: true, pageCount: 42, subcategoryCount: 3 },
+        { title: "Categoría:Missing", exists: false, pageCount: 0, subcategoryCount: 0 },
+      ]);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
   it("does not deadlock category requests with the default concurrency", async () => {
     const originalFetch = globalThis.fetch;
     globalThis.fetch = vi.fn().mockResolvedValue(

@@ -12,11 +12,11 @@ describe("Multi-tenant user assignment", () => {
           id: "user-es",
           tenantId: "es",
           timezone: "UTC",
-          areas: [{ id: "area-ciencia", preferenceWeight: 1 }],
+          areas: [{ id: "area-ciencia", rootAreaId: "area-ciencia" }],
         },
       ]),
       loadPublishedDailySubjects: vi.fn().mockResolvedValue([
-        { id: "daily-es", areaId: "area-ciencia", subjectId: "subject-es", tenantId: "es" },
+        { id: "daily-es", areaId: "area-ciencia", subjectId: "subject-es", tenantId: "es", rootAreaId: "area-ciencia" },
       ]),
       loadLearnedSubjectIds: vi.fn().mockResolvedValue([]),
       hasItem: vi.fn().mockResolvedValue(false),

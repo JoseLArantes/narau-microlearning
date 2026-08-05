@@ -31,7 +31,26 @@ export interface SelectionResult {
 
 export const prismaSubjectSelectionRepository: SubjectSelectionRepository = {
   async loadActiveAreas() {
-    return prisma.area.findMany({ where: { status: "ACTIVE", tenant: { status: "ACTIVE" } }, select: { id: true, tenantId: true } });
+    const areas = await prisma.area.findMany({
+      where: {
+        status: "ACTIVE",
+        tenant: { status: "ACTIVE" },
+        OR: [
+          { level: "AREA" },
+          { level: "TOPIC", parent: { status: "ACTIVE", level: "AREA" } },
+          {
+            level: "SPECIALTY",
+            parent: {
+              status: "ACTIVE",
+              level: "TOPIC",
+              parent: { status: "ACTIVE", level: "AREA" },
+            },
+          },
+        ],
+      },
+      select: { id: true, tenantId: true },
+    });
+    return areas;
   },
 
   async loadCandidates(areaId, tenantId, contentDate) {

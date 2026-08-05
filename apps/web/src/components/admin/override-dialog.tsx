@@ -24,7 +24,7 @@ export function OverrideDialog({
 }: {
   contentDate: Date;
   areaId: string;
-  areas: Array<{ id: string; name: string; status: "ACTIVE" | "DISABLED" }>;
+  areas: Array<{ id: string; name: string; status: "DRAFT" | "ACTIVE" | "DISABLED" }>;
   currentTitle: string | null;
   onError: (message: string | null) => void;
 }): React.ReactElement {

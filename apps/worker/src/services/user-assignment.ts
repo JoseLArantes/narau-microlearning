@@ -1,8 +1,8 @@
-import { prisma } from "@narau/database";
+import { chooseDailyCard, prisma } from "@narau/database";
 
 export interface AssignableArea {
   id: string;
-  preferenceWeight: number;
+  rootAreaId: string;
 }
 
 export interface AssignableUser {
@@ -17,6 +17,7 @@ export interface PublishedDailySubject {
   areaId: string;
   subjectId: string;
   tenantId: string;
+  rootAreaId: string;
 }
 
 export interface CreateItemInput {
@@ -37,6 +38,49 @@ export interface UserAssignmentRepository {
   createItem(input: CreateItemInput): Promise<unknown>;
 }
 
+type AreaTreeRecord = {
+  id: string;
+  tenantId: string;
+  status: "DRAFT" | "ACTIVE" | "DISABLED";
+  level: "AREA" | "TOPIC" | "SPECIALTY";
+  parentId: string | null;
+  parent: {
+    id: string;
+    status: "DRAFT" | "ACTIVE" | "DISABLED";
+    level: "AREA" | "TOPIC" | "SPECIALTY";
+    parent: { id: string; status: "DRAFT" | "ACTIVE" | "DISABLED"; level: "AREA" | "TOPIC" | "SPECIALTY" } | null;
+  } | null;
+};
+
+const areaTreeSelect = {
+  id: true,
+  tenantId: true,
+  status: true,
+  level: true,
+  parentId: true,
+  parent: {
+    select: {
+      id: true,
+      status: true,
+      level: true,
+      parent: { select: { id: true, status: true, level: true } },
+    },
+  },
+} as const;
+
+function isEffectivelyActive(area: AreaTreeRecord): boolean {
+  if (area.status !== "ACTIVE") return false;
+  if (area.level === "AREA") return true;
+  if (!area.parent || area.parent.status !== "ACTIVE") return false;
+  return area.level !== "SPECIALTY" || Boolean(area.parent.parent && area.parent.parent.status === "ACTIVE");
+}
+
+function rootAreaId(area: AreaTreeRecord): string {
+  if (area.level === "AREA") return area.id;
+  if (area.level === "TOPIC") return area.parent?.id ?? area.id;
+  return area.parent?.parent?.id ?? area.parent?.id ?? area.id;
+}
+
 export interface AssignmentResult {
   assigned: number;
   skipped: number;
@@ -49,7 +93,7 @@ export const prismaUserAssignmentRepository: UserAssignmentRepository = {
       where: {
         status: "ACTIVE",
         tenant: { status: "ACTIVE" },
-        userAreas: { some: { area: { status: "ACTIVE" } } },
+      userAreas: { some: { area: { status: "ACTIVE" } } },
       },
       select: {
         id: true,
@@ -57,21 +101,20 @@ export const prismaUserAssignmentRepository: UserAssignmentRepository = {
         timezone: true,
         userAreas: {
           where: { area: { status: "ACTIVE" } },
-          select: { areaId: true, preferenceWeight: true, area: { select: { tenantId: true } } },
+          select: { areaId: true, area: { select: areaTreeSelect } },
         },
       },
     });
-    return users.map((user) => ({
-      id: user.id,
-      tenantId: user.tenantId,
-      timezone: user.timezone,
-      areas: user.userAreas
-        .filter((ua) => ua.area.tenantId === user.tenantId)
-        .map((userArea) => ({
-          id: userArea.areaId,
-          preferenceWeight: userArea.preferenceWeight,
-        })),
-    }));
+    return users
+      .map((user) => ({
+        id: user.id,
+        tenantId: user.tenantId,
+        timezone: user.timezone,
+        areas: user.userAreas
+          .filter((userArea) => userArea.area.tenantId === user.tenantId && isEffectivelyActive(userArea.area))
+          .map((userArea) => ({ id: userArea.areaId, rootAreaId: rootAreaId(userArea.area) })),
+      }))
+      .filter((user) => user.areas.length > 0);
   },
 
   loadPublishedDailySubjects(areaIds, contentDate): Promise<PublishedDailySubject[]> {
@@ -82,14 +125,17 @@ export const prismaUserAssignmentRepository: UserAssignmentRepository = {
         status: "PUBLISHED",
         subject: { status: "ACTIVE" },
       },
-      select: { id: true, areaId: true, subjectId: true, area: { select: { tenantId: true } } },
+      select: { id: true, areaId: true, subjectId: true, area: { select: areaTreeSelect } },
     }).then((items) =>
-      items.map((item) => ({
-        id: item.id,
-        areaId: item.areaId,
-        subjectId: item.subjectId,
-        tenantId: item.area.tenantId,
-      })),
+      items
+        .filter((item) => isEffectivelyActive(item.area))
+        .map((item) => ({
+          id: item.id,
+          areaId: item.areaId,
+          subjectId: item.subjectId,
+          tenantId: item.area.tenantId,
+          rootAreaId: rootAreaId(item.area),
+        })),
     );
   },
 
@@ -158,10 +204,16 @@ export async function assignUserItems(date: Date, repo: UserAssignmentRepository
         user.areas.map((area) => area.id),
         date,
       );
-      const candidates = dailySubjects.filter((subject) => !learned.has(subject.subjectId));
-      if (candidates.length === 0) continue;
-
-      const pick = candidates[Math.floor(Math.random() * candidates.length)];
+      const pick = chooseDailyCard({
+        selections: user.areas.map((area) => ({ nodeId: area.id, rootAreaId: area.rootAreaId })),
+        cards: dailySubjects.map((subject) => ({
+          nodeId: subject.areaId,
+          rootAreaId: subject.rootAreaId,
+          subjectId: subject.subjectId,
+          dailyAreaSubjectId: subject.id,
+        })),
+        learnedSubjectIds: learned,
+      });
       if (!pick) continue;
 
       await repo.createItem({
@@ -169,9 +221,9 @@ export async function assignUserItems(date: Date, repo: UserAssignmentRepository
         userId: user.id,
         contentDate: date,
         userLocalDate: localDateForTimezone(date, user.timezone),
-        areaId: pick.areaId,
+        areaId: pick.nodeId,
         subjectId: pick.subjectId,
-        dailyAreaSubjectId: pick.id,
+        dailyAreaSubjectId: pick.dailyAreaSubjectId,
       });
       result.assigned += 1;
     } catch (error) {

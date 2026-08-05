@@ -1,15 +1,31 @@
 export {
   areaSourceConfigSchema,
   areaSlugSchema,
+  areaLevelSchema,
   areaStatusSchema,
+  areaSlugSegment,
+  getChildAreaSlugPrefix,
+  buildHierarchicalAreaSlug,
+  hasHierarchicalAreaSlug,
+  normalizeWikipediaCategoryTitle,
+  buildWikipediaCategorySuggestions,
   createAreaSchema,
+  createAreaNodeSchema,
   updateAreaSchema,
-  onboardingAreasSchema,
+  updateAreaNodeSchema,
+  learningInterestSelectionSchema,
 } from "./area";
-export type { AreaSourceConfig, CreateAreaInput, UpdateAreaInput, OnboardingAreasInput } from "./area";
+export type {
+  AreaSourceConfig,
+  CreateAreaInput,
+  UpdateAreaInput,
+  CreateAreaNodeInput,
+  UpdateAreaNodeInput,
+  LearningInterestSelectionInput,
+} from "./area";
 
-export { createUserSchema, assignUserAreasSchema, roleSchema, userStatusSchema } from "./user";
-export type { CreateUserInput, AssignUserAreasInput } from "./user";
+export { createUserSchema, assignLearningInterestsSchema, roleSchema, userStatusSchema } from "./user";
+export type { CreateUserInput, AssignLearningInterestsInput } from "./user";
 
 export { ratingSchema } from "./today";
 export type { RatingInput } from "./today";

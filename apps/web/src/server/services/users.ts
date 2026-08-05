@@ -10,14 +10,17 @@ export interface AdminCreateUserInput {
 }
 
 export type AdminUserRow = Prisma.UserGetPayload<{
-  include: { userAreas: { include: { area: true } }; _count: { select: { userAreas: true } } };
+  include: { userAreas: { include: { area: { include: { parent: { include: { parent: true } } } } } }; _count: { select: { userAreas: true } } };
 }>;
 
 export async function listUsers(tenantId: string): Promise<AdminUserRow[]> {
   return prisma.user.findMany({
     where: { tenantId },
     orderBy: { createdAt: "desc" },
-    include: { userAreas: { include: { area: true } }, _count: { select: { userAreas: true } } },
+    include: {
+      userAreas: { include: { area: { include: { parent: { include: { parent: true } } } } } },
+      _count: { select: { userAreas: true } },
+    },
   });
 }
 
@@ -53,9 +56,9 @@ export async function updateUser(
 export async function assignAreas(
   userId: string,
   tenantId: string,
-  areaIds: string[],
+  selectedNodeIds: string[],
   assignedBy?: string,
 ): Promise<Awaited<ReturnType<typeof listUsers>>> {
-  await setUserAreas(userId, tenantId, areaIds, assignedBy);
+  await setUserAreas(userId, tenantId, selectedNodeIds, assignedBy);
   return listUsers(tenantId);
 }

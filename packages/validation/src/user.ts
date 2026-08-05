@@ -12,9 +12,9 @@ export const createUserSchema = z.object({
 
 export type CreateUserInput = z.infer<typeof createUserSchema>;
 
-export const assignUserAreasSchema = z.object({
+export const assignLearningInterestsSchema = z.object({
   userId: z.string().min(1),
-  areaIds: z.array(z.string().min(1)).min(1),
+  selectedNodeIds: z.array(z.string().min(1)).min(1).max(100),
 });
 
-export type AssignUserAreasInput = z.infer<typeof assignUserAreasSchema>;
+export type AssignLearningInterestsInput = z.infer<typeof assignLearningInterestsSchema>;

@@ -1,5 +1,7 @@
 export { prisma } from "./client";
 export type { Prisma } from "@prisma/client";
+export { chooseDailyCard } from "./learning-selection";
+export type { DailyCardOption, SelectedLearningNode } from "./learning-selection";
 
 export type {
   Tenant,
@@ -20,6 +22,7 @@ export {
   TenantStatus,
   UserStatus,
   AreaStatus,
+  AreaLevel,
   SubjectSource,
   SubjectStatus,
   CandidateStatus,

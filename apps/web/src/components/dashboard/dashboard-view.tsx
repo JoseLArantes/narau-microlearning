@@ -11,6 +11,7 @@ interface HistoryEntry {
   id: string;
   title: string;
   areaName?: string;
+  breadcrumb?: string;
   learnedAt: Date | null;
   rating?: number | null;
 }
@@ -88,7 +89,8 @@ export function DashboardView({ history }: { history: DashboardHistory }): React
                         href={cardHref(entry.id)}
                         className="min-w-0 truncate font-serif text-[0.98rem] underline-offset-4 hover:underline"
                       >
-                        {entry.title}
+                        <span className="block">{entry.title}</span>
+                        {entry.breadcrumb ? <span className="mt-0.5 block text-xs text-muted-foreground">{entry.breadcrumb}</span> : null}
                       </Link>
                       <span className="mono-meta shrink-0 text-muted-foreground">
                         {entry.rating ? `★ ${entry.rating}/5 · ` : ""}
@@ -124,7 +126,7 @@ export function DashboardView({ history }: { history: DashboardHistory }): React
                           {entry.title}
                         </p>
                         <p className="mono-meta mt-0.5 text-muted-foreground">
-                          {entry.areaName}
+                          {entry.breadcrumb ?? entry.areaName}
                           {entry.learnedAt ? ` · ${learnedDate(entry.learnedAt)}` : ""}
                         </p>
                       </div>
@@ -155,6 +157,7 @@ export function DashboardView({ history }: { history: DashboardHistory }): React
                         className="min-w-0 truncate font-serif text-[0.98rem] underline-offset-4 hover:underline"
                       >
                         {entry.title}
+                        {entry.breadcrumb ? <span className="mt-0.5 block text-xs text-muted-foreground">{entry.breadcrumb}</span> : null}
                       </Link>
                       <span className="mono-meta shrink-0 text-muted-foreground">
                         {entry.rating ? `★ ${entry.rating}/5 · ` : ""}
