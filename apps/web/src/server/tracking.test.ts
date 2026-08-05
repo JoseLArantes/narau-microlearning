@@ -22,16 +22,16 @@ describe("track", () => {
   });
 
   it("persists analytics events for an existing user", async () => {
-    mocks.userFindUnique.mockResolvedValue({ id: "user-id" });
+    mocks.userFindUnique.mockResolvedValue({ id: "user-id", tenantId: "tenant-id" });
 
     await track("user-id", "DASHBOARD_VIEWED", { source: "test" });
 
     expect(mocks.userFindUnique).toHaveBeenCalledWith({
       where: { id: "user-id" },
-      select: { id: true },
+      select: { id: true, tenantId: true },
     });
     expect(mocks.analyticsEventCreate).toHaveBeenCalledWith({
-      data: { userId: "user-id", name: "DASHBOARD_VIEWED", payload: { source: "test" } },
+      data: { userId: "user-id", tenantId: "tenant-id", name: "DASHBOARD_VIEWED", payload: { source: "test" } },
     });
   });
 

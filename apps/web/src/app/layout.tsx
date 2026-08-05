@@ -2,6 +2,7 @@ import { Courier_Prime, Literata } from "next/font/google";
 import type { Metadata } from "next";
 import type { ReactElement, ReactNode } from "react";
 import { Providers } from "@/components/providers";
+import { getRequestTenant, listTenants } from "@/server/tenant";
 import "./globals.css";
 
 const literata = Literata({
@@ -32,7 +33,8 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: ReactNode }): ReactElement {
+export default async function RootLayout({ children }: { children: ReactNode }): Promise<ReactElement> {
+  const [initialTenant, tenants] = await Promise.all([getRequestTenant(), listTenants()]);
   return (
     <html lang="en" className={`${literata.variable} ${courierPrime.variable}`}>
       <body className="min-h-dvh font-sans">
@@ -44,7 +46,7 @@ FIRST VIEWPORT: One large manila card on the desk, a guide tab at its top edge n
 FORM: Library card catalog, candidate 4 of the grounded list, seed 27783a62.
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and docs/DESIGN.md
 */}
-        <Providers>{children}</Providers>
+        <Providers initialTenant={initialTenant} tenants={tenants}>{children}</Providers>
       </body>
     </html>
   );

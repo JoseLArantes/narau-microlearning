@@ -48,6 +48,14 @@ docker compose -f docker/docker-compose.yml ps
 docker compose -f docker/docker-compose.yml logs -f web
 ```
 
+### Tenants and language routes
+
+Each tenant is a language-specific content boundary. Its unique slug is also its public route, so a tenant such as `pt-br` is served at `/pt-br`, `/pt-br/today`, and `/pt-br/admin`. The route is resolved from the database; adding a tenant does not require adding a code constant or changing the router.
+
+Administrators manage tenants at `/en/admin/tenants` (or the equivalent route for the current tenant). Open a tenant's content from that page to work inside its isolated catalog. Areas, subjects, candidates, daily selections, assignments, reports, and learning history are tenant-scoped at both the application and database boundaries.
+
+The ingestion, selection, assignment, and reminder workers are shared. They iterate over active tenants and use each tenant's language tag for its Wikipedia source. Regional tags such as `pt-br` map to the `pt` Wikipedia project while remaining a distinct tenant route.
+
 The equivalent shortcuts are:
 
 ```bash
@@ -76,7 +84,13 @@ bun run worker:dev
 
 ## Worker jobs
 
-Each job can be run once from the repository root:
+The one-off job commands run the compiled worker entry point. For local development, build the worker first:
+
+```bash
+bun run worker:build
+```
+
+Each job can then be run once from the repository root:
 
 ```bash
 bun run job:ingest   # ingest Wikipedia candidates for each area
@@ -84,6 +98,14 @@ bun run job:select   # select one subject per area for today
 bun run job:assign   # assign today's item to each user
 bun run job:remind   # send reminders for unread items
 ```
+
+When using the Docker Compose stack, run the same jobs inside the running application container:
+
+```bash
+docker compose -f docker/docker-compose.yml exec web bun run job:ingest
+```
+
+Ingestion processes every active tenant and area. Run selection and assignment afterward when you want the newly ingested content to appear in users' daily cards.
 
 ## Quality checks
 

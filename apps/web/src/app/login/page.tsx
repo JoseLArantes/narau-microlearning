@@ -6,9 +6,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { Logo } from "@/components/layout/logo";
+import { useI18n } from "@/components/i18n-context";
+import { tenantPath } from "@/server/tenant-routing";
 
 export default function LoginPage(): React.ReactElement {
   const router = useRouter();
+  const { tenant } = useI18n();
   const { status } = useSession();
   const [email, setEmail] = React.useState("");
   const [sent, setSent] = React.useState(false);
@@ -17,7 +20,7 @@ export default function LoginPage(): React.ReactElement {
 
   React.useEffect(() => {
     if (status === "authenticated") {
-      router.replace("/today");
+      router.replace(tenantPath(tenant.slug, "/today"));
     }
   }, [status, router]);
 
@@ -29,7 +32,12 @@ export default function LoginPage(): React.ReactElement {
     event.preventDefault();
     setPending(true);
     setError(null);
-    const result = await signIn("email", { email, redirect: false });
+    document.cookie = `narau_tenant=${tenant.slug}; Path=/; Max-Age=31536000; SameSite=Lax`;
+    const result = await signIn("email", {
+      email,
+      redirect: false,
+      callbackUrl: tenantPath(tenant.slug, "/today"),
+    });
     setPending(false);
     if (result?.error) {
       setError("Could not send the sign-in link. Check the address and try again.");
@@ -117,7 +125,7 @@ export default function LoginPage(): React.ReactElement {
         </p>
       </div>
       <p className="mt-6 text-center">
-        <Link href="/" className="mono-meta text-muted-foreground underline underline-offset-4 hover:text-foreground">
+        <Link href={tenantPath(tenant.slug, "/")} className="mono-meta text-muted-foreground underline underline-offset-4 hover:text-foreground">
           Back to the reading room
         </Link>
       </p>

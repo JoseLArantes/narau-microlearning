@@ -1,10 +1,11 @@
 import Link from "next/link";
 import type { ReactElement } from "react";
-import { requireAdmin } from "@/server/guards";
+import { requireTenantAdmin } from "@/server/guards";
 import { listAllAreas } from "@/server/services/areas";
 import { listCandidates } from "@/server/services/admin";
 import { CandidatesTable, type CandidateRow } from "@/components/admin/candidates-table";
 import { parseUtcDate } from "@/lib/date";
+import { tenantPath } from "@/server/tenant-routing";
 
 export const metadata = { title: "Candidates" };
 
@@ -13,12 +14,12 @@ export default async function AdminCandidatesPage({
 }: {
   searchParams: Promise<{ area?: string; date?: string }>;
 }): Promise<ReactElement> {
-  await requireAdmin();
+  const { tenant } = await requireTenantAdmin();
   const params = await searchParams;
   const contentDate = parseUtcDate(params.date ?? new Date().toISOString());
-  const areas = await listAllAreas();
+  const areas = await listAllAreas(tenant.id);
   const area = params.area ? areas.find((entry) => entry.slug === params.area) : areas[0];
-  const candidates = area ? await listCandidates(area.id, contentDate) : [];
+  const candidates = area ? await listCandidates(tenant.id, area.id, contentDate) : [];
 
   const rows: CandidateRow[] = candidates.map((candidate) => ({
     id: candidate.id,
@@ -47,7 +48,7 @@ export default async function AdminCandidatesPage({
           return (
             <Link
               key={entry.id}
-              href={`/admin/candidates?area=${entry.slug}`}
+              href={`${tenantPath(tenant.slug, "/admin/candidates")}?area=${entry.slug}`}
               className={
                 isActive
                   ? "inline-flex items-center rounded-[3px] border border-[hsl(var(--primary))] bg-primary px-3 py-1.5 font-mono text-[0.65rem] font-bold uppercase tracking-[0.14em] text-primary-foreground"

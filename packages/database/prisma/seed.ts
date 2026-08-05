@@ -36,13 +36,14 @@ async function main(): Promise<void> {
   for (const tenant of TENANTS) {
     await prisma.tenant.upsert({
       where: { id: tenant.id },
-      update: { name: tenant.name, language: tenant.language, isDefault: tenant.isDefault },
+      update: { slug: tenant.slug, name: tenant.name, language: tenant.language, isDefault: tenant.isDefault, status: "ACTIVE" },
       create: {
         id: tenant.id,
         slug: tenant.slug,
         name: tenant.name,
         language: tenant.language,
         isDefault: tenant.isDefault,
+        status: "ACTIVE",
       },
     });
   }
@@ -106,7 +107,7 @@ async function main(): Promise<void> {
           await prisma.userArea.upsert({
             where: { userId_areaId: { userId, areaId: area.id } },
             update: {},
-            create: { userId, areaId: area.id, assignedBy: "seed" },
+            create: { userId, tenantId, areaId: area.id, assignedBy: "seed" },
           });
         }
       }

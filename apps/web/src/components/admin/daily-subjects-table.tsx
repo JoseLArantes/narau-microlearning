@@ -3,6 +3,8 @@
 import { Badge, Button, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@narau/ui";
 import { useState } from "react";
 import { OverrideDialog } from "./override-dialog";
+import { useI18n } from "../i18n-context";
+import { tenantPath } from "@/server/tenant-routing";
 
 export interface DailySubjectRow {
   areaId: string;
@@ -24,6 +26,7 @@ export function DailySubjectsTable({
 }): React.ReactElement {
   const [date, setDate] = useState(contentDate.toISOString().slice(0, 10));
   const [error, setError] = useState<string | null>(null);
+  const { tenant } = useI18n();
 
   return (
     <div className="space-y-4">
@@ -31,7 +34,7 @@ export function DailySubjectsTable({
         className="flex items-end gap-3"
         onSubmit={(event) => {
           event.preventDefault();
-          window.location.href = `/admin/subjects?date=${encodeURIComponent(date)}`;
+          window.location.href = `${tenantPath(tenant.slug, "/admin/subjects")}?date=${encodeURIComponent(date)}`;
         }}
       >
         <label className="block space-y-2">

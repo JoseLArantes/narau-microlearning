@@ -5,23 +5,25 @@ export type AdminAreaRow = Prisma.AreaGetPayload<{
   include: { _count: { select: { userAreas: true; candidates: true } } };
 }>;
 
-export async function listActiveAreas(tenantId = "en"): Promise<Prisma.AreaGetPayload<Record<string, never>>[]> {
+export async function listActiveAreas(tenantId: string): Promise<Prisma.AreaGetPayload<Record<string, never>>[]> {
   return prisma.area.findMany({
-    where: { status: "ACTIVE", tenantId },
+    where: { status: "ACTIVE", tenantId, tenant: { status: "ACTIVE" } },
     orderBy: { displayOrder: "asc" },
   });
 }
 
-export async function listAllAreas(): Promise<AdminAreaRow[]> {
+export async function listAllAreas(tenantId: string): Promise<AdminAreaRow[]> {
   return prisma.area.findMany({
+    where: { tenantId },
     orderBy: { displayOrder: "asc" },
     include: { _count: { select: { userAreas: true, candidates: true } } },
   });
 }
 
-export async function createArea(input: CreateAreaInput): Promise<Awaited<ReturnType<typeof prisma.area.create>>> {
+export async function createArea(tenantId: string, input: CreateAreaInput): Promise<Awaited<ReturnType<typeof prisma.area.create>>> {
   return prisma.area.create({
     data: {
+      tenantId,
       name: input.name,
       slug: input.slug,
       description: input.description,
@@ -33,7 +35,9 @@ export async function createArea(input: CreateAreaInput): Promise<Awaited<Return
   });
 }
 
-export async function updateArea(id: string, input: UpdateAreaInput): Promise<Awaited<ReturnType<typeof prisma.area.update>>> {
+export async function updateArea(id: string, tenantId: string, input: UpdateAreaInput): Promise<Awaited<ReturnType<typeof prisma.area.update>>> {
+  const existing = await prisma.area.findFirst({ where: { id, tenantId }, select: { id: true } });
+  if (!existing) throw new Error("Area not found in the current tenant.");
   return prisma.area.update({
     where: { id },
     data: {
@@ -49,6 +53,8 @@ export async function updateArea(id: string, input: UpdateAreaInput): Promise<Aw
   });
 }
 
-export async function disableArea(id: string): Promise<Awaited<ReturnType<typeof prisma.area.update>>> {
+export async function disableArea(id: string, tenantId: string): Promise<Awaited<ReturnType<typeof prisma.area.update>>> {
+  const existing = await prisma.area.findFirst({ where: { id, tenantId }, select: { id: true } });
+  if (!existing) throw new Error("Area not found in the current tenant.");
   return prisma.area.update({ where: { id }, data: { status: "DISABLED" } });
 }

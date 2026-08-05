@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { getTranslation, translate, SUPPORTED_LOCALES, DEFAULT_LOCALE } from "./i18n";
+import { getTranslation, translate, DICTIONARY_LOCALES, DEFAULT_LOCALE } from "./i18n";
 
 describe("i18n translation system", () => {
   it("defines base supported locales including en (default), es, and pt", () => {
-    expect(SUPPORTED_LOCALES).toContain("en");
-    expect(SUPPORTED_LOCALES).toContain("es");
-    expect(SUPPORTED_LOCALES).toContain("pt");
+    expect(DICTIONARY_LOCALES).toContain("en");
+    expect(DICTIONARY_LOCALES).toContain("es");
+    expect(DICTIONARY_LOCALES).toContain("pt");
     expect(DEFAULT_LOCALE).toBe("en");
   });
 

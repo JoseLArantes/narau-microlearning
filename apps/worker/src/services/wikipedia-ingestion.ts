@@ -5,6 +5,7 @@ import { createWikipediaClient, type WikipediaClient } from "@narau/wikipedia-cl
 import { env } from "../lib/env";
 import { storeImage } from "../lib/storage";
 import { isDisambiguationLike, isListLike, scoreCandidate } from "./candidate-scoring";
+import { wikipediaLanguageCode } from "./language";
 
 export interface IngestionResult {
   areas: number;
@@ -41,7 +42,7 @@ export async function ingestAreaCandidates(
 ): Promise<IngestionResult> {
   const result: IngestionResult = { areas: 0, candidatesCreated: 0, errors: [] };
   const since = new Date(date.getTime() - USED_WINDOW_DAYS * DAY_MS);
-  const areas = await prisma.area.findMany({ where: { status: "ACTIVE" }, include: { tenant: true } });
+  const areas = await prisma.area.findMany({ where: { status: "ACTIVE", tenant: { status: "ACTIVE" } }, include: { tenant: true } });
   result.areas = areas.length;
 
   for (const area of areas) {
@@ -52,10 +53,11 @@ export async function ingestAreaCandidates(
         continue;
       }
 
-      const tenantLang = area.tenant?.language ?? area.tenantId ?? "en";
+      const tenantLanguage = area.tenant.language;
+      const wikipediaLanguage = wikipediaLanguageCode(tenantLanguage);
       const areaClient = clientFactory
-        ? clientFactory(tenantLang)
-        : createWikipediaClient({ userAgent: env.WIKIPEDIA_USER_AGENT, language: tenantLang });
+        ? clientFactory(wikipediaLanguage)
+        : createWikipediaClient({ userAgent: env.WIKIPEDIA_USER_AGENT, language: wikipediaLanguage });
 
       const members = await areaClient.getPagesFromCategories(config.data.categories, {
         includeSubcategories: config.data.includeSubcategories,
@@ -90,13 +92,14 @@ export async function ingestAreaCandidates(
           imageUrl: page.thumbnailUrl,
         });
         const contentHash = createContentHash({ title: normalized.title, summary: normalized.summary });
-        const canonicalUrl = `https://${tenantLang}.wikipedia.org/wiki/${page.title.replace(/ /g, "_")}`;
+        const canonicalUrl = `https://${wikipediaLanguage}.wikipedia.org/wiki/${page.title.replace(/ /g, "_")}`;
 
         let imageUrl = page.thumbnailUrl;
         const score = scoreCandidate({ ...features, hasImage: Boolean(imageUrl) });
         const subject = await prisma.subject.upsert({
           where: { canonicalUrl_tenantId: { canonicalUrl, tenantId: area.tenantId } },
           update: {
+            language: tenantLanguage,
             summary: normalized.summary,
             hook: normalized.hook,
             imageUrl,
@@ -106,7 +109,7 @@ export async function ingestAreaCandidates(
           },
           create: {
             tenantId: area.tenantId,
-            language: tenantLang,
+            language: tenantLanguage,
             source: "WIKIPEDIA",
             sourcePageId: String(page.pageId),
             title: normalized.title,
@@ -137,14 +140,16 @@ export async function ingestAreaCandidates(
 
         const candidate = await prisma.areaSubjectCandidate.upsert({
           where: {
-            areaId_subjectId_generatedForDate: {
+            areaId_subjectId_generatedForDate_tenantId: {
               areaId: area.id,
               subjectId: subject.id,
               generatedForDate: date,
+              tenantId: area.tenantId,
             },
           },
           update: { candidateScore: score },
           create: {
+            tenantId: area.tenantId,
             areaId: area.id,
             subjectId: subject.id,
             generatedForDate: date,

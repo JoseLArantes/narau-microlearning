@@ -33,9 +33,9 @@ function computeStreak(learnedDates: string[], today: Date): number {
   return streak;
 }
 
-export async function getHistory(userId: string): Promise<DashboardHistory> {
+export async function getHistory(userId: string, tenantId: string): Promise<DashboardHistory> {
   const items = await prisma.userDailyItem.findMany({
-    where: { userId, status: "LEARNED" },
+    where: { userId, tenantId, status: "LEARNED" },
     include: {
       subject: { select: { title: true, canonicalUrl: true } },
       area: { select: { id: true, name: true, slug: true, color: true } },

@@ -1,10 +1,13 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@narau/database";
-import { getEmailFrom } from "@narau/email";
+import { getEmailFrom, renderMagicLinkEmail, sendEmail } from "@narau/email";
+import type { Adapter, AdapterUser } from "@auth/core/adapters";
 import NextAuth from "next-auth";
 import type { NextAuthConfig, Session } from "next-auth";
 import EmailProvider from "next-auth/providers/email";
 import { resolveUserIdFromToken } from "./session";
+import { getRequestTenant } from "./tenant";
+import { attachTenantToAdapterUser } from "./tenant-auth";
 
 function smtpSettings(): { host: string; port: number; auth?: { user: string; pass: string } } {
   return {
@@ -17,13 +20,29 @@ function smtpSettings(): { host: string; port: number; auth?: { user: string; pa
   };
 }
 
+const tenantAwareAdapter: Adapter = {
+  ...PrismaAdapter(prisma),
+  async createUser(user: AdapterUser): Promise<AdapterUser> {
+    const tenant = await getRequestTenant();
+    return prisma.user.create({ data: attachTenantToAdapterUser(user, tenant.id) });
+  },
+};
+
 export const authConfig: NextAuthConfig = {
-  adapter: PrismaAdapter(prisma),
+  adapter: tenantAwareAdapter,
   session: { strategy: "jwt" },
   providers: [
     EmailProvider({
       server: smtpSettings(),
       from: getEmailFrom(),
+      async sendVerificationRequest({ identifier, url }) {
+        const html = renderMagicLinkEmail({ email: identifier, url });
+        await sendEmail({
+          to: identifier,
+          subject: "Sign In to Narau",
+          html,
+        });
+      },
     }),
   ],
   pages: {
@@ -38,16 +57,13 @@ export const authConfig: NextAuthConfig = {
         });
         token.id = user.id;
         token.role = dbUser?.role ?? "USER";
-        token.tenantId = dbUser?.tenantId ?? "en";
+        token.tenantId = dbUser?.tenantId;
         const areaCount = await prisma.userArea.count({ where: { userId: user.id } });
         token.hasAreas = areaCount > 0;
       }
       if (trigger === "update" && session) {
         if ("hasAreas" in session && typeof session.hasAreas === "boolean") {
           token.hasAreas = session.hasAreas;
-        }
-        if ("tenantId" in session && typeof session.tenantId === "string") {
-          token.tenantId = session.tenantId;
         }
       }
       return token;
@@ -59,7 +75,7 @@ export const authConfig: NextAuthConfig = {
           session.user.id = userId;
         }
         session.user.role = token.role ?? "USER";
-        session.user.tenantId = token.tenantId ?? "en";
+        session.user.tenantId = token.tenantId;
         session.hasAreas = Boolean(token.hasAreas);
       }
       return session;

@@ -8,6 +8,7 @@ function createRepo(overrides: Partial<UserAssignmentRepository> = {}): UserAssi
     loadActiveUsersWithAreas: vi.fn().mockResolvedValue([
       {
         id: "user-1",
+        tenantId: "tenant-en",
         timezone: "UTC",
         areas: [
           { id: "area-1", preferenceWeight: 1 },
@@ -72,8 +73,8 @@ describe("assignUserItems", () => {
   it("continues when one user fails", async () => {
     const repo = createRepo({
       loadActiveUsersWithAreas: vi.fn().mockResolvedValue([
-        { id: "user-1", timezone: "UTC", areas: [{ id: "area-1", preferenceWeight: 1 }] },
-        { id: "user-2", timezone: "UTC", areas: [{ id: "area-1", preferenceWeight: 1 }] },
+        { id: "user-1", tenantId: "tenant-en", timezone: "UTC", areas: [{ id: "area-1", preferenceWeight: 1 }] },
+        { id: "user-2", tenantId: "tenant-en", timezone: "UTC", areas: [{ id: "area-1", preferenceWeight: 1 }] },
       ]),
       createItem: vi
         .fn()

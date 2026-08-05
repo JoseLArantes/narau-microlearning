@@ -12,13 +12,14 @@ export function track(
       const user = event.userId
         ? await prisma.user.findUnique({
             where: { id: event.userId },
-            select: { id: true },
+            select: { id: true, tenantId: true },
           })
         : null;
 
       await prisma.analyticsEvent.create({
         data: {
           ...(user ? { userId: user.id } : {}),
+          ...(user ? { tenantId: user.tenantId } : {}),
           name: event.name,
           payload: (event.payload ?? undefined) as Prisma.InputJsonValue | undefined,
         },

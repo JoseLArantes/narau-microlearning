@@ -1,7 +1,7 @@
 "use server";
 
 import { createAreaSchema, updateAreaSchema } from "@narau/validation";
-import { requireAdmin } from "@/server/guards";
+import { requireTenantAdmin } from "@/server/guards";
 import { createArea, updateArea, disableArea } from "@/server/services/areas";
 import { audit } from "@/server/services/admin";
 import { track } from "@/server/tracking";
@@ -27,9 +27,9 @@ export async function adminCreateArea(input: {
     if (!parsed.success) {
       return { ok: false, error: "The area data is invalid.", fieldErrors: parsed.error.flatten().fieldErrors };
     }
-    const session = await requireAdmin();
-    const area = await createArea(parsed.data);
-    await audit(session.user.id, "ADMIN_AREA_CREATED", "Area", area.id, { slug: area.slug });
+    const { session, tenant } = await requireTenantAdmin();
+    const area = await createArea(tenant.id, parsed.data);
+    await audit(session.user.id, "ADMIN_AREA_CREATED", "Area", area.id, { slug: area.slug }, tenant.id);
     await track(session.user.id, "ADMIN_AREA_CREATED", { slug: area.slug });
     return { ok: true, data: area };
   } catch (error) {
@@ -61,9 +61,9 @@ export async function adminUpdateArea(
     if (!parsed.success) {
       return { ok: false, error: "The area data is invalid.", fieldErrors: parsed.error.flatten().fieldErrors };
     }
-    const session = await requireAdmin();
-    const area = await updateArea(areaId, parsed.data);
-    await audit(session.user.id, "ADMIN_AREA_UPDATED", "Area", areaId);
+    const { session, tenant } = await requireTenantAdmin();
+    const area = await updateArea(areaId, tenant.id, parsed.data);
+    await audit(session.user.id, "ADMIN_AREA_UPDATED", "Area", areaId, undefined, tenant.id);
     return { ok: true, data: area };
   } catch (error) {
     return errorResult(error);
@@ -72,9 +72,9 @@ export async function adminUpdateArea(
 
 export async function adminDisableArea(areaId: string): Promise<ActionResult> {
   try {
-    const session = await requireAdmin();
-    const area = await disableArea(areaId);
-    await audit(session.user.id, "ADMIN_AREA_DISABLED", "Area", areaId);
+    const { session, tenant } = await requireTenantAdmin();
+    const area = await disableArea(areaId, tenant.id);
+    await audit(session.user.id, "ADMIN_AREA_DISABLED", "Area", areaId, undefined, tenant.id);
     return { ok: true, data: area };
   } catch (error) {
     return errorResult(error);

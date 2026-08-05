@@ -5,6 +5,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as React from "react";
 import { cn } from "@narau/ui";
+import { useI18n } from "../i18n-context";
+import { tenantPath } from "@/server/tenant-routing";
 
 interface MobileNavLink {
   href: string;
@@ -13,6 +15,7 @@ interface MobileNavLink {
 
 export function MobileNav({ isAdmin }: { isAdmin: boolean }): React.ReactElement {
   const pathname = usePathname();
+  const { tenant } = useI18n();
   const [open, setOpen] = React.useState(false);
 
   const links: MobileNavLink[] = [
@@ -63,11 +66,12 @@ export function MobileNav({ isAdmin }: { isAdmin: boolean }): React.ReactElement
             className="absolute right-0 top-11 z-50 w-60 rounded-[calc(var(--radius)+3px)] border border-border bg-card p-1.5 shadow-[0_1px_2px_rgba(48,34,12,0.1),0_16px_36px_-14px_rgba(48,34,12,0.4)]"
           >
             {links.map((link) => {
-              const active = pathname === link.href || pathname.startsWith(`${link.href}/`);
+              const resolvedHref = tenantPath(tenant.slug, link.href);
+              const active = pathname === resolvedHref || pathname.startsWith(`${resolvedHref}/`);
               return (
                 <Link
                   key={link.href}
-                  href={link.href}
+                  href={resolvedHref}
                   role="menuitem"
                   onClick={() => setOpen(false)}
                   className={cn(

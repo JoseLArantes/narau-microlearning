@@ -3,12 +3,14 @@ import type { ReactElement } from "react";
 import { auth } from "@/server/auth";
 import { listActiveAreas } from "@/server/services/areas";
 import { OnboardingForm } from "@/components/forms/onboarding-form";
+import { getRequestTenantPath } from "@/server/tenant";
 
 export default async function OnboardingPage(): Promise<ReactElement> {
   const session = await auth();
-  if (!session?.user?.id) redirect("/login");
+  if (!session?.user?.id) redirect(await getRequestTenantPath("/login"));
 
-  const tenantId = session?.user?.tenantId ?? "en";
+  const tenantId = session.user.tenantId;
+  if (!tenantId) redirect(await getRequestTenantPath("/login"));
   const areas = await listActiveAreas(tenantId);
 
   return (

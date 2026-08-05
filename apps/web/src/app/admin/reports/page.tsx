@@ -1,11 +1,11 @@
 import type { ReactElement } from "react";
-import { requireAdmin } from "@/server/guards";
+import { requireTenantAdmin } from "@/server/guards";
 import { listReports } from "@/server/services/admin";
 import { ReportsTable, type ReportRow } from "@/components/admin/reports-table";
 
 export default async function AdminReportsPage(): Promise<ReactElement> {
-  await requireAdmin();
-  const reports = await listReports();
+  const { tenant } = await requireTenantAdmin();
+  const reports = await listReports(tenant.id);
 
   const rows: ReportRow[] = reports.map((report) => ({
     id: report.id,

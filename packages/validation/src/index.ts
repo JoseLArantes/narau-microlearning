@@ -22,3 +22,12 @@ export type { OverrideDailySubjectInput } from "./admin";
 
 export { appSettingsSchema } from "./admin";
 export type { AppSettingsInput } from "./admin";
+
+export {
+  createTenantSchema,
+  tenantLanguageSchema,
+  tenantNameSchema,
+  tenantSlugSchema,
+  updateTenantSchema,
+} from "./tenant";
+export type { CreateTenantInput, UpdateTenantInput } from "./tenant";

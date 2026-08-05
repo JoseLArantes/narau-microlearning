@@ -8,8 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@narau/ui";
 
 export default async function SettingsPage(): Promise<ReactElement> {
   const session = await requireUser();
-  const areas = await listActiveAreas(session.user.tenantId ?? "en");
-  const userAreas = await getUserAreas(session.user.id);
+  const tenantId = session.user.tenantId;
+  if (!tenantId) throw new Error("User tenant is missing.");
+  const areas = await listActiveAreas(tenantId);
+  const userAreas = await getUserAreas(session.user.id, tenantId);
 
   return (
     <div className="min-h-dvh">

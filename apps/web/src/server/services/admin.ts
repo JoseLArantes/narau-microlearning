@@ -7,10 +7,12 @@ export async function audit(
   entityType: string,
   entityId?: string,
   metadata?: Record<string, unknown>,
+  tenantId?: string,
 ): Promise<void> {
   await prisma.auditLog.create({
     data: {
       actorId,
+      tenantId,
       action,
       entityType,
       entityId,
@@ -19,46 +21,53 @@ export async function audit(
   });
 }
 
-export async function adminOverview(): Promise<{ users: number; areas: number; pendingReports: number; pendingItems: number }> {
+export async function adminOverview(tenantId: string): Promise<{ users: number; areas: number; pendingReports: number; pendingItems: number }> {
   const [users, areas, pendingReports, pendingItems] = await Promise.all([
-    prisma.user.count(),
-    prisma.area.count(),
-    prisma.inaccuracyReport.count({ where: { status: "NEW" } }),
-    prisma.userDailyItem.count({ where: { status: "PENDING" } }),
+    prisma.user.count({ where: { tenantId } }),
+    prisma.area.count({ where: { tenantId } }),
+    prisma.inaccuracyReport.count({ where: { tenantId, status: "NEW" } }),
+    prisma.userDailyItem.count({ where: { tenantId, status: "PENDING" } }),
   ]);
   return { users, areas, pendingReports, pendingItems };
 }
 
 export async function listDailySubjects(
+  tenantId: string,
   contentDate: Date,
 ): Promise<Prisma.DailyAreaSubjectGetPayload<{ include: { area: true; subject: true } }>[]> {
   return prisma.dailyAreaSubject.findMany({
-    where: { contentDate },
+    where: { tenantId, contentDate },
     include: { area: true, subject: true },
     orderBy: { area: { displayOrder: "asc" } },
   });
 }
 
 export async function overrideDailySubject(
-  input: { contentDate: Date; areaId: string; subjectId: string },
+  input: { tenantId: string; contentDate: Date; areaId: string; subjectId: string },
   actorId: string,
 ): Promise<Awaited<ReturnType<typeof prisma.dailyAreaSubject.upsert>>> {
+  const [area, subject] = await Promise.all([
+    prisma.area.findFirst({ where: { id: input.areaId, tenantId: input.tenantId }, select: { id: true } }),
+    prisma.subject.findFirst({ where: { id: input.subjectId, tenantId: input.tenantId, status: "ACTIVE" }, select: { id: true } }),
+  ]);
+  if (!area || !subject) throw new Error("The area and subject must belong to the current tenant.");
   const daily = await prisma.dailyAreaSubject.upsert({
-    where: { contentDate_areaId: { contentDate: input.contentDate, areaId: input.areaId } },
+    where: { contentDate_areaId_tenantId: { contentDate: input.contentDate, areaId: input.areaId, tenantId: input.tenantId } },
     update: { subjectId: input.subjectId, selectedBy: `admin:${actorId}`, status: "PUBLISHED" },
     create: {
       contentDate: input.contentDate,
+      tenantId: input.tenantId,
       areaId: input.areaId,
       subjectId: input.subjectId,
       selectedBy: `admin:${actorId}`,
     },
   });
-  await audit(actorId, "ADMIN_SUBJECT_OVERRIDDEN", "DailyAreaSubject", daily.id, input);
+  await audit(actorId, "ADMIN_SUBJECT_OVERRIDDEN", "DailyAreaSubject", daily.id, input, input.tenantId);
   await track(actorId, "ADMIN_SUBJECT_OVERRIDDEN", { areaId: input.areaId, subjectId: input.subjectId });
   return daily;
 }
 
-export async function listReports(): Promise<
+export async function listReports(tenantId: string): Promise<
   Prisma.InaccuracyReportGetPayload<{
     include: {
       user: { select: { id: true; email: true; name: true } };
@@ -68,7 +77,7 @@ export async function listReports(): Promise<
   }>[]
 > {
   return prisma.inaccuracyReport.findMany({
-    where: { status: { in: ["NEW", "REVIEWING"] } },
+    where: { tenantId, status: { in: ["NEW", "REVIEWING"] } },
     orderBy: { createdAt: "desc" },
     include: {
       user: { select: { id: true, email: true, name: true } },
@@ -81,13 +90,16 @@ export async function listReports(): Promise<
 export async function resolveReport(
   id: string,
   actorId: string,
+  tenantId: string,
   note?: string,
 ): Promise<Awaited<ReturnType<typeof prisma.inaccuracyReport.update>>> {
+  const existing = await prisma.inaccuracyReport.findFirst({ where: { id, tenantId }, select: { id: true } });
+  if (!existing) throw new Error("Report not found in the current tenant.");
   const report = await prisma.inaccuracyReport.update({
-    where: { id },
+    where: { id: existing.id },
     data: { status: "RESOLVED", reviewedBy: actorId, reviewedAt: new Date(), resolutionNote: note },
   });
-  await audit(actorId, "REPORT_RESOLVED", "InaccuracyReport", id, { reportId: id });
+  await audit(actorId, "REPORT_RESOLVED", "InaccuracyReport", id, { reportId: id }, tenantId);
   await track(actorId, "REPORT_RESOLVED", { reportId: id });
   return report;
 }
@@ -95,35 +107,40 @@ export async function resolveReport(
 export async function dismissReport(
   id: string,
   actorId: string,
+  tenantId: string,
 ): Promise<Awaited<ReturnType<typeof prisma.inaccuracyReport.update>>> {
+  const existing = await prisma.inaccuracyReport.findFirst({ where: { id, tenantId }, select: { id: true } });
+  if (!existing) throw new Error("Report not found in the current tenant.");
   const report = await prisma.inaccuracyReport.update({
-    where: { id },
+    where: { id: existing.id },
     data: { status: "DISMISSED", reviewedBy: actorId, reviewedAt: new Date() },
   });
-  await audit(actorId, "REPORT_DISMISSED", "InaccuracyReport", id);
+  await audit(actorId, "REPORT_DISMISSED", "InaccuracyReport", id, undefined, tenantId);
   return report;
 }
 
 export async function hideSubject(
   subjectId: string,
   actorId: string,
+  tenantId: string,
 ): Promise<Awaited<ReturnType<typeof prisma.subject.update>>> {
   const subject = await prisma.subject.update({
-    where: { id: subjectId },
+    where: { id_tenantId: { id: subjectId, tenantId } },
     data: { status: "HIDDEN" },
   });
-  await audit(actorId, "SUBJECT_HIDDEN", "Subject", subjectId);
+  await audit(actorId, "SUBJECT_HIDDEN", "Subject", subjectId, undefined, tenantId);
   return subject;
 }
 
 export async function listCandidates(
+  tenantId: string,
   areaId: string,
   contentDate: Date,
 ): Promise<Prisma.AreaSubjectCandidateGetPayload<{
   include: { subject: { select: { id: true; title: true; canonicalUrl: true; qualityScore: true } } };
 }>[]> {
   return prisma.areaSubjectCandidate.findMany({
-    where: { areaId, generatedForDate: contentDate },
+    where: { tenantId, areaId, generatedForDate: contentDate },
     include: {
       subject: {
         select: { id: true, title: true, canonicalUrl: true, qualityScore: true },
@@ -136,11 +153,14 @@ export async function listCandidates(
 export async function rejectCandidate(
   candidateId: string,
   actorId: string,
+  tenantId: string,
 ): Promise<Awaited<ReturnType<typeof prisma.areaSubjectCandidate.update>>> {
+  const existing = await prisma.areaSubjectCandidate.findFirst({ where: { id: candidateId, tenantId }, select: { id: true } });
+  if (!existing) throw new Error("Candidate not found in the current tenant.");
   const candidate = await prisma.areaSubjectCandidate.update({
-    where: { id: candidateId },
+    where: { id: existing.id },
     data: { status: "REJECTED" },
   });
-  await audit(actorId, "CANDIDATE_REJECTED", "AreaSubjectCandidate", candidateId);
+  await audit(actorId, "CANDIDATE_REJECTED", "AreaSubjectCandidate", candidateId, undefined, tenantId);
   return candidate;
 }

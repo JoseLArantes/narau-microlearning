@@ -7,6 +7,7 @@ export type DailySubjectWithRelations = Prisma.DailyAreaSubjectGetPayload<{
 export async function findPublishedDailySubjects(
   contentDate: Date,
   areaIds?: string[],
+  tenantId?: string,
 ): Promise<DailySubjectWithRelations[]> {
   return prisma.dailyAreaSubject.findMany({
     where: {
@@ -14,6 +15,7 @@ export async function findPublishedDailySubjects(
       status: "PUBLISHED",
       subject: { status: "ACTIVE" },
       ...(areaIds ? { areaId: { in: areaIds } } : {}),
+      ...(tenantId ? { tenantId } : {}),
     },
     include: { subject: true, area: true },
     orderBy: { area: { displayOrder: "asc" } },

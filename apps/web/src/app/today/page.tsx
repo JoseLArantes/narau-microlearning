@@ -6,11 +6,12 @@ import { DailyItem } from "@/components/today/daily-item";
 import { EmptyState } from "@narau/ui";
 import { redirect } from "next/navigation";
 import type { ReactElement } from "react";
+import { getRequestTenantPath } from "@/server/tenant";
 
 export default async function TodayPage(): Promise<ReactElement> {
   const session = await requireUser();
   if (!session.hasAreas) {
-    redirect("/onboarding");
+    redirect(await getRequestTenantPath("/onboarding"));
   }
   const item = await TodayService.getCurrentItem(session.user.id);
   const readingMinutes = await getDefaultReadingMinutes();

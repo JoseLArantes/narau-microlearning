@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { requireAdmin } from "@/server/guards";
+import { requireTenantAdmin } from "@/server/guards";
 import { listAllAreas } from "@/server/services/areas";
 import { listDailySubjects } from "@/server/services/admin";
 import { DailySubjectsTable, type DailySubjectRow } from "@/components/admin/daily-subjects-table";
@@ -12,12 +12,12 @@ export default async function AdminSubjectsPage({
 }: {
   searchParams: Promise<{ date?: string }>;
 }): Promise<ReactElement> {
-  await requireAdmin();
+  const { tenant } = await requireTenantAdmin();
   const params = await searchParams;
   const contentDate = parseUtcDate(params.date ?? new Date().toISOString());
   const [areas, subjects] = await Promise.all([
-    listAllAreas(),
-    listDailySubjects(contentDate),
+    listAllAreas(tenant.id),
+    listDailySubjects(tenant.id, contentDate),
   ]);
 
   const rows: DailySubjectRow[] = subjects.map((daily) => ({

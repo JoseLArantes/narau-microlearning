@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation";
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { selectOnboardingAreas } from "@/server/actions/onboarding";
+import { useI18n } from "@/components/i18n-context";
+import { tenantPath } from "@/server/tenant-routing";
 
 interface AreaOption {
   id: string;
@@ -16,6 +18,7 @@ interface AreaOption {
 
 export function OnboardingForm({ areas }: { areas: AreaOption[] }): React.ReactElement {
   const router = useRouter();
+  const { tenant } = useI18n();
   const { update } = useSession();
   const {
     register,
@@ -37,7 +40,7 @@ export function OnboardingForm({ areas }: { areas: AreaOption[] }): React.ReactE
       return;
     }
     await update({ hasAreas: true });
-    router.push("/today");
+    router.push(tenantPath(tenant.slug, "/today"));
     router.refresh();
   }
 

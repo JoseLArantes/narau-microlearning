@@ -13,10 +13,10 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
-    "job:ingest": "tsx src/cli.ts ingest-area-candidates",
-    "job:select": "tsx src/cli.ts select-daily-subjects",
-    "job:assign": "tsx src/cli.ts assign-user-daily-items",
-    "job:remind": "tsx src/cli.ts send-daily-reminders"
+    "job:ingest": "node dist/cli.js ingest-area-candidates",
+    "job:select": "node dist/cli.js select-daily-subjects",
+    "job:assign": "node dist/cli.js assign-user-daily-items",
+    "job:remind": "node dist/cli.js send-daily-reminders"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.750.0",

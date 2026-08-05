@@ -38,6 +38,7 @@ export const TodayService = {
     const dailySubjects = await findPublishedDailySubjects(
       today,
       userAreas.map((userArea) => userArea.areaId),
+      user.tenantId,
     );
     if (dailySubjects.length === 0) return null;
 
@@ -47,6 +48,7 @@ export const TodayService = {
     try {
       return await prisma.userDailyItem.create({
         data: {
+          tenantId: user.tenantId,
           userId,
           contentDate: today,
           userLocalDate: localDateForTimezone(today, user.timezone),

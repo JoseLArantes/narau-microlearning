@@ -2,23 +2,18 @@ import en from "../../public/locales/en.json";
 import es from "../../public/locales/es.json";
 import pt from "../../public/locales/pt.json";
 
-export const SUPPORTED_LOCALES = ["en", "es", "pt"] as const;
-export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
-export const DEFAULT_LOCALE: SupportedLocale = "en";
+export const DEFAULT_LOCALE = "en";
+export const DICTIONARY_LOCALES = ["en", "es", "pt"] as const;
+export type DictionaryLocale = (typeof DICTIONARY_LOCALES)[number];
 
 export interface TenantInfo {
   id: string;
+  slug: string;
   name: string;
-  language: SupportedLocale;
+  language: string;
 }
 
-export const TENANTS: Record<string, TenantInfo> = {
-  en: { id: "en", name: "English", language: "en" },
-  es: { id: "es", name: "Español", language: "es" },
-  pt: { id: "pt", name: "Português", language: "pt" },
-};
-
-const dictionaries: Record<SupportedLocale, Record<string, unknown>> = {
+const dictionaries: Record<DictionaryLocale, Record<string, unknown>> = {
   en: en as Record<string, unknown>,
   es: es as Record<string, unknown>,
   pt: pt as Record<string, unknown>,
@@ -42,7 +37,9 @@ export function getTranslation(
   key: string,
   fallback?: string,
 ): string {
-  const normalizedLocale = (SUPPORTED_LOCALES.includes(locale as SupportedLocale) ? locale : DEFAULT_LOCALE) as SupportedLocale;
+  const normalizedLocale = (DICTIONARY_LOCALES.includes(locale.toLowerCase() as DictionaryLocale)
+    ? locale.toLowerCase()
+    : DEFAULT_LOCALE) as DictionaryLocale;
   const dict = dictionaries[normalizedLocale] ?? dictionaries[DEFAULT_LOCALE];
   const value = getNestedValue(dict, key);
   if (value !== undefined) return value;

@@ -17,6 +17,7 @@ export type {
 
 export {
   Role,
+  TenantStatus,
   UserStatus,
   AreaStatus,
   SubjectSource,

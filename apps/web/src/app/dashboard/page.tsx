@@ -6,13 +6,16 @@ import { AppHeader } from "@/components/layout/app-header";
 import { DashboardView } from "@/components/dashboard/dashboard-view";
 import { Card } from "@narau/ui";
 import { track } from "@/server/tracking";
+import { getRequestTenantPath } from "@/server/tenant";
 
 export default async function DashboardPage(): Promise<ReactElement> {
   const session = await requireUser();
   if (!session.hasAreas) {
-    redirect("/onboarding");
+    redirect(await getRequestTenantPath("/onboarding"));
   }
-  const history = await getHistory(session.user.id);
+  const tenantId = session.user.tenantId;
+  if (!tenantId) throw new Error("User tenant is missing.");
+  const history = await getHistory(session.user.id, tenantId);
   await track(session.user.id, "DASHBOARD_VIEWED");
 
   return (

@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import * as React from "react";
 import { useState, useTransition } from "react";
 import { adminOverrideDailySubject } from "@/server/actions/admin/daily-subjects";
+import { useI18n } from "../i18n-context";
+import { tenantPath } from "@/server/tenant-routing";
 
 interface SubjectOption {
   id: string;
@@ -31,13 +33,14 @@ export function OverrideDialog({
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const { tenant } = useI18n();
   const area = areas.find((entry) => entry.id === areaId);
 
   const subjects = useQuery({
     queryKey: ["admin-subjects", areaId],
     queryFn: async () => {
       const response = await fetch(
-        `/api/admin/subjects?areaId=${encodeURIComponent(areaId)}&date=${contentDate.toISOString().slice(0, 10)}`,
+        `${tenantPath(tenant.slug, "/api/admin/subjects")}?areaId=${encodeURIComponent(areaId)}&date=${contentDate.toISOString().slice(0, 10)}`,
       );
       if (!response.ok) throw new Error("Failed to load subjects");
       return (await response.json()) as { subjects: SubjectOption[]; currentSubjectId: string | null };

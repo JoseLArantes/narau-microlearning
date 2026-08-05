@@ -13,16 +13,18 @@ export type AdminUserRow = Prisma.UserGetPayload<{
   include: { userAreas: { include: { area: true } }; _count: { select: { userAreas: true } } };
 }>;
 
-export async function listUsers(): Promise<AdminUserRow[]> {
+export async function listUsers(tenantId: string): Promise<AdminUserRow[]> {
   return prisma.user.findMany({
+    where: { tenantId },
     orderBy: { createdAt: "desc" },
     include: { userAreas: { include: { area: true } }, _count: { select: { userAreas: true } } },
   });
 }
 
-export async function createUser(input: AdminCreateUserInput): Promise<Awaited<ReturnType<typeof prisma.user.create>>> {
+export async function createUser(tenantId: string, input: AdminCreateUserInput): Promise<Awaited<ReturnType<typeof prisma.user.create>>> {
   return prisma.user.create({
     data: {
+      tenantId,
       name: input.name,
       email: input.email,
       role: input.role ?? "USER",
@@ -33,8 +35,11 @@ export async function createUser(input: AdminCreateUserInput): Promise<Awaited<R
 
 export async function updateUser(
   id: string,
+  tenantId: string,
   input: { name?: string; role?: Role; status?: UserStatus },
 ): Promise<Awaited<ReturnType<typeof prisma.user.update>>> {
+  const existing = await prisma.user.findFirst({ where: { id, tenantId }, select: { id: true } });
+  if (!existing) throw new Error("User not found in the current tenant.");
   return prisma.user.update({
     where: { id },
     data: {
@@ -47,9 +52,10 @@ export async function updateUser(
 
 export async function assignAreas(
   userId: string,
+  tenantId: string,
   areaIds: string[],
   assignedBy?: string,
 ): Promise<Awaited<ReturnType<typeof listUsers>>> {
-  await setUserAreas(userId, areaIds, assignedBy);
-  return listUsers();
+  await setUserAreas(userId, tenantId, areaIds, assignedBy);
+  return listUsers(tenantId);
 }

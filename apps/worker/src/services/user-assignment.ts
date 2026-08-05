@@ -7,7 +7,7 @@ export interface AssignableArea {
 
 export interface AssignableUser {
   id: string;
-  tenantId?: string;
+  tenantId: string;
   timezone: string;
   areas: AssignableArea[];
 }
@@ -16,10 +16,11 @@ export interface PublishedDailySubject {
   id: string;
   areaId: string;
   subjectId: string;
-  tenantId?: string;
+  tenantId: string;
 }
 
 export interface CreateItemInput {
+  tenantId: string;
   userId: string;
   contentDate: Date;
   userLocalDate: Date;
@@ -47,6 +48,7 @@ export const prismaUserAssignmentRepository: UserAssignmentRepository = {
     const users = await prisma.user.findMany({
       where: {
         status: "ACTIVE",
+        tenant: { status: "ACTIVE" },
         userAreas: { some: { area: { status: "ACTIVE" } } },
       },
       select: {
@@ -163,6 +165,7 @@ export async function assignUserItems(date: Date, repo: UserAssignmentRepository
       if (!pick) continue;
 
       await repo.createItem({
+        tenantId: user.tenantId,
         userId: user.id,
         contentDate: date,
         userLocalDate: localDateForTimezone(date, user.timezone),

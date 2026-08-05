@@ -1,12 +1,13 @@
 import Link from "next/link";
 import type { ReactElement } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@narau/ui";
-import { requireAdmin } from "@/server/guards";
+import { requireTenantAdmin } from "@/server/guards";
 import { adminOverview } from "@/server/services/admin";
+import { tenantPath } from "@/server/tenant-routing";
 
 export default async function AdminPage(): Promise<ReactElement> {
-  await requireAdmin();
-  const overview = await adminOverview();
+  const { tenant } = await requireTenantAdmin();
+  const overview = await adminOverview(tenant.id);
 
   const stats = [
     { label: "Users", value: overview.users, href: "/admin/users" },
@@ -25,7 +26,7 @@ export default async function AdminPage(): Promise<ReactElement> {
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
-          <Link key={stat.label} href={stat.href} className="transition-opacity hover:opacity-80">
+          <Link key={stat.label} href={tenantPath(tenant.slug, stat.href)} className="transition-opacity hover:opacity-80">
             <Card className="px-6 py-6">
               <p className="mono-meta text-muted-foreground">{stat.label.toUpperCase()}</p>
               <p className="mt-3 font-serif text-4xl font-normal tracking-tight">{stat.value}</p>

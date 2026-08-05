@@ -14,16 +14,18 @@ export async function selectOnboardingAreas(areaIds: string[]): Promise<ActionRe
       return { ok: false, error: "Choose at least one area.", fieldErrors: parsed.error.flatten().fieldErrors };
     }
     const session = await requireUser();
+    const tenantId = session.user.tenantId;
+    if (!tenantId) return { ok: false, error: "Your account has no tenant assigned." };
 
     const activeAreas = await prisma.area.findMany({
-      where: { id: { in: parsed.data.areaIds }, status: "ACTIVE" },
+      where: { id: { in: parsed.data.areaIds }, tenantId, status: "ACTIVE" },
       select: { id: true },
     });
     if (activeAreas.length !== parsed.data.areaIds.length) {
       return { ok: false, error: "One of the selected areas is not available." };
     }
 
-    await setUserAreas(session.user.id, parsed.data.areaIds, session.user.id);
+    await setUserAreas(session.user.id, tenantId, parsed.data.areaIds, session.user.id);
     await track(session.user.id, "ONBOARDING_COMPLETED", { areaIds: parsed.data.areaIds });
     return { ok: true, data: undefined };
   } catch (error) {

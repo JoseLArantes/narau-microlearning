@@ -3,6 +3,8 @@ import Link from "next/link";
 import type { ReactElement } from "react";
 import { Button } from "@narau/ui";
 import { Logo } from "@/components/layout/logo";
+import { getRequestTenant } from "@/server/tenant";
+import { tenantPath } from "@/server/tenant-routing";
 
 function LandingCard(): ReactElement {
   return (
@@ -37,7 +39,8 @@ function LandingCard(): ReactElement {
   );
 }
 
-export default function LandingPage(): ReactElement {
+export default async function LandingPage(): Promise<ReactElement> {
+  const tenant = await getRequestTenant();
   return (
     <main className="flex min-h-dvh flex-col">
       <header className="border-b border-border bg-secondary/60">
@@ -49,7 +52,7 @@ export default function LandingPage(): ReactElement {
             </p>
           </div>
           <Button asChild variant="outline" size="sm">
-            <Link href="/login">Sign in</Link>
+            <Link href={tenantPath(tenant.slug, "/login")}>Sign in</Link>
           </Button>
         </div>
       </header>
@@ -67,7 +70,7 @@ export default function LandingPage(): ReactElement {
           </p>
           <div className="mt-10 flex flex-wrap items-center gap-4">
             <Button asChild size="lg">
-              <Link href="/login">
+              <Link href={tenantPath(tenant.slug, "/login")}>
                 Start learning <ArrowRight />
               </Link>
             </Button>

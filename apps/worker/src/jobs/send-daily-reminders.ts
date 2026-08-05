@@ -1,5 +1,5 @@
 import { prisma } from "@narau/database";
-import { sendEmail } from "@narau/email";
+import { renderDailyLearnEmail, sendEmail } from "@narau/email";
 import { JOB_NAMES } from "../lib/queue";
 import { logger } from "../lib/logger";
 
@@ -22,21 +22,45 @@ export const sendDailyRemindersProcessor = async (): Promise<ReminderResult> => 
 
   const items = await prisma.userDailyItem.findMany({
     where: { contentDate: { gte: startOfDay, lt: endOfDay }, status: "PENDING" },
-    include: { subject: { select: { title: true } }, user: { select: { email: true, name: true } } },
+    include: {
+      subject: { select: { title: true, summary: true } },
+      area: { select: { name: true } },
+      user: {
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          userAreas: {
+            where: { area: { status: "ACTIVE" } },
+            select: { area: { select: { name: true } } },
+          },
+        },
+      },
+    },
   });
+
+  const appUrl = process.env.APP_URL ?? "http://localhost:3030";
+  const dateStr = startOfDay.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }).toUpperCase();
 
   const result: ReminderResult = { found: items.length, sent: 0, failed: [] };
   for (const item of items) {
     try {
-      const firstName = item.user.name ?? item.user.email;
+      const userTags = item.user.userAreas.map((ua) => ua.area.name);
+      const html = renderDailyLearnEmail({
+        userName: item.user.name ?? undefined,
+        subjectTitle: item.subject.title,
+        subjectSummary: item.subject.summary ?? undefined,
+        areaName: item.area.name,
+        userTags: userTags.length > 0 ? userTags : [item.area.name],
+        readingMinutes: 5,
+        itemUrl: `${appUrl}/today`,
+        dateStr,
+      });
+
       await sendEmail({
         to: item.user.email,
-        subject: "Your tiny thing for today is ready",
-        html: `
-          <p>Hello ${firstName},</p>
-          <p>Your reading for today is ready: <strong>${item.subject.title}</strong>.</p>
-          <p>It takes only a few minutes. Take a quiet look whenever you have a moment.</p>
-        `,
+        subject: `Today's Card: ${item.subject.title} · Narau`,
+        html,
       });
       result.sent += 1;
     } catch (error) {

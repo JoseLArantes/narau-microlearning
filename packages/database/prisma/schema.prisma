@@ -25,6 +25,11 @@ enum AreaStatus {
   DISABLED
 }
 
+enum TenantStatus {
+  ACTIVE
+  DISABLED
+}
+
 enum SubjectSource {
   WIKIPEDIA
   FALLBACK
@@ -67,18 +72,26 @@ model AppSettings {
 }
 
 model Tenant {
-  id        String   @id // "en", "es", "pt"
+  id        String   @id @default(cuid())
   slug      String   @unique
   name      String
-  language  String   // "en", "es", "pt"
+  language  String
   domain    String?
   isDefault Boolean  @default(false)
+  status    TenantStatus @default(ACTIVE)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users    User[]
-  areas    Area[]
-  subjects Subject[]
+  users                 User[]
+  areas                 Area[]
+  subjects              Subject[]
+  candidates            AreaSubjectCandidate[]
+  dailySubjects         DailyAreaSubject[]
+  userAreas             UserArea[]
+  userDailyItems        UserDailyItem[]
+  inaccuracyReports     InaccuracyReport[]
+  auditLogs             AuditLog[]
+  analyticsEvents       AnalyticsEvent[]
 }
 
 enum ReportReason {
@@ -100,7 +113,7 @@ enum ReportStatus {
 
 model User {
   id            String        @id @default(cuid())
-  tenantId      String        @default("en")
+  tenantId      String
   name          String?
   email         String        @unique
   emailVerified DateTime?
@@ -119,6 +132,8 @@ model User {
   reports         InaccuracyReport[]
   auditLogs       AuditLog[]
   analyticsEvents AnalyticsEvent[]
+
+  @@unique([id, tenantId])
 }
 
 model Account {
@@ -159,7 +174,7 @@ model VerificationToken {
 
 model Area {
   id           String     @id @default(cuid())
-  tenantId     String     @default("en")
+  tenantId     String
   name         String
   slug         String
   description  String?
@@ -179,11 +194,12 @@ model Area {
 
   @@unique([slug, tenantId])
   @@unique([name, tenantId])
+  @@unique([id, tenantId])
 }
 
 model Subject {
   id               String        @id @default(cuid())
-  tenantId         String        @default("en")
+  tenantId         String
   source           SubjectSource @default(WIKIPEDIA)
   sourcePageId     String?
   title            String
@@ -213,12 +229,14 @@ model Subject {
 
   @@unique([canonicalUrl, tenantId])
   @@unique([contentHash, tenantId])
+  @@unique([id, tenantId])
   @@index([source, sourcePageId])
   @@index([status])
 }
 
 model AreaSubjectCandidate {
   id               String          @id @default(cuid())
+  tenantId         String
   areaId           String
   subjectId        String
   generatedForDate DateTime        @db.Date
@@ -226,15 +244,17 @@ model AreaSubjectCandidate {
   status           CandidateStatus @default(CANDIDATE)
   createdAt        DateTime        @default(now())
 
-  area    Area    @relation(fields: [areaId], references: [id], onDelete: Cascade)
-  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  area    Area    @relation(fields: [areaId, tenantId], references: [id, tenantId], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId, tenantId], references: [id, tenantId], onDelete: Cascade)
 
-  @@unique([areaId, subjectId, generatedForDate])
-  @@index([areaId, generatedForDate, status])
+  @@unique([areaId, subjectId, generatedForDate, tenantId])
+  @@index([tenantId, areaId, generatedForDate, status])
 }
 
 model DailyAreaSubject {
   id          String             @id @default(cuid())
+  tenantId    String
   contentDate DateTime           @db.Date
   areaId      String
   subjectId   String
@@ -243,15 +263,18 @@ model DailyAreaSubject {
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
 
-  area           Area            @relation(fields: [areaId], references: [id], onDelete: Cascade)
-  subject        Subject         @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  tenant         Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  area           Area            @relation(fields: [areaId, tenantId], references: [id, tenantId], onDelete: Cascade)
+  subject        Subject         @relation(fields: [subjectId, tenantId], references: [id, tenantId], onDelete: Cascade)
   userDailyItems UserDailyItem[]
 
-  @@unique([contentDate, areaId])
-  @@index([contentDate, status])
+  @@unique([contentDate, areaId, tenantId])
+  @@unique([id, tenantId])
+  @@index([tenantId, contentDate, status])
 }
 
 model UserArea {
+  tenantId         String
   userId           String
   areaId           String
   preferenceWeight Float    @default(1)
@@ -259,14 +282,16 @@ model UserArea {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  area Area @relation(fields: [areaId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId, tenantId], references: [id, tenantId], onDelete: Cascade)
+  area Area @relation(fields: [areaId, tenantId], references: [id, tenantId], onDelete: Cascade)
 
   @@id([userId, areaId])
 }
 
 model UserDailyItem {
   id                 String              @id @default(cuid())
+  tenantId           String
   userId             String
   contentDate        DateTime            @db.Date
   userLocalDate      DateTime            @db.Date
@@ -282,18 +307,21 @@ model UserDailyItem {
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 
-  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  area             Area               @relation(fields: [areaId], references: [id], onDelete: Cascade)
-  subject          Subject            @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  dailyAreaSubject DailyAreaSubject?  @relation(fields: [dailyAreaSubjectId], references: [id], onDelete: SetNull)
+  tenant           Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user             User               @relation(fields: [userId, tenantId], references: [id, tenantId], onDelete: Cascade)
+  area             Area               @relation(fields: [areaId, tenantId], references: [id, tenantId], onDelete: Cascade)
+  subject          Subject            @relation(fields: [subjectId, tenantId], references: [id, tenantId], onDelete: Cascade)
+  dailyAreaSubject DailyAreaSubject?  @relation(fields: [dailyAreaSubjectId, tenantId], references: [id, tenantId], onDelete: Cascade)
   reports          InaccuracyReport[]
 
   @@unique([userId, contentDate])
-  @@index([userId, status, contentDate])
+  @@unique([id, tenantId])
+  @@index([tenantId, userId, status, contentDate])
 }
 
 model InaccuracyReport {
   id              String       @id @default(cuid())
+  tenantId        String
   userId          String?
   userDailyItemId String?
   subjectId       String
@@ -305,15 +333,17 @@ model InaccuracyReport {
   reviewedAt      DateTime?
   resolutionNote  String?
 
-  user          User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
-  userDailyItem UserDailyItem? @relation(fields: [userDailyItemId], references: [id], onDelete: Cascade)
-  subject       Subject        @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  tenant        Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user          User?           @relation(fields: [userId, tenantId], references: [id, tenantId], onDelete: Cascade)
+  userDailyItem UserDailyItem?  @relation(fields: [userDailyItemId, tenantId], references: [id, tenantId], onDelete: Cascade)
+  subject       Subject         @relation(fields: [subjectId, tenantId], references: [id, tenantId], onDelete: Cascade)
 
-  @@index([status, createdAt])
+  @@index([tenantId, status, createdAt])
 }
 
 model AuditLog {
   id         String   @id @default(cuid())
+  tenantId   String?
   actorId    String?
   action     String
   entityType String
@@ -321,16 +351,19 @@ model AuditLog {
   metadata   Json?
   createdAt  DateTime @default(now())
 
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
   actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
 }
 
 model AnalyticsEvent {
   id        String   @id @default(cuid())
+  tenantId  String?
   userId    String?
   name      String
   payload   Json?
   createdAt DateTime @default(now())
 
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([name, createdAt])

@@ -7,11 +7,12 @@ export interface SelectionAreaCandidate {
 }
 
 export interface SubjectSelectionRepository {
-  loadActiveAreas(): Promise<Array<{ id: string }>>;
-  loadCandidates(areaId: string, contentDate: Date): Promise<SelectionAreaCandidate[]>;
-  loadRecentlySelectedSubjectIds(areaId: string, since: Date): Promise<string[]>;
-  findExisting(areaId: string, contentDate: Date): Promise<{ id: string; selectedBy: string | null } | null>;
+  loadActiveAreas(): Promise<Array<{ id: string; tenantId: string }>>;
+  loadCandidates(areaId: string, tenantId: string, contentDate: Date): Promise<SelectionAreaCandidate[]>;
+  loadRecentlySelectedSubjectIds(areaId: string, tenantId: string, since: Date): Promise<string[]>;
+  findExisting(areaId: string, tenantId: string, contentDate: Date): Promise<{ id: string; selectedBy: string | null } | null>;
   upsertDailySubject(input: {
+    tenantId: string;
     contentDate: Date;
     areaId: string;
     subjectId: string;
@@ -30,27 +31,27 @@ export interface SelectionResult {
 
 export const prismaSubjectSelectionRepository: SubjectSelectionRepository = {
   async loadActiveAreas() {
-    return prisma.area.findMany({ where: { status: "ACTIVE" }, select: { id: true } });
+    return prisma.area.findMany({ where: { status: "ACTIVE", tenant: { status: "ACTIVE" } }, select: { id: true, tenantId: true } });
   },
 
-  async loadCandidates(areaId, contentDate) {
+  async loadCandidates(areaId, tenantId, contentDate) {
     return prisma.areaSubjectCandidate.findMany({
-      where: { areaId, generatedForDate: contentDate, status: "CANDIDATE", subject: { status: "ACTIVE" } },
+      where: { areaId, tenantId, generatedForDate: contentDate, status: "CANDIDATE", subject: { status: "ACTIVE" } },
       select: { id: true, subjectId: true, candidateScore: true },
     });
   },
 
-  async loadRecentlySelectedSubjectIds(areaId, since) {
+  async loadRecentlySelectedSubjectIds(areaId, tenantId, since) {
     const items = await prisma.dailyAreaSubject.findMany({
-      where: { areaId, contentDate: { gte: since } },
+      where: { areaId, tenantId, contentDate: { gte: since } },
       select: { subjectId: true },
     });
     return items.map((item) => item.subjectId);
   },
 
-  findExisting(areaId, contentDate) {
+  findExisting(areaId, tenantId, contentDate) {
     return prisma.dailyAreaSubject.findUnique({
-      where: { contentDate_areaId: { contentDate, areaId } },
+      where: { contentDate_areaId_tenantId: { contentDate, areaId, tenantId } },
       select: { id: true, selectedBy: true },
     });
   },
@@ -59,9 +60,10 @@ export const prismaSubjectSelectionRepository: SubjectSelectionRepository = {
     return prisma.dailyAreaSubject.upsert({
       where: input.id
         ? { id: input.id }
-        : { contentDate_areaId: { contentDate: input.contentDate, areaId: input.areaId } },
+        : { contentDate_areaId_tenantId: { contentDate: input.contentDate, areaId: input.areaId, tenantId: input.tenantId } },
       update: { subjectId: input.subjectId, selectedBy: input.selectedBy, status: "PUBLISHED" },
       create: {
+        tenantId: input.tenantId,
         contentDate: input.contentDate,
         areaId: input.areaId,
         subjectId: input.subjectId,
@@ -93,14 +95,14 @@ export async function selectDailySubjects(date: Date, repo: SubjectSelectionRepo
   const since = new Date(date.getTime() - RECENT_WINDOW_DAYS * 24 * 60 * 60 * 1000);
 
   for (const area of areas) {
-    const existing = await repo.findExisting(area.id, date);
+    const existing = await repo.findExisting(area.id, area.tenantId, date);
     if (existing && existing.selectedBy?.startsWith("admin:")) {
       result.skipped.push(area.id);
       continue;
     }
 
-    const recentlyUsed = new Set(await repo.loadRecentlySelectedSubjectIds(area.id, since));
-    const candidates = (await repo.loadCandidates(area.id, date)).filter(
+    const recentlyUsed = new Set(await repo.loadRecentlySelectedSubjectIds(area.id, area.tenantId, since));
+    const candidates = (await repo.loadCandidates(area.id, area.tenantId, date)).filter(
       (candidate) => !recentlyUsed.has(candidate.subjectId),
     );
     if (candidates.length === 0) {
@@ -118,6 +120,7 @@ export async function selectDailySubjects(date: Date, repo: SubjectSelectionRepo
     const winner = shuffled[0] ?? pick;
 
     await repo.upsertDailySubject({
+      tenantId: area.tenantId,
       contentDate: date,
       areaId: area.id,
       subjectId: winner.subjectId,

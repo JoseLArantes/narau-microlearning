@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@narau/database";
-import { auth } from "@/server/auth";
+import { requireTenantAdmin } from "@/server/guards";
+import type { TenantRecord } from "@/server/tenant";
 
 export async function GET(request: Request): Promise<NextResponse> {
-  const session = await auth();
-  if (!session?.user?.id || (session.user.role !== "ADMIN" && session.user.role !== "MODERATOR")) {
+  let tenant: TenantRecord;
+  try {
+    ({ tenant } = await requireTenantAdmin());
+  } catch {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -13,7 +16,7 @@ export async function GET(request: Request): Promise<NextResponse> {
   const contentDate = searchParams.get("date");
 
   const subjects = await prisma.subject.findMany({
-    where: { status: "ACTIVE" },
+    where: { tenantId: tenant.id, status: "ACTIVE" },
     orderBy: { title: "asc" },
     select: { id: true, title: true, canonicalUrl: true },
     take: 500,
@@ -21,7 +24,7 @@ export async function GET(request: Request): Promise<NextResponse> {
 
   const dailyForArea = areaId && contentDate
     ? await prisma.dailyAreaSubject.findUnique({
-        where: { contentDate_areaId: { contentDate: new Date(`${contentDate}T00:00:00.000Z`), areaId } },
+        where: { contentDate_areaId_tenantId: { contentDate: new Date(`${contentDate}T00:00:00.000Z`), areaId, tenantId: tenant.id } },
         select: { subjectId: true },
       })
     : null;
