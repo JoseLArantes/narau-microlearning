@@ -5,6 +5,10 @@ import type { Adapter, AdapterUser } from "@auth/core/adapters";
 import NextAuth from "next-auth";
 import type { NextAuthConfig, Session } from "next-auth";
 import EmailProvider from "next-auth/providers/email";
+import Google from "next-auth/providers/google";
+import Facebook from "next-auth/providers/facebook";
+import Twitter from "next-auth/providers/twitter";
+import LinkedIn from "next-auth/providers/linkedin";
 import { resolveUserIdFromToken } from "./session";
 import { getRequestTenant } from "./tenant";
 import { attachTenantToAdapterUser } from "./tenant-auth";
@@ -43,6 +47,22 @@ export const authConfig: NextAuthConfig = {
           html,
         });
       },
+    }),
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID ?? "dummy-google-id",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "dummy-google-secret",
+    }),
+    Facebook({
+      clientId: process.env.FACEBOOK_CLIENT_ID ?? "dummy-facebook-id",
+      clientSecret: process.env.FACEBOOK_CLIENT_SECRET ?? "dummy-facebook-secret",
+    }),
+    Twitter({
+      clientId: process.env.TWITTER_CLIENT_ID ?? "dummy-twitter-id",
+      clientSecret: process.env.TWITTER_CLIENT_SECRET ?? "dummy-twitter-secret",
+    }),
+    LinkedIn({
+      clientId: process.env.LINKEDIN_CLIENT_ID ?? "dummy-linkedin-id",
+      clientSecret: process.env.LINKEDIN_CLIENT_SECRET ?? "dummy-linkedin-secret",
     }),
   ],
   pages: {
