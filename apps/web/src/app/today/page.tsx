@@ -6,27 +6,31 @@ import { DailyItem } from "@/components/today/daily-item";
 import { EmptyState } from "@narau/ui";
 import { redirect } from "next/navigation";
 import type { ReactElement } from "react";
-import { getRequestTenantPath } from "@/server/tenant";
+import { getRequestTenant } from "@/server/tenant";
+import { tenantPath } from "@/server/tenant-routing";
 
 export default async function TodayPage(): Promise<ReactElement> {
   const session = await requireUser();
+  const tenant = await getRequestTenant();
   if (!session.hasAreas) {
-    redirect(await getRequestTenantPath("/onboarding"));
+    redirect(tenantPath(tenant.slug, "/onboarding"));
   }
-  const item = await TodayService.getCurrentItem(session.user.id);
-  const readingMinutes = await getDefaultReadingMinutes();
+  const [item, readingMinutes] = await Promise.all([
+    TodayService.getCurrentItem(session.user.id),
+    getDefaultReadingMinutes(),
+  ]);
 
   return (
     <div className="min-h-dvh">
       <AppHeader />
-      <main className="mx-auto w-full max-w-3xl px-6 py-12">
+      <main className="mx-auto w-full max-w-3xl px-4 py-12 sm:px-6">
         {!item ? (
           <EmptyState
             title="Nothing in today’s stack"
             description="The daily item for your areas has not been generated yet. The worker usually creates it early in the morning — check back later, or ask an administrator to run the jobs."
           />
         ) : item.status === "SKIPPED" ? (
-          <div className="index-card relative px-6 py-12 text-center sm:px-10">
+          <div className="index-card relative px-5 py-12 text-center sm:px-10">
             <span className="mono-meta text-muted-foreground">CARD SET ASIDE</span>
             <h1 className="mt-3 font-serif text-2xl tracking-tight">You skipped today&apos;s card.</h1>
             <p className="mx-auto mt-3 max-w-md text-muted-foreground">
@@ -35,7 +39,7 @@ export default async function TodayPage(): Promise<ReactElement> {
             </p>
           </div>
         ) : (
-          <DailyItem item={item} readingMinutes={readingMinutes} />
+          <DailyItem item={item} readingMinutes={readingMinutes} locale={tenant.language || "en"} />
         )}
       </main>
     </div>

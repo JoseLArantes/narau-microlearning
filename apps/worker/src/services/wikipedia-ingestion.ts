@@ -89,6 +89,7 @@ export async function ingestAreaCandidates(
         const normalized = normalizeWikipediaContent({
           title: page.title,
           extract: page.extract,
+          locale: tenantLanguage,
           imageUrl: page.thumbnailUrl,
         });
         const contentHash = createContentHash({ title: normalized.title, summary: normalized.summary });

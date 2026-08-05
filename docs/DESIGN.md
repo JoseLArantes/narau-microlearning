@@ -18,13 +18,14 @@ typography:
     lineHeight: 1.08
   body:
     fontFamily: "Literata, Georgia, serif"
-    fontSize: "1.05rem"
-    lineHeight: 1.75
+    fontSize: "1.0625rem mobile / 1.125rem desktop"
+    lineHeight: 1.7
     maxWidth: "66ch"
   label:
     fontFamily: "Courier Prime, Courier New, monospace"
-    fontSize: "0.68rem"
-    letterSpacing: "0.14em"
+    fontSize: "0.75rem"
+    fontWeight: 700
+    letterSpacing: "0.10em"
     textTransform: "uppercase"
 rounded:
   card: "11px"
@@ -112,13 +113,19 @@ An ivory-and-ink paper system with one rare red accent.
 
 ### Hierarchy
 - **Display** (Literata 400, clamp 4xl→5xl, 1.08): The landing hero only.
-- **Headline** (Literata 400, 3xl→4xl, 1.08–1.1): Page titles and the daily card's subject title.
+- **Reader headline** (Literata 400, responsive 28→36px, 1.12, −0.025em): The daily card's subject title, left aligned with balanced wrapping.
 - **Title** (Literata 400, xl–2xl, 1.1): Section titles and card titles.
-- **Body** (Literata 400, 1.05rem, 1.75, max 66ch): The daily reading and long text.
-- **Label** (Courier Prime 700, 0.68rem, 0.14em tracking, uppercase): All metadata — dates, area names, "CARD", "SEE ALSO", stamps, table heads, badge text.
+- **Standfirst** (Literata 400 italic, 1.125rem, 1.55, max 55ch): An optional short editorial hook below a reader headline; shown only when it is concise and never repeated in the body.
+- **Body** (Literata 400, 1.0625rem mobile / 1.125rem desktop, 1.7, max 66ch): The daily reading and long text, left aligned with paragraph spacing and no justification.
+- **Label** (Courier Prime 700, 0.75rem, 0.10em tracking, uppercase): Short catalog metadata — dates, area names, "CARD", "SEE ALSO", reading time, and stamps.
+- **Source caption** (system sans 400, 0.75rem, 1.5): Long image credits and legal/source text where monospaced uppercase would reduce legibility.
 
 ### Named Rules
 **The One Voice Rule.** Typewriter mono is for catalog data and labels only; prose is always the serif. Mono used as decoration on body text is off-brand.
+
+**The Reading Measure Rule.** Running text stays within 66ch on larger screens and uses the card's full available width on small screens. Reading prose is always left aligned with a ragged right edge; text is never fully justified.
+
+**The Standfirst Rule.** A hook may appear in Literata italic below the title only when it is no more than 32 words and 220 characters. When displayed, the same sentence is removed from the body so the reader encounters it once.
 
 ## Layout
 

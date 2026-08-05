@@ -1,6 +1,6 @@
 import { Badge } from "@narau/ui";
 import type { ReactElement } from "react";
-import { fitToReadingTime } from "@/lib/reading-time";
+import { fitToReadingTime, prepareReadingContent } from "@/lib/reading-time";
 import { MarkLearnedButton } from "./mark-learned-button";
 import { MarkViewed } from "./mark-viewed";
 import { RatingDialog } from "./rating-dialog";
@@ -18,16 +18,19 @@ function cardDate(date: Date): string {
 export function DailyItem({
   item,
   readingMinutes,
+  locale,
 }: {
   item: Item;
   readingMinutes: number;
+  locale: string;
 }): ReactElement {
   const isLearned = item.status === "LEARNED";
   const isViewed = item.status === "VIEWED" || isLearned;
-  const fitted = fitToReadingTime(item.subject.summary, readingMinutes);
+  const fitted = fitToReadingTime(item.subject.summary, readingMinutes, locale);
+  const reading = prepareReadingContent(fitted.text, item.subject.hook ?? undefined, locale);
 
   return (
-    <article className="index-card relative px-6 py-10 sm:px-10 sm:py-12">
+    <article className="index-card relative px-5 py-10 sm:px-10 sm:py-12">
       <span className="guide-tab">{item.area.name}</span>
 
       <MarkViewed itemId={item.id} enabled={item.status === "PENDING"} />
@@ -40,12 +43,8 @@ export function DailyItem({
           <span aria-hidden>·</span>
           <span>{fitted.minutes} MIN READ</span>
         </div>
-        <h1 className="mt-4 font-serif text-3xl leading-tight tracking-tight sm:text-4xl">
-          {item.subject.title}
-        </h1>
-        {item.subject.hook ? (
-          <p className="mt-3 font-serif text-lg italic text-muted-foreground">{item.subject.hook}</p>
-        ) : null}
+        <h1 className="reader-title mt-4">{item.subject.title}</h1>
+        {reading.standfirst ? <p className="reader-standfirst">{reading.standfirst}</p> : null}
       </header>
 
       {item.subject.imageUrl ? (
@@ -55,14 +54,18 @@ export function DailyItem({
             alt={`Illustration for ${item.subject.title}`}
             className="aspect-[16/9] w-full object-cover"
           />
-          <figcaption className="border-t border-border px-4 py-2 font-mono text-[0.62rem] uppercase tracking-[0.12em] text-muted-foreground">
+          <figcaption className="source-caption border-t border-border px-4 py-2 text-muted-foreground">
             {item.subject.imageAttribution ?? "Illustration from Wikipedia"}
             {item.subject.imageLicense ? ` · ${item.subject.imageLicense}` : ""}
           </figcaption>
         </figure>
       ) : null}
 
-      <p className="measure mt-8 font-serif text-[1.05rem] leading-7">{fitted.text}</p>
+      <div className="reader-body mt-8">
+        {reading.paragraphs.map((paragraph, index) => (
+          <p key={`${item.id}-paragraph-${index}`}>{paragraph}</p>
+        ))}
+      </div>
 
       <footer className="mt-10 space-y-6 border-t border-border pt-6">
         <div className="mono-meta flex flex-wrap items-center gap-x-2 gap-y-1 text-muted-foreground">
@@ -99,7 +102,7 @@ export function DailyItem({
           <ReportDialog subjectId={item.subjectId} itemId={item.id} />
         </div>
         {isViewed && !isLearned ? (
-          <p className="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-muted-foreground">
+          <p className="mono-meta text-muted-foreground">
             Read it, then stamp it learned — or skip it.
           </p>
         ) : null}

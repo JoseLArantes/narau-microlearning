@@ -19,6 +19,12 @@ describe("cleanText", () => {
     expect(cleanText("The  sky\n   is\tblue. ")).toBe("The sky is blue.");
   });
 
+  it("preserves paragraph boundaries while collapsing inline whitespace", () => {
+    expect(cleanText("First paragraph.\n\n  Second   paragraph.\nThird sentence.")).toBe(
+      "First paragraph.\n\nSecond paragraph. Third sentence.",
+    );
+  });
+
   it("removes empty parentheses", () => {
     expect(cleanText("The sky () is blue.")).toBe("The sky is blue.");
   });
@@ -56,6 +62,7 @@ describe("normalizeWikipediaContent", () => {
     const result = normalizeWikipediaContent({
       title: "Example",
       extract: `Lead sentence. ${words}`,
+      locale: "en",
     });
     const count = result.summary.split(" ").length;
     expect(count).toBeGreaterThanOrEqual(60);
@@ -66,6 +73,7 @@ describe("normalizeWikipediaContent", () => {
     const result = normalizeWikipediaContent({
       title: "Example",
       extract: "The example is a thing. It does other things.",
+      locale: "en",
     });
     expect(result.hook).toBe("The example is a thing.");
   });
@@ -74,14 +82,25 @@ describe("normalizeWikipediaContent", () => {
     const result = normalizeWikipediaContent({
       title: "Example",
       extract: "The example is a thing.[1] It does other things.[citation needed]",
+      locale: "en",
     });
     expect(result.summary).not.toContain("[1]");
     expect(result.summary).not.toContain("[citation needed]");
   });
 
   it("preserves the title", () => {
-    const result = normalizeWikipediaContent({ title: "Example", extract: "The example is a thing." });
+    const result = normalizeWikipediaContent({ title: "Example", extract: "The example is a thing.", locale: "en" });
     expect(result.title).toBe("Example");
+  });
+
+  it("keeps normalized source paragraphs", () => {
+    const result = normalizeWikipediaContent({
+      title: "Example",
+      extract: "The example is a thing.\n\nIt has a second paragraph.",
+      locale: "en",
+    });
+
+    expect(result.summary).toBe("The example is a thing.\n\nIt has a second paragraph.");
   });
 });
 

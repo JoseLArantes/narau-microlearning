@@ -38,6 +38,8 @@ export interface WikipediaClientOptions {
   concurrency?: number;
   retries?: number;
   timeoutMs?: number;
+  /** Minimum delay between HTTP requests in milliseconds (default: 10000ms / 10s). */
+  requestDelayMs?: number;
 }
 
 export interface WikipediaClient {

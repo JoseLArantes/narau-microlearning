@@ -16,7 +16,7 @@ const courierPrime = Courier_Prime({
   variable: "--font-mono",
   subsets: ["latin"],
   weight: ["400", "700"],
-  style: ["normal", "italic"],
+  style: "normal",
   display: "swap",
 });
 
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: { children: ReactNode }): Promise<ReactElement> {
   const [initialTenant, tenants] = await Promise.all([getRequestTenant(), listTenants()]);
   return (
-    <html lang="en" className={`${literata.variable} ${courierPrime.variable}`}>
+    <html lang={initialTenant.language || "en"} className={`${literata.variable} ${courierPrime.variable}`}>
       <body className="min-h-dvh font-sans">
         {/*
 THESIS: The daily item is one card in a drawer; Narau is a quiet personal library where a curator files one well-sourced card each morning, refusing both the feed and the cream-editorial default.

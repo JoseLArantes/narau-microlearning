@@ -63,23 +63,41 @@ const PAGE_BATCH_SIZE = 50;
 export function createWikipediaClient(options: WikipediaClientOptions): WikipediaClient {
   const endpoint =
     options.endpoint ?? (options.language ? `https://${options.language}.wikipedia.org` : DEFAULT_ENDPOINT);
-  const concurrency = options.concurrency ?? 4;
+  const concurrency = options.concurrency ?? 1; // Default concurrency 1 to respect strict sequential rate limits
   const retries = options.retries ?? 3;
   const timeoutMs = options.timeoutMs ?? 15_000;
+  const requestDelayMs = options.requestDelayMs ?? 10_000; // 10 seconds between API calls by default
   const limit = pLimit(concurrency);
   const headers = { "User-Agent": options.userAgent, Accept: "application/json" };
 
+  let lastRequestTime = 0;
+  let rateLimitPromise: Promise<void> = Promise.resolve();
+
   async function fetchJson(url: string): Promise<unknown> {
-    return pRetry(
-      async () => {
-        const response = await fetch(url, { headers, signal: AbortSignal.timeout(timeoutMs) });
-        if (!response.ok) {
-          throw new Error(`Wikipedia API responded with ${response.status} for ${url}`);
+    return limit(async () => {
+      // Chain rate limit queue so all calls respect min delay sequentially
+      rateLimitPromise = rateLimitPromise.then(async () => {
+        const now = Date.now();
+        const elapsed = now - lastRequestTime;
+        if (lastRequestTime > 0 && elapsed < requestDelayMs) {
+          const waitTime = requestDelayMs - elapsed;
+          await new Promise((resolve) => setTimeout(resolve, waitTime));
         }
-        return (await response.json()) as unknown;
-      },
-      { retries, minTimeout: 500, maxTimeout: 5000 },
-    );
+        lastRequestTime = Date.now();
+      });
+      await rateLimitPromise;
+
+      return pRetry(
+        async () => {
+          const response = await fetch(url, { headers, signal: AbortSignal.timeout(timeoutMs) });
+          if (!response.ok) {
+            throw new Error(`Wikipedia API responded with ${response.status} for ${url}`);
+          }
+          return (await response.json()) as unknown;
+        },
+        { retries, minTimeout: 500, maxTimeout: 5000 },
+      );
+    });
   }
 
   async function fetchCategoryMembersRecursive(

@@ -8,6 +8,7 @@ export const SUMMARY_MAX_WORDS = 2100;
 export interface NormalizeInput {
   title: string;
   extract: string;
+  locale: string;
   imageUrl?: string;
 }
 
@@ -27,17 +28,12 @@ export function normalizeWikipediaContent(input: NormalizeInput): NormalizedCont
   if (words.length <= SUMMARY_MAX_WORDS) {
     summary = cleaned;
   } else {
-    const atBoundary = truncateToSentence(cleaned, SUMMARY_MAX_WORDS);
-    if (atBoundary.split(/\s+/).filter(Boolean).length >= SUMMARY_MIN_WORDS) {
-      summary = atBoundary;
-    } else {
-      summary = `${words.slice(0, SUMMARY_MAX_WORDS).join(" ")}\u2026`;
-    }
+    summary = truncateToSentence(cleaned, SUMMARY_MAX_WORDS, input.locale);
   }
 
   return {
     title: input.title.trim(),
-    hook: firstSentence(cleaned),
+    hook: firstSentence(cleaned, input.locale),
     summary,
     imageUrl: input.imageUrl,
     wordCount: summary.split(/\s+/).filter(Boolean).length,

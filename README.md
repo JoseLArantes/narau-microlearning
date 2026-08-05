@@ -140,7 +140,7 @@ packages/
 docker/
   Dockerfile           Multi-stage production image
   docker-compose.yml   Single Compose definition for local infrastructure and the full stack
-docs/                  Product and project documentation
+docs/                  Product, design, and [system architecture](docs/architecture.md) documentation
 tests/                 Repository-level structural tests
 ```
 
