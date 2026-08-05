@@ -2,6 +2,130 @@ import { describe, expect, it, vi } from "vitest";
 import { createWikipediaClient } from "./client";
 
 describe("WikipediaClient Rate Limiting & Spacing", () => {
+  it("uses the requested Wikipedia language project", async () => {
+    const originalFetch = globalThis.fetch;
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({ query: { categorymembers: [{ pageid: 1, title: "Ciencia" }] } }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+    globalThis.fetch = fetchMock;
+
+    try {
+      const client = createWikipediaClient({
+        userAgent: "TestBot/1.0",
+        language: "es",
+        requestDelayMs: 0,
+      });
+
+      await client.getCategoryMembers("Categoría:Ciencia", { maxMembers: 1 });
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        expect.stringMatching(/^https:\/\/es\.wikipedia\.org\/w\/api\.php/),
+        expect.anything(),
+      );
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it("does not deadlock category requests with the default concurrency", async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          query: {
+            categorymembers: [{ pageid: 1, title: "Test Page 1" }],
+          },
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+
+    try {
+      const client = createWikipediaClient({
+        userAgent: "TestBot/1.0",
+        requestDelayMs: 0,
+        timeoutMs: 1_000,
+      });
+
+      const members = await Promise.race([
+        client.getPagesFromCategories(["Category:Science"], { maxMembers: 1 }),
+        new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error("category request deadlocked")), 500);
+        }),
+      ]);
+
+      expect(members).toEqual([{ pageId: 1, title: "Test Page 1" }]);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it("does not deadlock page detail requests with the default concurrency", async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          query: {
+            pages: [{ pageid: 1, title: "Test Page 1", ns: 0, extract: "A sufficiently long page extract." }],
+          },
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+
+    try {
+      const client = createWikipediaClient({
+        userAgent: "TestBot/1.0",
+        requestDelayMs: 0,
+        timeoutMs: 1_000,
+      });
+
+      const details = await Promise.race([
+        client.getPageDetails([1]),
+        new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error("page detail request deadlocked")), 500);
+        }),
+      ]);
+
+      expect(details.get(1)?.title).toBe("Test Page 1");
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it("honors Retry-After before retrying a rate-limited request", async () => {
+    const originalFetch = globalThis.fetch;
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response("rate limited", { status: 429, headers: { "Retry-After": "1" } }))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ title: "Test Page 1", extract: "A page extract." }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      );
+    globalThis.fetch = fetchMock;
+
+    try {
+      const client = createWikipediaClient({
+        userAgent: "TestBot/1.0",
+        requestDelayMs: 0,
+        retries: 1,
+      });
+      const startedAt = Date.now();
+
+      await client.getPageSummary("Page 1");
+
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(Date.now() - startedAt).toBeGreaterThanOrEqual(900);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
   it("spaces out consecutive HTTP requests by configured requestDelayMs", async () => {
     const timestamps: number[] = [];
 

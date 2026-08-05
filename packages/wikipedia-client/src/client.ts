@@ -60,6 +60,40 @@ const DEFAULT_ENDPOINT = "https://en.wikipedia.org";
 const MEMBER_BATCH_SIZE = 500;
 const PAGE_BATCH_SIZE = 50;
 
+class WikipediaRequestError extends Error {
+  constructor(
+    readonly status: number,
+    readonly url: string,
+    readonly retryAfterMs?: number,
+  ) {
+    super(`Wikipedia API responded with ${status} for ${url}`);
+    this.name = "WikipediaRequestError";
+  }
+}
+
+function parseRetryAfterMs(value: string | null): number | undefined {
+  if (!value) return undefined;
+
+  const seconds = Number(value);
+  if (Number.isFinite(seconds) && seconds >= 0) return seconds * 1_000;
+
+  const timestamp = Date.parse(value);
+  if (Number.isNaN(timestamp)) return undefined;
+  return Math.max(0, timestamp - Date.now());
+}
+
+function retryDelayMs(error: unknown): number {
+  const failure = error as { attemptNumber?: unknown; retryAfterMs?: unknown };
+  if (typeof failure.retryAfterMs === "number") return failure.retryAfterMs;
+
+  const attemptNumber = typeof failure.attemptNumber === "number" ? failure.attemptNumber : 1;
+  return Math.min(500 * 2 ** Math.max(0, attemptNumber - 1), 5_000);
+}
+
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export function createWikipediaClient(options: WikipediaClientOptions): WikipediaClient {
   const endpoint =
     options.endpoint ?? (options.language ? `https://${options.language}.wikipedia.org` : DEFAULT_ENDPOINT);
@@ -91,11 +125,18 @@ export function createWikipediaClient(options: WikipediaClientOptions): Wikipedi
         async () => {
           const response = await fetch(url, { headers, signal: AbortSignal.timeout(timeoutMs) });
           if (!response.ok) {
-            throw new Error(`Wikipedia API responded with ${response.status} for ${url}`);
+            throw new WikipediaRequestError(response.status, url, parseRetryAfterMs(response.headers.get("Retry-After")));
           }
           return (await response.json()) as unknown;
         },
-        { retries, minTimeout: 500, maxTimeout: 5000 },
+        {
+          retries,
+          minTimeout: 0,
+          maxTimeout: 0,
+          onFailedAttempt: async (error) => {
+            if (error.retriesLeft > 0) await wait(retryDelayMs(error));
+          },
+        },
       );
     });
   }
@@ -151,7 +192,7 @@ export function createWikipediaClient(options: WikipediaClientOptions): Wikipedi
 
   async function getPagesFromCategories(categories: string[], options: CategoryOptions = {}): Promise<CategoryMember[]> {
     const results = await Promise.all(
-      categories.map((category) => limit(() => getCategoryMembers(category, options))),
+      categories.map((category) => getCategoryMembers(category, options)),
     );
     const seen = new Map<number, CategoryMember>();
     for (const members of results) {
@@ -167,28 +208,26 @@ export function createWikipediaClient(options: WikipediaClientOptions): Wikipedi
     const uniqueIds = [...new Set(pageIds)];
     const batches = chunk(uniqueIds, PAGE_BATCH_SIZE);
     await Promise.all(
-      batches.map((batch) =>
-        limit(async () => {
-          const url =
-            `${endpoint}/w/api.php?action=query&prop=extracts|pageimages|info|revisions|categories` +
-            `&pageids=${batch.join("|")}&explaintext=1&exintro=1&exlimit=max&cllimit=max&rvprop=ids` +
-            `&pithumbsize=1200&format=json&formatversion=2&redirects=1`;
-          const parsed = pageQueryResponseSchema.safeParse(await fetchJson(url));
-          if (!parsed.success) return;
-          for (const page of parsed.data.query?.pages ?? []) {
-            details.set(page.pageid, {
-              pageId: page.pageid,
-              title: page.title,
-              namespace: page.ns,
-              extract: page.extract ?? "",
-              thumbnailUrl: page.thumbnail?.source,
-              pageImage: page.pageimage,
-              categories: (page.categories ?? []).map((category) => category.title),
-              lastRevisionId: page.revisions?.[0]?.revid?.toString(),
-            });
-          }
-        }),
-      ),
+      batches.map(async (batch) => {
+        const url =
+          `${endpoint}/w/api.php?action=query&prop=extracts|pageimages|info|revisions|categories` +
+          `&pageids=${batch.join("|")}&explaintext=1&exintro=1&exlimit=max&cllimit=max&rvprop=ids` +
+          `&pithumbsize=1200&format=json&formatversion=2&redirects=1`;
+        const parsed = pageQueryResponseSchema.safeParse(await fetchJson(url));
+        if (!parsed.success) return;
+        for (const page of parsed.data.query?.pages ?? []) {
+          details.set(page.pageid, {
+            pageId: page.pageid,
+            title: page.title,
+            namespace: page.ns,
+            extract: page.extract ?? "",
+            thumbnailUrl: page.thumbnail?.source,
+            pageImage: page.pageimage,
+            categories: (page.categories ?? []).map((category) => category.title),
+            lastRevisionId: page.revisions?.[0]?.revid?.toString(),
+          });
+        }
+      }),
     );
     return details;
   }

@@ -34,6 +34,7 @@ async function main(): Promise<void> {
   const { job, date } = parseArgs(process.argv.slice(2));
   const contentDate = date ? parseUtcDate(date) : new Date();
   const dateLabel = contentDate.toISOString().slice(0, 10);
+  logger.info("cli job started", { job, date: dateLabel });
 
   let result: unknown;
   switch (job) {
@@ -52,16 +53,17 @@ async function main(): Promise<void> {
     default:
       logger.error("unknown job", { job });
       console.info(USAGE);
-      process.exit(1);
+      process.exitCode = 1;
+      return;
   }
 
   logger.info("cli job finished", { job, date: dateLabel, result });
 }
 
-main()
+await main()
   .catch((error) => {
     logger.error("cli job failed", { error: error instanceof Error ? error.message : String(error) });
-    process.exit(1);
+    process.exitCode = 1;
   })
   .finally(async () => {
     await prisma.$disconnect();

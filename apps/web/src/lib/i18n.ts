@@ -37,8 +37,9 @@ export function getTranslation(
   key: string,
   fallback?: string,
 ): string {
-  const normalizedLocale = (DICTIONARY_LOCALES.includes(locale.toLowerCase() as DictionaryLocale)
-    ? locale.toLowerCase()
+  const languageCode = locale.toLowerCase().split(/[-_]/)[0] ?? DEFAULT_LOCALE;
+  const normalizedLocale = (DICTIONARY_LOCALES.includes(languageCode as DictionaryLocale)
+    ? languageCode
     : DEFAULT_LOCALE) as DictionaryLocale;
   const dict = dictionaries[normalizedLocale] ?? dictionaries[DEFAULT_LOCALE];
   const value = getNestedValue(dict, key);

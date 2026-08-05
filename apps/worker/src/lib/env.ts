@@ -4,6 +4,7 @@ const envSchema = z.object({
   DATABASE_URL: z.string().min(1),
   REDIS_URL: z.string().min(1),
   WIKIPEDIA_USER_AGENT: z.string().min(1),
+  WIKIPEDIA_REQUEST_DELAY_MS: z.coerce.number().int().min(0).default(10_000),
   STORAGE_ENABLED: z.string().default("false"),
   STORAGE_ENDPOINT: z.string().default("http://localhost:9000"),
   STORAGE_ACCESS_KEY: z.string().default("minioadmin"),

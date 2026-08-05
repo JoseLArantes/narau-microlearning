@@ -11,6 +11,23 @@
     "spanish": "Español",
     "portuguese": "Português"
   },
+  "system": {
+    "masthead": "LA FICHA DIARIA",
+    "volume": "VOL. I",
+    "tagline": "UNA COSA BIEN DOCUMENTADA AL DÍA",
+    "sampleCard": "FICHA DE EJEMPLO",
+    "sampleArea": "Ciencia",
+    "minutesRead": "{minutes} MIN DE LECTURA",
+    "seeAlso": "VER TAMBIÉN",
+    "sourceWikipedia": "Fuente: Wikipedia",
+    "learnedStamp": "APRENDIDO · {date}",
+    "signIn": "Iniciar sesión",
+    "startLearning": "Empezar a aprender",
+    "howItWorks": "Cómo funciona",
+    "readLicense": "Leer la licencia",
+    "licenseNotice": "Contenido de Wikipedia, bajo licencia CC BY-SA 4.0 — nada inventado.",
+    "backToReadingRoom": "Volver a la sala de lectura"
+  },
   "nav": {
     "today": "Hoy",
     "dashboard": "Panel",
@@ -20,10 +37,20 @@
     "logout": "Cerrar sesión"
   },
   "landing": {
-    "title": "Una pequeña lección bien documentada cada día",
-    "subtitle": "Sin feeds, sin ruido. Solo un artículo curado de Wikipedia al día adaptado a tus intereses.",
-    "getStarted": "Empezar",
-    "signIn": "Iniciar sesión"
+    "title": "¿Qué aprendiste hoy?",
+    "subtitle": "Narau te ayuda a responderla cada día. Cada mañana, una persona curadora coloca en tu escritorio una ficha bien documentada: una lectura de Wikipedia sobre las áreas que te interesan. Léela, márcala como aprendida y deja que tu cajón de conocimientos crezca, una idea a la vez.",
+    "getStarted": "Empezar a aprender",
+    "signIn": "Iniciar sesión",
+    "howTitle": "Cómo funciona",
+    "sampleTitle": "La tranquila invención del catálogo de fichas",
+    "sampleBody": "Antes de los buscadores, antes de la web, un cajón de biblioteca guardaba cada tema del mundo: una ficha, una idea y una referencia cruzada cuidadosamente preparada.",
+    "sampleLearnedDate": "3 AGO",
+    "step1Title": "Elige tus fichas",
+    "step1Body": "Escoge las áreas sobre las que quieres leer: ciencia, historia, arte y mucho más.",
+    "step2Title": "Una ficha llega cada mañana",
+    "step2Body": "Una lectura cuidadosamente seleccionada al día, basada y atribuida a Wikipedia.",
+    "step3Title": "Lee, marca y sigue",
+    "step3Body": "Termina la ficha, márcala como aprendida y deja que tu cajón de conocimientos crezca."
   },
   "today": {
     "title": "¿Qué aprendiste hoy?",

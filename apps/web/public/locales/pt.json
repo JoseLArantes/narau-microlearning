@@ -11,6 +11,23 @@
     "spanish": "Español",
     "portuguese": "Português"
   },
+  "system": {
+    "masthead": "O CARTÃO DO DIA",
+    "volume": "VOL. I",
+    "tagline": "UMA COISA BEM FUNDAMENTADA POR DIA",
+    "sampleCard": "CARTÃO DE EXEMPLO",
+    "sampleArea": "Ciência",
+    "minutesRead": "{minutes} MIN DE LEITURA",
+    "seeAlso": "VEJA TAMBÉM",
+    "sourceWikipedia": "Fonte: Wikipédia",
+    "learnedStamp": "APRENDIDO · {date}",
+    "signIn": "Entrar",
+    "startLearning": "Começar a aprender",
+    "howItWorks": "Como funciona",
+    "readLicense": "Ler a licença",
+    "licenseNotice": "Conteúdo da Wikipédia, licenciado sob CC BY-SA 4.0 — nada é inventado.",
+    "backToReadingRoom": "Voltar à sala de leitura"
+  },
   "nav": {
     "today": "Hoje",
     "dashboard": "Painel",
@@ -20,10 +37,20 @@
     "logout": "Sair"
   },
   "landing": {
-    "title": "Uma pequena lição bem fundamentada todos os dias",
-    "subtitle": "Sem feeds, sem barulho. Apenas um artigo curado da Wikipédia por dia adaptado aos seus interesses.",
-    "getStarted": "Começar",
-    "signIn": "Entrar"
+    "title": "O que você aprendeu hoje?",
+    "subtitle": "A Narau ajuda você a responder isso todos os dias. A cada manhã, uma pessoa curadora coloca sobre a sua mesa um cartão bem fundamentado: uma leitura da Wikipédia sobre as áreas que você escolheu. Leia, marque como aprendido e veja sua gaveta de conhecimentos crescer, uma ideia por vez.",
+    "getStarted": "Começar a aprender",
+    "signIn": "Entrar",
+    "howTitle": "Como funciona",
+    "sampleTitle": "A invenção silenciosa do catálogo de fichas",
+    "sampleBody": "Antes da busca, antes da web, uma gaveta de biblioteca guardava todos os assuntos do mundo: um cartão, uma ideia e uma referência cruzada cuidadosamente preparada.",
+    "sampleLearnedDate": "3 AGO",
+    "step1Title": "Escolha suas fichas",
+    "step1Body": "Escolha as áreas sobre as quais você quer ler — ciência, história, arte e muito mais.",
+    "step2Title": "Um cartão chega a cada manhã",
+    "step2Body": "Uma leitura cuidadosamente selecionada por dia, com curadoria e atribuição da Wikipédia.",
+    "step3Title": "Leia, marque e siga",
+    "step3Body": "Termine o cartão, marque-o como aprendido e veja sua gaveta de conhecimentos crescer."
   },
   "today": {
     "title": "O que você aprendeu hoje?",

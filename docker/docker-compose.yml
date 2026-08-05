@@ -105,7 +105,8 @@ services:
       LINKEDIN_CLIENT_ID: "${LINKEDIN_CLIENT_ID:-}"
       LINKEDIN_CLIENT_SECRET: "${LINKEDIN_CLIENT_SECRET:-}"
       STORAGE_ENABLED: "false"
-      WIKIPEDIA_USER_AGENT: "NarauBot/0.1 (container)"
+      WIKIPEDIA_USER_AGENT: "${WIKIPEDIA_USER_AGENT:-NarauBot/0.1 (https://localhost:3030; contact@example.com)}"
+      WIKIPEDIA_REQUEST_DELAY_MS: "${WIKIPEDIA_REQUEST_DELAY_MS:-1000}"
     volumes:
       - ../apps/web/public:/app/apps/web/public
     depends_on:

@@ -11,6 +11,23 @@
     "spanish": "Español",
     "portuguese": "Português"
   },
+  "system": {
+    "masthead": "THE DAILY CARD",
+    "volume": "VOL. I",
+    "tagline": "ONE WELL-SOURCED THING A DAY",
+    "sampleCard": "SAMPLE CARD",
+    "sampleArea": "Science",
+    "minutesRead": "{minutes} MIN READ",
+    "seeAlso": "SEE ALSO",
+    "sourceWikipedia": "Source: Wikipedia",
+    "learnedStamp": "LEARNED · {date}",
+    "signIn": "Sign in",
+    "startLearning": "Start learning",
+    "howItWorks": "How it works",
+    "readLicense": "Read the license",
+    "licenseNotice": "Content from Wikipedia, licensed under CC BY-SA 4.0 — nothing fabricated.",
+    "backToReadingRoom": "Back to the reading room"
+  },
   "nav": {
     "today": "Today",
     "dashboard": "Dashboard",
@@ -20,10 +37,20 @@
     "logout": "Sign Out"
   },
   "landing": {
-    "title": "One small, well-sourced thing to learn every day",
-    "subtitle": "No feeds, no noise. Just one curated Wikipedia article per day tailored to your interests.",
-    "getStarted": "Get Started",
-    "signIn": "Sign In"
+    "title": "What did you learn today?",
+    "subtitle": "Narau helps you answer that, every day. Each morning a curator files one well-sourced card on your desk — a single Wikipedia reading from the areas you care about. Read it, stamp it learned, and watch your drawer of learning grow, one new thing at a time.",
+    "getStarted": "Start learning",
+    "signIn": "Sign in",
+    "howTitle": "How it works",
+    "sampleTitle": "The quiet invention of the card catalogue",
+    "sampleBody": "Before search, before the web, a librarian's drawer held every subject in the world — one card, one idea, one careful cross-reference at a time.",
+    "sampleLearnedDate": "AUG 3",
+    "step1Title": "Pull your tabs",
+    "step1Body": "Choose the areas you want to read about — science, history, art, and more.",
+    "step2Title": "A card arrives each morning",
+    "step2Body": "One carefully selected reading per day, curated and attributed from Wikipedia.",
+    "step3Title": "Read, stamp, move on",
+    "step3Body": "Finish the card, stamp it learned, and watch your drawer of learning grow."
   },
   "today": {
     "title": "What did you learn today?",

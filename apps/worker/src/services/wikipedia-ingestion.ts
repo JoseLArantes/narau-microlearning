@@ -3,6 +3,7 @@ import { prisma } from "@narau/database";
 import { areaSourceConfigSchema } from "@narau/validation";
 import { createWikipediaClient, type WikipediaClient } from "@narau/wikipedia-client";
 import { env } from "../lib/env";
+import { logger } from "../lib/logger";
 import { storeImage } from "../lib/storage";
 import { isDisambiguationLike, isListLike, scoreCandidate } from "./candidate-scoring";
 import { wikipediaLanguageCode } from "./language";
@@ -42,29 +43,58 @@ export async function ingestAreaCandidates(
 ): Promise<IngestionResult> {
   const result: IngestionResult = { areas: 0, candidatesCreated: 0, errors: [] };
   const since = new Date(date.getTime() - USED_WINDOW_DAYS * DAY_MS);
-  const areas = await prisma.area.findMany({ where: { status: "ACTIVE", tenant: { status: "ACTIVE" } }, include: { tenant: true } });
+  const areas = await prisma.area.findMany({
+    where: { status: "ACTIVE", tenant: { status: "ACTIVE" } },
+    include: { tenant: true },
+    orderBy: [{ tenant: { slug: "asc" } }, { displayOrder: "asc" }, { slug: "asc" }],
+  });
   result.areas = areas.length;
 
-  for (const area of areas) {
+  for (const [areaIndex, area] of areas.entries()) {
+    const candidatesBeforeArea = result.candidatesCreated;
+
     try {
+      const tenantLanguage = area.tenant.language;
+      const wikipediaLanguage = wikipediaLanguageCode(tenantLanguage);
+      logger.info("ingestion area started", {
+        area: area.slug,
+        tenant: area.tenant.slug,
+        language: tenantLanguage,
+        wikipediaLanguage,
+        position: areaIndex + 1,
+        totalAreas: areas.length,
+      });
+
       const config = areaSourceConfigSchema.safeParse(area.sourceConfig);
       if (!config.success) {
         result.errors.push(`area ${area.slug}: invalid sourceConfig`);
         continue;
       }
 
-      const tenantLanguage = area.tenant.language;
-      const wikipediaLanguage = wikipediaLanguageCode(tenantLanguage);
       const areaClient = clientFactory
         ? clientFactory(wikipediaLanguage)
-        : createWikipediaClient({ userAgent: env.WIKIPEDIA_USER_AGENT, language: wikipediaLanguage });
+        : createWikipediaClient({
+            userAgent: env.WIKIPEDIA_USER_AGENT,
+            language: wikipediaLanguage,
+            requestDelayMs: env.WIKIPEDIA_REQUEST_DELAY_MS,
+          });
 
       const members = await areaClient.getPagesFromCategories(config.data.categories, {
         includeSubcategories: config.data.includeSubcategories,
         depth: config.data.depth,
         maxMembers: config.data.maxCandidates,
       });
+      logger.info("ingestion area members fetched", {
+        area: area.slug,
+        tenant: area.tenant.slug,
+        members: members.length,
+      });
       const details = await areaClient.getPageDetails(members.map((member) => member.pageId));
+      logger.info("ingestion area details fetched", {
+        area: area.slug,
+        tenant: area.tenant.slug,
+        details: details.size,
+      });
 
       const usedSubjectIds = new Set(
         (
@@ -161,10 +191,18 @@ export async function ingestAreaCandidates(
           result.candidatesCreated += 1;
         }
       }
+
+      logger.info("ingestion area finished", {
+        area: area.slug,
+        tenant: area.tenant.slug,
+        candidatesCreated: result.candidatesCreated - candidatesBeforeArea,
+      });
     } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
       result.errors.push(
-        `area ${area.slug}: ${error instanceof Error ? error.message : String(error)}`,
+        `area ${area.slug}: ${message}`,
       );
+      logger.error("ingestion area failed", { area: area.slug, tenant: area.tenant.slug, error: message });
     }
   }
 

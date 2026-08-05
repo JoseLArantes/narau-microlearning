@@ -33,7 +33,7 @@ ENV SMTP_PORT=1025
 ENV SMTP_USER=
 ENV SMTP_PASS=
 ENV SMTP_SECURE=false
-ENV WIKIPEDIA_USER_AGENT="NarauBot/0.1 (build)"
+ENV WIKIPEDIA_USER_AGENT="NarauBot/0.1 (https://localhost:3030; contact@example.com)"
 RUN bun run build
 
 FROM oven/bun:1-alpine AS runner
