@@ -3,7 +3,7 @@ import { startOfUtcDay } from "@/lib/date";
 
 export interface AreaHistory {
   area: { id: string; name: string; slug: string; color: string | null };
-  learned: Array<{ id: string; title: string; canonicalUrl: string; learnedAt: Date | null; rating: number | null }>;
+  learned: Array<{ id: string; title: string; learnedAt: Date | null; rating: number | null }>;
 }
 
 export interface DashboardHistory {
@@ -12,7 +12,6 @@ export interface DashboardHistory {
   recent: Array<{
     id: string;
     title: string;
-    canonicalUrl: string;
     areaName: string;
     learnedAt: Date | null;
   }>;
@@ -37,7 +36,7 @@ export async function getHistory(userId: string, tenantId: string): Promise<Dash
   const items = await prisma.userDailyItem.findMany({
     where: { userId, tenantId, status: "LEARNED" },
     include: {
-      subject: { select: { title: true, canonicalUrl: true } },
+      subject: { select: { title: true } },
       area: { select: { id: true, name: true, slug: true, color: true } },
     },
     orderBy: { learnedAt: "desc" },
@@ -60,7 +59,6 @@ export async function getHistory(userId: string, tenantId: string): Promise<Dash
     entry.learned.push({
       id: item.id,
       title: item.subject.title,
-      canonicalUrl: item.subject.canonicalUrl,
       learnedAt: item.learnedAt,
       rating: item.rating,
     });
@@ -79,7 +77,6 @@ export async function getHistory(userId: string, tenantId: string): Promise<Dash
     recent: items.slice(0, 10).map((item) => ({
       id: item.id,
       title: item.subject.title,
-      canonicalUrl: item.subject.canonicalUrl,
       areaName: item.area.name,
       learnedAt: item.learnedAt,
     })),

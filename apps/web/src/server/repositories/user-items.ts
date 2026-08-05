@@ -7,9 +7,10 @@ export type UserItemWithRelations = Prisma.UserDailyItemGetPayload<{
 export async function findUserItem(
   itemId: string,
   userId: string,
+  tenantId: string,
 ): Promise<UserItemWithRelations | null> {
   return prisma.userDailyItem.findFirst({
-    where: { id: itemId, userId },
+    where: { id: itemId, userId, tenantId },
     include: { subject: true, area: true, dailyAreaSubject: true },
   });
 }

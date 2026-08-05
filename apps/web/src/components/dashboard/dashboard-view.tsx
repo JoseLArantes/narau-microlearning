@@ -3,11 +3,13 @@
 import { Card, CardContent, EmptyState } from "@narau/ui";
 import * as React from "react";
 import { cn } from "@narau/ui";
+import Link from "next/link";
+import { useI18n } from "../i18n-context";
+import { dashboardCardPath } from "@/lib/dashboard-links";
 
 interface HistoryEntry {
   id: string;
   title: string;
-  canonicalUrl: string;
   areaName?: string;
   learnedAt: Date | null;
   rating?: number | null;
@@ -36,7 +38,9 @@ function learnedDate(value: Date | null): string {
 
 export function DashboardView({ history }: { history: DashboardHistory }): React.ReactElement {
   const [selected, setSelected] = React.useState<string | null>(null);
+  const { tenant } = useI18n();
   const active = selected ? history.byArea.find((group) => group.area.id === selected) : null;
+  const cardHref = (itemId: string): string => dashboardCardPath(tenant.slug, itemId);
 
   const areaPills = [
     { id: null, name: "All", count: history.totalLearned },
@@ -80,14 +84,12 @@ export function DashboardView({ history }: { history: DashboardHistory }): React
                 <ul className="divide-y divide-border">
                   {active.learned.map((entry) => (
                     <li key={entry.id} className="flex items-center justify-between gap-4 py-2.5">
-                      <a
-                        href={entry.canonicalUrl}
-                        target="_blank"
-                        rel="noreferrer"
+                      <Link
+                        href={cardHref(entry.id)}
                         className="min-w-0 truncate font-serif text-[0.98rem] underline-offset-4 hover:underline"
                       >
                         {entry.title}
-                      </a>
+                      </Link>
                       <span className="mono-meta shrink-0 text-muted-foreground">
                         {entry.rating ? `★ ${entry.rating}/5 · ` : ""}
                         {learnedDate(entry.learnedAt)}
@@ -112,23 +114,24 @@ export function DashboardView({ history }: { history: DashboardHistory }): React
               <Card>
                 <CardContent className="divide-y divide-border p-0">
                   {history.recent.map((entry) => (
-                    <div key={entry.id} className="flex items-center justify-between gap-4 px-6 py-3">
+                    <Link
+                      key={entry.id}
+                      href={cardHref(entry.id)}
+                      className="group flex items-center justify-between gap-4 px-6 py-3 transition-colors hover:bg-secondary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+                    >
                       <div className="min-w-0">
-                        <p className="truncate font-serif text-[1.02rem]">{entry.title}</p>
+                        <p className="truncate font-serif text-[1.02rem] group-hover:underline group-hover:underline-offset-4">
+                          {entry.title}
+                        </p>
                         <p className="mono-meta mt-0.5 text-muted-foreground">
                           {entry.areaName}
                           {entry.learnedAt ? ` · ${learnedDate(entry.learnedAt)}` : ""}
                         </p>
                       </div>
-                      <a
-                        href={entry.canonicalUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="mono-meta shrink-0 text-foreground underline underline-offset-4 hover:text-[hsl(var(--accent))]"
-                      >
-                        SEE ALSO
-                      </a>
-                    </div>
+                      <span className="mono-meta shrink-0 text-foreground underline underline-offset-4">
+                        READ CARD
+                      </span>
+                    </Link>
                   ))}
                 </CardContent>
               </Card>
@@ -147,14 +150,12 @@ export function DashboardView({ history }: { history: DashboardHistory }): React
                 <div className="mt-4 divide-y divide-border">
                   {group.learned.slice(0, 20).map((entry) => (
                     <div key={entry.id} className="flex items-center justify-between gap-4 py-2.5">
-                      <a
-                        href={entry.canonicalUrl}
-                        target="_blank"
-                        rel="noreferrer"
+                      <Link
+                        href={cardHref(entry.id)}
                         className="min-w-0 truncate font-serif text-[0.98rem] underline-offset-4 hover:underline"
                       >
                         {entry.title}
-                      </a>
+                      </Link>
                       <span className="mono-meta shrink-0 text-muted-foreground">
                         {entry.rating ? `★ ${entry.rating}/5 · ` : ""}
                         {learnedDate(entry.learnedAt)}

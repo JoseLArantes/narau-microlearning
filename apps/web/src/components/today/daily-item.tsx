@@ -19,10 +19,12 @@ export function DailyItem({
   item,
   readingMinutes,
   locale,
+  readOnly = false,
 }: {
   item: Item;
   readingMinutes: number;
   locale: string;
+  readOnly?: boolean;
 }): ReactElement {
   const isLearned = item.status === "LEARNED";
   const isViewed = item.status === "VIEWED" || isLearned;
@@ -33,7 +35,7 @@ export function DailyItem({
     <article className="index-card relative px-5 py-10 sm:px-10 sm:py-12">
       <span className="guide-tab">{item.area.name}</span>
 
-      <MarkViewed itemId={item.id} enabled={item.status === "PENDING"} />
+      <MarkViewed itemId={item.id} enabled={!readOnly && item.status === "PENDING"} />
 
       <header>
         <div className="mono-meta flex flex-wrap items-center gap-x-2 gap-y-1 text-muted-foreground">
@@ -89,9 +91,9 @@ export function DailyItem({
           {isLearned ? (
             <>
               <Badge variant="stamped">LEARNED · {cardDate(item.learnedAt ?? item.contentDate)}</Badge>
-              <RatingDialog itemId={item.id} />
+              {!readOnly ? <RatingDialog itemId={item.id} /> : null}
             </>
-          ) : (
+          ) : readOnly ? null : (
             <>
               <MarkLearnedButton itemId={item.id} contentDate={item.contentDate} />
               <SkipButton itemId={item.id} />
@@ -101,7 +103,7 @@ export function DailyItem({
           <span className="flex-1" />
           <ReportDialog subjectId={item.subjectId} itemId={item.id} />
         </div>
-        {isViewed && !isLearned ? (
+        {!readOnly && isViewed && !isLearned ? (
           <p className="mono-meta text-muted-foreground">
             Read it, then stamp it learned — or skip it.
           </p>
