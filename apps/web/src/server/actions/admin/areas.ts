@@ -1,8 +1,8 @@
 "use server";
 
-import { areaSourceConfigSchema, createAreaNodeSchema, updateAreaNodeSchema, type AreaSourceConfig } from "@narau/validation";
+import { areaSourceConfigSchema, createAreaNodeSchema, updateAreaNodeSchema } from "@narau/validation";
 import { requireTenantAdmin } from "@/server/guards";
-import { activateArea, createArea, deleteDraftArea, disableArea, listAllAreas, updateArea } from "@/server/services/areas";
+import { activateArea, createArea, deleteDraftArea, disableArea, listAllAreas, normalizeAreaSourceConfig, updateArea } from "@/server/services/areas";
 import { audit } from "@/server/services/admin";
 import { previewWikipediaSource } from "@/server/services/wikipedia-preview";
 import { track } from "@/server/tracking";
@@ -75,7 +75,11 @@ export async function adminActivateArea(areaId: string): Promise<ActionResult> {
     if (!draft) return { ok: false, error: "Area or topic not found in the current tenant." };
     const config = areaSourceConfigSchema.safeParse(draft.sourceConfig);
     if (!config.success) return { ok: false, error: "The node has an invalid Wikipedia source configuration." };
-    await previewWikipediaSource(tenant.language, config.data as AreaSourceConfig);
+    const normalizedConfig = normalizeAreaSourceConfig(draft, config.data);
+    if (JSON.stringify(normalizedConfig) !== JSON.stringify(config.data)) {
+      await updateArea(areaId, tenant.id, { sourceConfig: normalizedConfig });
+    }
+    await previewWikipediaSource(tenant.language, normalizedConfig);
     const area = await activateArea(areaId, tenant.id);
     await audit(session.user.id, "ADMIN_AREA_NODE_ACTIVATED", "Area", areaId, undefined, tenant.id);
     return { ok: true, data: area };
@@ -91,7 +95,7 @@ export async function adminPreviewArea(areaId: string): Promise<ActionResult<Awa
     if (!area) return { ok: false, error: "Area or topic not found in the current tenant." };
     const config = areaSourceConfigSchema.safeParse(area.sourceConfig);
     if (!config.success) return { ok: false, error: "The node has an invalid Wikipedia source configuration." };
-    return { ok: true, data: await previewWikipediaSource(tenant.language, config.data) };
+    return { ok: true, data: await previewWikipediaSource(tenant.language, normalizeAreaSourceConfig(area, config.data)) };
   } catch (error) {
     return errorResult(error);
   }

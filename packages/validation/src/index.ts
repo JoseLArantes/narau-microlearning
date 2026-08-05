@@ -8,6 +8,7 @@ export {
   buildHierarchicalAreaSlug,
   hasHierarchicalAreaSlug,
   normalizeWikipediaCategoryTitle,
+  localizeWikipediaCategoryTitle,
   buildWikipediaCategorySuggestions,
   createAreaSchema,
   createAreaNodeSchema,

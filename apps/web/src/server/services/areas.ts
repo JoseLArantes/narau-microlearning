@@ -186,11 +186,24 @@ function sourceConfigForNode(input: { name: string; sourceConfig: AreaSourceConf
   return {
     ...input.sourceConfig,
     categories: buildWikipediaCategorySuggestions([
+      ...input.sourceConfig.categories,
       ...parentNames,
       input.name,
-      ...input.sourceConfig.categories,
     ]),
   };
+}
+
+export function normalizeAreaSourceConfig(
+  area: {
+    name: string;
+    parent: { name: string; parent?: { name: string } | null } | null;
+  },
+  sourceConfig: AreaSourceConfig,
+): AreaSourceConfig {
+  const parentNames = area.parent
+    ? [...(area.parent.parent ? [area.parent.parent.name] : []), area.parent.name]
+    : [];
+  return sourceConfigForNode({ name: area.name, sourceConfig }, parentNames);
 }
 
 export async function createArea(tenantId: string, input: CreateAreaNodeInput) {

@@ -1,6 +1,17 @@
 import z from "zod";
 
 const AREA_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const WIKIPEDIA_CATEGORY_NAMESPACES: Record<string, string> = {
+  de: "Kategorie",
+  es: "Categoría",
+  fr: "Catégorie",
+  it: "Categoria",
+  nl: "Categorie",
+  pl: "Kategoria",
+  pt: "Categoria",
+  ru: "Категория",
+  uk: "Категорія",
+};
 
 export function areaSlugSegment(value: string): string {
   const slug = value
@@ -30,10 +41,18 @@ export function hasHierarchicalAreaSlug(slug: string, parentSlugs: string[]): bo
 export function normalizeWikipediaCategoryTitle(value: string): string {
   const categoryName = value
     .trim()
-    .replace(/^category\s*:\s*/i, "")
+    .replace(/^(?:category|categoría|categoria|catégorie|kategorie|categorie|kategoria|категория|категорія)\s*:\s*/i, "")
     .replace(/\s+/g, " ")
     .trim();
   return `Category:${categoryName}`;
+}
+
+export function localizeWikipediaCategoryTitle(category: string, language: string): string {
+  const normalized = normalizeWikipediaCategoryTitle(category);
+  const categoryName = normalized.slice("Category:".length);
+  const languageCode = language.trim().toLowerCase().split(/[-_]/)[0] ?? "";
+  const namespace = WIKIPEDIA_CATEGORY_NAMESPACES[languageCode] ?? "Category";
+  return `${namespace}:${categoryName}`;
 }
 
 export function buildWikipediaCategorySuggestions(names: string[]): string[] {

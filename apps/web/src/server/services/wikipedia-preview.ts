@@ -1,4 +1,4 @@
-import type { AreaSourceConfig } from "@narau/validation";
+import { localizeWikipediaCategoryTitle, type AreaSourceConfig } from "@narau/validation";
 
 function wikipediaLanguageCode(languageTag: string): string {
   const code = languageTag.trim().toLowerCase().split(/[-_]/)[0] ?? "";
@@ -32,13 +32,14 @@ export interface WikipediaSourcePreview {
 
 export async function previewWikipediaSource(languageTag: string, config: AreaSourceConfig): Promise<WikipediaSourcePreview> {
   const language = wikipediaLanguageCode(languageTag);
+  const wikipediaCategories = config.categories.map((category) => localizeWikipediaCategoryTitle(category, language));
   const categoryData = await fetchWikipedia(language, {
     action: "query",
     prop: "categoryinfo",
-    titles: config.categories.join("|"),
+    titles: wikipediaCategories.join("|"),
   });
   const pages = Array.isArray(categoryData?.query?.pages) ? categoryData.query.pages : [];
-  const categories = config.categories.map((requested) => {
+  const categories = wikipediaCategories.map((requested) => {
     const page = pages.find((candidate: { title?: string }) => candidate.title === requested) ?? pages.find((candidate: { title?: string }) => candidate.title?.toLowerCase() === requested.toLowerCase());
     return {
       title: page?.title ?? requested,

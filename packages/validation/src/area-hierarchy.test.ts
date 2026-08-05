@@ -4,6 +4,7 @@ import {
   buildWikipediaCategorySuggestions,
   getChildAreaSlugPrefix,
   hasHierarchicalAreaSlug,
+  localizeWikipediaCategoryTitle,
   normalizeWikipediaCategoryTitle,
 } from "./area";
 
@@ -27,6 +28,9 @@ describe("Wikipedia category values", () => {
   it("keeps Category: as a normalized fixed prefix", () => {
     expect(normalizeWikipediaCategoryTitle(" physics ")).toBe("Category:physics");
     expect(normalizeWikipediaCategoryTitle("Category:Quantum mechanics")).toBe("Category:Quantum mechanics");
+    expect(normalizeWikipediaCategoryTitle("Categoría:Ciencia")).toBe("Category:Ciencia");
+    expect(localizeWikipediaCategoryTitle("Category:Ciencia", "es")).toBe("Categoría:Ciencia");
+    expect(localizeWikipediaCategoryTitle("Category:Ciência", "pt-BR")).toBe("Categoria:Ciência");
   });
 
   it("builds unique ancestor-to-child category suggestions", () => {

@@ -1,12 +1,13 @@
 import { createContentHash, normalizeWikipediaContent } from "@narau/content-normalizer";
 import { prisma } from "@narau/database";
-import { areaSourceConfigSchema } from "@narau/validation";
+import { areaSourceConfigSchema, localizeWikipediaCategoryTitle } from "@narau/validation";
 import { createWikipediaClient, type WikipediaClient } from "@narau/wikipedia-client";
 import { env } from "../lib/env";
 import { logger } from "../lib/logger";
 import { storeImage } from "../lib/storage";
 import { isDisambiguationLike, isListLike, scoreCandidate } from "./candidate-scoring";
 import { wikipediaLanguageCode } from "./language";
+import { getWikipediaResearchCategories } from "./wikipedia-research";
 
 export interface IngestionResult {
   areas: number;
@@ -94,11 +95,27 @@ export async function ingestAreaCandidates(
             requestDelayMs: env.WIKIPEDIA_REQUEST_DELAY_MS,
           });
 
-      const members = await areaClient.getPagesFromCategories(config.data.categories, {
+      const researchCategories = getWikipediaResearchCategories(config.data.categories)
+        .map((category) => localizeWikipediaCategoryTitle(category, tenantLanguage));
+      const contextCategories = config.data.categories
+        .map((category) => localizeWikipediaCategoryTitle(category, tenantLanguage));
+      let members = await areaClient.getPagesFromCategories(researchCategories, {
         includeSubcategories: config.data.includeSubcategories,
         depth: config.data.depth,
         maxMembers: config.data.maxCandidates,
       });
+      if (members.length === 0 && researchCategories.length < contextCategories.length) {
+        logger.warn("ingestion focus category empty, using context categories", {
+          area: area.slug,
+          tenant: area.tenant.slug,
+          focusCategory: researchCategories[0],
+        });
+        members = await areaClient.getPagesFromCategories(contextCategories, {
+          includeSubcategories: config.data.includeSubcategories,
+          depth: config.data.depth,
+          maxMembers: config.data.maxCandidates,
+        });
+      }
       logger.info("ingestion area members fetched", {
         area: area.slug,
         tenant: area.tenant.slug,
@@ -119,7 +136,9 @@ export async function ingestAreaCandidates(
           })
         ).map((candidate) => candidate.subjectId),
       );
-      const unsafeCategories = new Set(config.data.excludeCategories.map((category) => category.toLowerCase()));
+      const unsafeCategories = new Set(
+        config.data.excludeCategories.map((category) => localizeWikipediaCategoryTitle(category, tenantLanguage).toLowerCase()),
+      );
 
       for (const member of members) {
         const page = details.get(member.pageId);
