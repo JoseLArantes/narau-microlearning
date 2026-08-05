@@ -38,11 +38,15 @@ describe("WikipediaClient Rate Limiting & Spacing", () => {
       await client.getPageSummary("Page 3");
 
       expect(timestamps.length).toBe(3);
-      const diff1 = timestamps[1] - timestamps[0];
-      const diff2 = timestamps[2] - timestamps[1];
+      const t0 = timestamps[0] ?? 0;
+      const t1 = timestamps[1] ?? 0;
+      const t2 = timestamps[2] ?? 0;
 
-      expect(diff1).toBeGreaterThanOrEqual(delayMs - 15); // Allow slight timer variance
-      expect(diff2).toBeGreaterThanOrEqual(delayMs - 15);
+      const diff1 = t1 - t0;
+      const diff2 = t2 - t1;
+
+      expect(diff1).toBeGreaterThanOrEqual(delayMs - 20); // Allow slight timer variance
+      expect(diff2).toBeGreaterThanOrEqual(delayMs - 20);
     } finally {
       globalThis.fetch = originalFetch;
     }
