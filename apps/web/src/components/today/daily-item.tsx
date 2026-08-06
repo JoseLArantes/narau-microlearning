@@ -7,12 +7,20 @@ import { RatingDialog } from "./rating-dialog";
 import { ReportDialog } from "./report-dialog";
 import { SkipButton } from "./skip-button";
 import { getAreaBreadcrumb } from "@/server/services/areas";
+import { getTranslation } from "@/lib/i18n";
 
-type Item = NonNullable<Awaited<ReturnType<typeof import("@/server/services/today").TodayService.getCurrentItem>>>;
+type Item = NonNullable<
+  Awaited<ReturnType<typeof import("@/server/services/today").TodayService.getCurrentItem>>
+>;
 
 function cardDate(date: Date): string {
   return date
-    .toLocaleDateString("en-US", { timeZone: "UTC", month: "short", day: "numeric", year: "numeric" })
+    .toLocaleDateString("en-US", {
+      timeZone: "UTC",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    })
     .toUpperCase();
 }
 
@@ -29,8 +37,17 @@ export function DailyItem({
 }): ReactElement {
   const isLearned = item.status === "LEARNED";
   const isViewed = item.status === "VIEWED" || isLearned;
-  const fitted = fitToReadingTime(item.subject.summary, readingMinutes, locale);
-  const reading = prepareReadingContent(fitted.text, item.subject.hook ?? undefined, locale);
+  const isAiCurated =
+    item.dailyAreaSubject?.curationStatus === "CURATED" &&
+    Boolean(item.dailyAreaSubject.curatedText);
+  const sourceText = isAiCurated
+    ? (item.dailyAreaSubject?.curatedText ?? item.subject.summary)
+    : item.subject.summary;
+  const sourceHook = isAiCurated
+    ? (item.dailyAreaSubject?.curatedHook ?? undefined)
+    : (item.subject.hook ?? undefined);
+  const fitted = fitToReadingTime(sourceText, readingMinutes, locale);
+  const reading = prepareReadingContent(fitted.text, sourceHook, locale);
 
   return (
     <article className="index-card relative px-5 py-10 sm:px-10 sm:py-12">
@@ -45,6 +62,14 @@ export function DailyItem({
           <span>{cardDate(item.contentDate)}</span>
           <span aria-hidden>·</span>
           <span>{fitted.minutes} MIN READ</span>
+          {isAiCurated ? (
+            <>
+              <span aria-hidden>·</span>
+              <Badge variant="muted">
+                {getTranslation(locale, "system.aiCurated", "TEXT CURATED BY AI")}
+              </Badge>
+            </>
+          ) : null}
           <span aria-hidden>·</span>
           <span className="normal-case tracking-normal">{getAreaBreadcrumb(item.area)}</span>
         </div>
@@ -85,15 +110,15 @@ export function DailyItem({
             Read the full article
           </a>
           <span aria-hidden>·</span>
-          <span>
-            Source: Wikipedia{item.subject.license ? ` · ${item.subject.license}` : ""}
-          </span>
+          <span>Source: Wikipedia{item.subject.license ? ` · ${item.subject.license}` : ""}</span>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
           {isLearned ? (
             <>
-              <Badge variant="stamped">LEARNED · {cardDate(item.learnedAt ?? item.contentDate)}</Badge>
+              <Badge variant="stamped">
+                LEARNED · {cardDate(item.learnedAt ?? item.contentDate)}
+              </Badge>
               {!readOnly ? <RatingDialog itemId={item.id} /> : null}
             </>
           ) : readOnly ? null : (

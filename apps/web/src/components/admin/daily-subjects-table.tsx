@@ -1,6 +1,15 @@
 "use client";
 
-import { Badge, Button, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@narau/ui";
+import {
+  Badge,
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@narau/ui";
 import { useState } from "react";
 import { OverrideDialog } from "./override-dialog";
 import { useI18n } from "../i18n-context";
@@ -13,6 +22,10 @@ export interface DailySubjectRow {
   subjectUrl: string | null;
   status: "DRAFT" | "PUBLISHED" | "HIDDEN" | "REPLACED";
   selectedBy: string | null;
+  curationStatus: "NOT_REQUESTED" | "PENDING" | "CURATED" | "FAILED";
+  curationProvider: "OPENAI" | "DEEPSEEK" | "GEMINI" | null;
+  curationModel: string | null;
+  curationError: string | null;
 }
 
 export function DailySubjectsTable({
@@ -46,7 +59,9 @@ export function DailySubjectsTable({
             className="flex h-9 rounded-[calc(var(--radius)-2px)] border border-input bg-card px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
         </label>
-        <Button type="submit" variant="outline">Go</Button>
+        <Button type="submit" variant="outline">
+          Go
+        </Button>
       </form>
 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
@@ -57,6 +72,7 @@ export function DailySubjectsTable({
             <TableHead>Area</TableHead>
             <TableHead>Subject</TableHead>
             <TableHead>Status</TableHead>
+            <TableHead>AI text</TableHead>
             <TableHead className="text-right">Override</TableHead>
           </TableRow>
         </TableHeader>
@@ -81,11 +97,41 @@ export function DailySubjectsTable({
               <TableCell>
                 <Badge
                   variant={
-                    row.status === "PUBLISHED" ? "secondary" : row.status === "HIDDEN" ? "destructive" : "outline"
+                    row.status === "PUBLISHED"
+                      ? "secondary"
+                      : row.status === "HIDDEN"
+                        ? "destructive"
+                        : "outline"
                   }
                 >
                   {row.status}
                 </Badge>
+              </TableCell>
+              <TableCell>
+                <div className="space-y-1">
+                  <Badge
+                    variant={
+                      row.curationStatus === "FAILED"
+                        ? "destructive"
+                        : row.curationStatus === "CURATED"
+                          ? "stamped"
+                          : "muted"
+                    }
+                  >
+                    {row.curationStatus.replace("_", " ")}
+                  </Badge>
+                  {row.curationModel ? (
+                    <p className="max-w-48 truncate text-xs text-muted-foreground">
+                      {row.curationProvider ? `${row.curationProvider} · ` : ""}
+                      {row.curationModel}
+                    </p>
+                  ) : null}
+                  {row.curationError ? (
+                    <p className="max-w-64 text-xs leading-5 text-destructive">
+                      {row.curationError}
+                    </p>
+                  ) : null}
+                </div>
               </TableCell>
               <TableCell className="text-right">
                 <OverrideDialog

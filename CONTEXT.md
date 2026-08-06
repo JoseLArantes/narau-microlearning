@@ -24,6 +24,14 @@ _Avoid_: Topic, category
 A tenant-owned sourced learning article that can be selected for a daily card.
 _Avoid_: Content item, article
 
+**AI curation**:
+An optional, source-bound editorial transformation that reshapes a selected Subject to the configured reading time without adding outside facts. Failure always falls back to the Subject.
+_Avoid_: AI generation, AI-authored content
+
+**Curated daily text**:
+The immutable-for-the-day AI derivative stored on a DailyAreaSubject and shared by every user assigned that publication. Its model, prompt version, source revision, and time are recorded; the Subject remains the authority.
+_Avoid_: Curated Subject, personalized AI text
+
 ## Operations
 
 **Tenant context**:

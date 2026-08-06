@@ -1,0 +1,21 @@
+{
+  "name": "@narau/ai-curation",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@narau/config": "workspace:*",
+    "@types/node": "^22.13.0",
+    "eslint": "^9.22.0",
+    "typescript": "^5.7.2",
+    "vitest": "^3.0.8"
+  }
+}

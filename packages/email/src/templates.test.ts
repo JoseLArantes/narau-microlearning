@@ -17,6 +17,7 @@ describe("Email Templates", () => {
       readingMinutes: 4,
       itemUrl: "http://localhost:3030/today",
       dateStr: "AUG 4, 2026",
+      aiCuratedLabel: "TEXT CURATED BY AI",
     });
 
     expect(html).toContain("NARAU");
@@ -26,6 +27,7 @@ describe("Email Templates", () => {
     expect(html).toContain("Linguistics");
     expect(html).toContain("http://localhost:3030/today");
     expect(html).toContain("AUG 4, 2026");
+    expect(html).toContain("TEXT CURATED BY AI");
   });
 
   it("renders welcome email with editorial greeting and action link", () => {

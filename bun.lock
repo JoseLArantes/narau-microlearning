@@ -21,6 +21,7 @@
       "dependencies": {
         "@auth/prisma-adapter": "^2.7.4",
         "@hookform/resolvers": "^5.1.1",
+        "@narau/ai-curation": "workspace:*",
         "@narau/analytics": "workspace:*",
         "@narau/database": "workspace:*",
         "@narau/email": "workspace:*",
@@ -56,6 +57,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@aws-sdk/client-s3": "^3.750.0",
+        "@narau/ai-curation": "workspace:*",
         "@narau/content-normalizer": "workspace:*",
         "@narau/database": "workspace:*",
         "@narau/email": "workspace:*",
@@ -77,6 +79,17 @@
         "eslint": "^9.22.0",
         "tsup": "^8.3.5",
         "tsx": "^4.19.2",
+        "typescript": "^5.7.2",
+        "vitest": "^3.0.8",
+      },
+    },
+    "packages/ai-curation": {
+      "name": "@narau/ai-curation",
+      "version": "0.0.0",
+      "devDependencies": {
+        "@narau/config": "workspace:*",
+        "@types/node": "^22.13.0",
+        "eslint": "^9.22.0",
         "typescript": "^5.7.2",
         "vitest": "^3.0.8",
       },
@@ -411,6 +424,8 @@
     "@msgpackr-extract/msgpackr-extract-win32-x64": ["@msgpackr-extract/msgpackr-extract-win32-x64@3.0.4", "", { "os": "win32", "cpu": "x64" }, "sha512-CmCXPQrkbwExx3j946/PtHWHbYJiCRBRDl4BlkRQcJB/YOwQxJRTpoo7aTsortjgoJ1x7opzTSxn7C+ASSLVjQ=="],
 
     "@napi-rs/lzma-linux-x64-gnu": ["@napi-rs/lzma-linux-x64-gnu@1.5.1", "", { "os": "linux", "cpu": "x64" }, "sha512-oTXEIha4SsuXdTA4Iyskj0kpdx2yVXdhd75c2v3xGrHFfVMsbhTPZU/nMPL4sWKo4pBHm3aucLaqGlF696dTyQ=="],
+
+    "@narau/ai-curation": ["@narau/ai-curation@workspace:packages/ai-curation"],
 
     "@narau/analytics": ["@narau/analytics@workspace:packages/analytics"],
 

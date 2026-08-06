@@ -7,24 +7,20 @@ import { ingestAreaCandidatesProcessor } from "./jobs/ingest-area-candidates";
 import { selectDailySubjectsProcessor } from "./jobs/select-daily-subjects";
 import { assignUserItemsProcessor } from "./jobs/assign-user-items";
 import { sendDailyRemindersProcessor } from "./jobs/send-daily-reminders";
+import { createJobProcessor, type JobProcessor } from "./job-dispatcher";
 
 export function createWorkers(): Worker[] {
   const connection = createRedisConnection();
-  const processors: Record<string, (job: { data?: { date?: string } }) => Promise<unknown>> = {
+  const processors: Record<string, JobProcessor> = {
     [JOB_NAMES.INGEST]: ingestAreaCandidatesProcessor,
     [JOB_NAMES.SELECT]: selectDailySubjectsProcessor,
     [JOB_NAMES.ASSIGN]: assignUserItemsProcessor,
     [JOB_NAMES.REMINDER]: sendDailyRemindersProcessor,
   };
 
-  const workers = Object.values(processors).map(
-    (processor) =>
-      new Worker(
-        QUEUE_NAME,
-        async (job) => processor(job),
-        { connection, concurrency: 1 },
-      ),
-  );
+  const workers = [
+    new Worker(QUEUE_NAME, createJobProcessor(processors), { connection, concurrency: 1 }),
+  ];
 
   workers.forEach((worker) => {
     worker.on("failed", (job, error) => {
@@ -51,6 +47,8 @@ async function main(): Promise<void> {
 }
 
 void main().catch((error) => {
-  logger.error("worker failed to start", { error: error instanceof Error ? error.message : String(error) });
+  logger.error("worker failed to start", {
+    error: error instanceof Error ? error.message : String(error),
+  });
   process.exit(1);
 });

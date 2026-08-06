@@ -16,8 +16,6 @@ export interface IngestionResult {
 }
 
 const MIN_SUMMARY_CHARS = 80;
-const USED_WINDOW_DAYS = 180;
-const DAY_MS = 24 * 60 * 60 * 1000;
 const WIKIPEDIA_LICENSE = "CC BY-SA 4.0";
 
 async function downloadImage(url: string): Promise<{ buffer: Buffer; contentType: string; extension: string } | null> {
@@ -43,7 +41,6 @@ export async function ingestAreaCandidates(
   clientFactory?: (language: string) => WikipediaClient,
 ): Promise<IngestionResult> {
   const result: IngestionResult = { areas: 0, candidatesCreated: 0, errors: [] };
-  const since = new Date(date.getTime() - USED_WINDOW_DAYS * DAY_MS);
   const areas = await prisma.area.findMany({
     where: {
       status: "ACTIVE",
@@ -128,14 +125,6 @@ export async function ingestAreaCandidates(
         details: details.size,
       });
 
-      const usedSubjectIds = new Set(
-        (
-          await prisma.areaSubjectCandidate.findMany({
-            where: { areaId: area.id, generatedForDate: { gte: since } },
-            select: { subjectId: true },
-          })
-        ).map((candidate) => candidate.subjectId),
-      );
       const unsafeCategories = new Set(
         config.data.excludeCategories.map((category) => localizeWikipediaCategoryTitle(category, tenantLanguage).toLowerCase()),
       );
@@ -200,8 +189,6 @@ export async function ingestAreaCandidates(
             }
           }
         }
-
-        if (usedSubjectIds.has(subject.id)) continue;
 
         const candidate = await prisma.areaSubjectCandidate.upsert({
           where: {

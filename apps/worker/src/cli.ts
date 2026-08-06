@@ -3,9 +3,13 @@ import { prisma } from "@narau/database";
 import { parseUtcDate } from "./lib/date";
 import { logger } from "./lib/logger";
 import { ingestAreaCandidates } from "./services/wikipedia-ingestion";
-import { prismaSubjectSelectionRepository, selectDailySubjects } from "./services/subject-selection";
+import {
+  prismaSubjectSelectionRepository,
+  selectDailySubjects,
+} from "./services/subject-selection";
 import { assignUserItems, prismaUserAssignmentRepository } from "./services/user-assignment";
 import { sendDailyReminders } from "./jobs/send-daily-reminders";
+import { curateDailySubjectsForDate } from "./services/daily-curation";
 
 const USAGE = `
 Usage: bun run job:<name> [--date=YYYY-MM-DD]
@@ -42,7 +46,10 @@ async function main(): Promise<void> {
       result = await ingestAreaCandidates(contentDate);
       break;
     case "select-daily-subjects":
-      result = await selectDailySubjects(contentDate, prismaSubjectSelectionRepository);
+      result = {
+        selection: await selectDailySubjects(contentDate, prismaSubjectSelectionRepository),
+        curation: await curateDailySubjectsForDate(contentDate),
+      };
       break;
     case "assign-user-daily-items":
       result = await assignUserItems(contentDate, prismaUserAssignmentRepository);
@@ -62,7 +69,9 @@ async function main(): Promise<void> {
 
 await main()
   .catch((error) => {
-    logger.error("cli job failed", { error: error instanceof Error ? error.message : String(error) });
+    logger.error("cli job failed", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     process.exitCode = 1;
   })
   .finally(async () => {

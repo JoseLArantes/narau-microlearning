@@ -1,8 +1,8 @@
 name: narau
 
 x-app-build: &app-build
-    context: ..
-    dockerfile: docker/Dockerfile
+  context: ..
+  dockerfile: docker/Dockerfile
 
 services:
   db:
@@ -118,9 +118,37 @@ services:
       LINKEDIN_CLIENT_SECRET: "${LINKEDIN_CLIENT_SECRET:-}"
       STORAGE_ENABLED: "false"
       WIKIPEDIA_USER_AGENT: "${WIKIPEDIA_USER_AGENT:-NarauBot/0.1 (https://localhost:3030; contact@example.com)}"
-      WIKIPEDIA_REQUEST_DELAY_MS: "${WIKIPEDIA_REQUEST_DELAY_MS:-1000}"
+      WIKIPEDIA_REQUEST_DELAY_MS: "${WIKIPEDIA_REQUEST_DELAY_MS:-10000}"
+      LLM_SETTINGS_ENCRYPTION_KEY: "${LLM_SETTINGS_ENCRYPTION_KEY:-local-development-llm-key-change-me}"
     volumes:
       - ../apps/web/public:/app/apps/web/public
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  worker:
+    image: narau-web
+    command: ["bun", "apps/worker/dist/index.js"]
+    environment:
+      NODE_ENV: production
+      APP_URL: http://localhost:3030
+      DATABASE_URL: postgresql://app:app@db:5432/narau?schema=public
+      REDIS_URL: redis://redis:6379
+      EMAIL_FROM: "Narau <no-reply@localhost>"
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      SMTP_USER: ""
+      SMTP_PASS: ""
+      SMTP_SECURE: "false"
+      STORAGE_ENABLED: "false"
+      WIKIPEDIA_USER_AGENT: "${WIKIPEDIA_USER_AGENT:-NarauBot/0.1 (https://localhost:3030; contact@example.com)}"
+      WIKIPEDIA_REQUEST_DELAY_MS: "${WIKIPEDIA_REQUEST_DELAY_MS:-10000}"
+      LLM_SETTINGS_ENCRYPTION_KEY: "${LLM_SETTINGS_ENCRYPTION_KEY:-local-development-llm-key-change-me}"
     depends_on:
       db:
         condition: service_healthy

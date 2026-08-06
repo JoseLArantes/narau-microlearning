@@ -4,6 +4,7 @@ WORKDIR /app
 COPY package.json bun.lock turbo.json tsconfig.base.json eslint.config.mjs prettier.config.mjs ./
 COPY apps/web/package.json ./apps/web/package.json
 COPY apps/worker/package.json ./apps/worker/package.json
+COPY packages/ai-curation/package.json ./packages/ai-curation/package.json
 COPY packages/analytics/package.json ./packages/analytics/package.json
 COPY packages/config/package.json ./packages/config/package.json
 COPY packages/content-normalizer/package.json ./packages/content-normalizer/package.json
@@ -36,6 +37,7 @@ ENV SMTP_USER=
 ENV SMTP_PASS=
 ENV SMTP_SECURE=false
 ENV WIKIPEDIA_USER_AGENT="NarauBot/0.1 (https://localhost:3030; contact@example.com)"
+ENV WIKIPEDIA_REQUEST_DELAY_MS=10000
 RUN bun run build
 
 FROM dev-deps AS runtime-files

@@ -9,6 +9,7 @@ export default defineConfig({
   external: ["@prisma/client", "nodemailer"],
   noExternal: [
     "@aws-sdk/client-s3",
+    "@narau/ai-curation",
     "@narau/content-normalizer",
     "@narau/database",
     "@narau/email",

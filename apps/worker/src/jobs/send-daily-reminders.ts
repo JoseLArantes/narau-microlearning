@@ -25,6 +25,10 @@ export const sendDailyRemindersProcessor = async (): Promise<ReminderResult> => 
     include: {
       subject: { select: { title: true, summary: true } },
       area: { select: { name: true } },
+      tenant: { select: { slug: true, language: true } },
+      dailyAreaSubject: {
+        select: { curationStatus: true, curatedText: true },
+      },
       user: {
         select: {
           id: true,
@@ -40,21 +44,38 @@ export const sendDailyRemindersProcessor = async (): Promise<ReminderResult> => 
   });
 
   const appUrl = process.env.APP_URL ?? "http://localhost:3030";
-  const dateStr = startOfDay.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }).toUpperCase();
+  const appSettings = await prisma.appSettings.upsert({
+    where: { id: 1 },
+    update: {},
+    create: { id: 1 },
+  });
 
   const result: ReminderResult = { found: items.length, sent: 0, failed: [] };
   for (const item of items) {
     try {
       const userTags = item.user.userAreas.map((ua) => ua.area.name);
+      const isAiCurated =
+        item.dailyAreaSubject?.curationStatus === "CURATED" &&
+        Boolean(item.dailyAreaSubject.curatedText);
+      const dateStr = startOfDay
+        .toLocaleDateString(item.tenant.language || "en", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })
+        .toUpperCase();
       const html = renderDailyLearnEmail({
         userName: item.user.name ?? undefined,
         subjectTitle: item.subject.title,
-        subjectSummary: item.subject.summary ?? undefined,
+        subjectSummary: isAiCurated
+          ? (item.dailyAreaSubject?.curatedText ?? item.subject.summary)
+          : item.subject.summary,
         areaName: item.area.name,
         userTags: userTags.length > 0 ? userTags : [item.area.name],
-        readingMinutes: 5,
-        itemUrl: `${appUrl}/today`,
+        readingMinutes: appSettings.defaultReadingMinutes,
+        itemUrl: `${appUrl}/${item.tenant.slug}/today`,
         dateStr,
+        ...(isAiCurated ? { aiCuratedLabel: aiCuratedLabel(item.tenant.language) } : {}),
       });
 
       await sendEmail({
@@ -75,3 +96,10 @@ export const sendDailyRemindersProcessor = async (): Promise<ReminderResult> => 
 };
 
 export const sendDailyReminders = sendDailyRemindersProcessor;
+
+function aiCuratedLabel(language: string): string {
+  const locale = language.toLowerCase().split(/[-_]/)[0];
+  if (locale === "es") return "TEXTO CURADO POR IA";
+  if (locale === "pt") return "TEXTO COM CURADORIA DE IA";
+  return "TEXT CURATED BY AI";
+}

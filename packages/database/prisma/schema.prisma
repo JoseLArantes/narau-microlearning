@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x", "linux-musl-openssl-3.0.x"]
 }
 
@@ -63,6 +63,19 @@ enum DailySubjectStatus {
   REPLACED
 }
 
+enum AiCurationStatus {
+  NOT_REQUESTED
+  PENDING
+  CURATED
+  FAILED
+}
+
+enum LlmProvider {
+  OPENAI
+  DEEPSEEK
+  GEMINI
+}
+
 enum UserDailyItemStatus {
   PENDING
   VIEWED
@@ -73,32 +86,37 @@ enum UserDailyItemStatus {
 }
 
 model AppSettings {
-  id                   Int      @id @default(1)
-  defaultReadingMinutes Int     @default(5)
-  updatedAt            DateTime @updatedAt
+  id                    Int         @id @default(1)
+  defaultReadingMinutes Int         @default(5)
+  llmEnabled            Boolean     @default(false)
+  llmProvider           LlmProvider @default(OPENAI)
+  llmModel              String?
+  llmApiKeyEncrypted    String?
+  llmApiKeyHint         String?
+  updatedAt             DateTime    @updatedAt
 }
 
 model Tenant {
-  id        String   @id @default(cuid())
-  slug      String   @unique
+  id        String       @id @default(cuid())
+  slug      String       @unique
   name      String
   language  String
   domain    String?
-  isDefault Boolean  @default(false)
+  isDefault Boolean      @default(false)
   status    TenantStatus @default(ACTIVE)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
 
-  users                 User[]
-  areas                 Area[]
-  subjects              Subject[]
-  candidates            AreaSubjectCandidate[]
-  dailySubjects         DailyAreaSubject[]
-  userAreas             UserArea[]
-  userDailyItems        UserDailyItem[]
-  inaccuracyReports     InaccuracyReport[]
-  auditLogs             AuditLog[]
-  analyticsEvents       AnalyticsEvent[]
+  users             User[]
+  areas             Area[]
+  subjects          Subject[]
+  candidates        AreaSubjectCandidate[]
+  dailySubjects     DailyAreaSubject[]
+  userAreas         UserArea[]
+  userDailyItems    UserDailyItem[]
+  inaccuracyReports InaccuracyReport[]
+  auditLogs         AuditLog[]
+  analyticsEvents   AnalyticsEvent[]
 }
 
 enum ReportReason {
@@ -119,19 +137,19 @@ enum ReportStatus {
 }
 
 model User {
-  id            String        @id @default(cuid())
+  id            String     @id @default(cuid())
   tenantId      String
   name          String?
-  email         String        @unique
+  email         String     @unique
   emailVerified DateTime?
   image         String?
-  role          Role          @default(USER)
-  status        UserStatus    @default(ACTIVE)
-  timezone      String        @default("UTC")
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  role          Role       @default(USER)
+  status        UserStatus @default(ACTIVE)
+  timezone      String     @default("UTC")
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
-  tenant          Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant          Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   accounts        Account[]
   sessions        Session[]
   userAreas       UserArea[]
@@ -265,15 +283,24 @@ model AreaSubjectCandidate {
 }
 
 model DailyAreaSubject {
-  id          String             @id @default(cuid())
-  tenantId    String
-  contentDate DateTime           @db.Date
-  areaId      String
-  subjectId   String
-  status      DailySubjectStatus @default(PUBLISHED)
-  selectedBy  String?
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
+  id                       String             @id @default(cuid())
+  tenantId                 String
+  contentDate              DateTime           @db.Date
+  areaId                   String
+  subjectId                String
+  status                   DailySubjectStatus @default(PUBLISHED)
+  selectedBy               String?
+  curationStatus           AiCurationStatus   @default(NOT_REQUESTED)
+  curatedText              String?
+  curatedHook              String?
+  curationProvider         LlmProvider?
+  curationModel            String?
+  curationPromptVersion    String?
+  curationSourceRevisionId String?
+  curatedAt                DateTime?
+  curationError            String?
+  createdAt                DateTime           @default(now())
+  updatedAt                DateTime           @updatedAt
 
   tenant         Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   area           Area            @relation(fields: [areaId, tenantId], references: [id, tenantId], onDelete: Cascade)
@@ -286,16 +313,16 @@ model DailyAreaSubject {
 }
 
 model UserArea {
-  tenantId         String
-  userId           String
-  areaId           String
-  assignedBy       String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  tenantId   String
+  userId     String
+  areaId     String
+  assignedBy String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId, tenantId], references: [id, tenantId], onDelete: Cascade)
-  area Area @relation(fields: [areaId, tenantId], references: [id, tenantId], onDelete: Cascade)
+  user   User   @relation(fields: [userId, tenantId], references: [id, tenantId], onDelete: Cascade)
+  area   Area   @relation(fields: [areaId, tenantId], references: [id, tenantId], onDelete: Cascade)
 
   @@id([userId, areaId])
 }
@@ -344,10 +371,10 @@ model InaccuracyReport {
   reviewedAt      DateTime?
   resolutionNote  String?
 
-  tenant        Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  user          User?           @relation(fields: [userId, tenantId], references: [id, tenantId], onDelete: Cascade)
-  userDailyItem UserDailyItem?  @relation(fields: [userDailyItemId, tenantId], references: [id, tenantId], onDelete: Cascade)
-  subject       Subject         @relation(fields: [subjectId, tenantId], references: [id, tenantId], onDelete: Cascade)
+  tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user          User?          @relation(fields: [userId, tenantId], references: [id, tenantId], onDelete: Cascade)
+  userDailyItem UserDailyItem? @relation(fields: [userDailyItemId, tenantId], references: [id, tenantId], onDelete: Cascade)
+  subject       Subject        @relation(fields: [subjectId, tenantId], references: [id, tenantId], onDelete: Cascade)
 
   @@index([tenantId, status, createdAt])
 }
@@ -363,7 +390,7 @@ model AuditLog {
   createdAt  DateTime @default(now())
 
   tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
-  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  actor  User?   @relation(fields: [actorId], references: [id], onDelete: SetNull)
 }
 
 model AnalyticsEvent {
@@ -375,7 +402,7 @@ model AnalyticsEvent {
   createdAt DateTime @default(now())
 
   tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
-  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([name, createdAt])
 }

@@ -28,18 +28,19 @@ export default async function AdminSubjectsPage({
     subjectUrl: daily.subject?.canonicalUrl ?? null,
     status: daily.status,
     selectedBy: daily.selectedBy,
+    curationStatus: daily.curationStatus,
+    curationProvider: daily.curationProvider,
+    curationModel: daily.curationModel,
+    curationError: daily.curationError,
   }));
 
   return (
     <div className="space-y-6">
       <header className="space-y-1">
-        <span className="mono-meta text-muted-foreground">DAILY SELECTIONS</span>
-        <h1 className="mt-1 font-serif text-3xl tracking-tight">Subjects</h1>
+        <h1 className="font-serif text-3xl tracking-tight">Daily subjects</h1>
         <p className="text-muted-foreground">
           The items picked for{" "}
-          <time dateTime={contentDate.toISOString()}>
-            {contentDate.toISOString().slice(0, 10)}
-          </time>
+          <time dateTime={contentDate.toISOString()}>{contentDate.toISOString().slice(0, 10)}</time>
         </p>
       </header>
 

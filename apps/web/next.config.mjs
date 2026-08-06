@@ -7,6 +7,7 @@ const nextConfig = {
     "@narau/analytics",
     "@narau/database",
     "@narau/email",
+    "@narau/ai-curation",
   ],
   serverExternalPackages: ["@prisma/client", "nodemailer"],
   eslint: { ignoreDuringBuilds: true },

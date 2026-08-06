@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.750.0",
+    "@narau/ai-curation": "workspace:*",
     "@narau/content-normalizer": "workspace:*",
     "@narau/database": "workspace:*",
     "@narau/email": "workspace:*",

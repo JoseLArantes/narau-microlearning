@@ -27,6 +27,7 @@ export {
   SubjectStatus,
   CandidateStatus,
   DailySubjectStatus,
+  AiCurationStatus,
   UserDailyItemStatus,
   ReportReason,
   ReportStatus,

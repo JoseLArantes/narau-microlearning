@@ -22,7 +22,9 @@ export async function audit(
   });
 }
 
-export async function adminOverview(tenantId: string): Promise<{ users: number; areas: number; pendingReports: number; pendingItems: number }> {
+export async function adminOverview(
+  tenantId: string,
+): Promise<{ users: number; areas: number; pendingReports: number; pendingItems: number }> {
   const [users, areas, pendingReports, pendingItems] = await Promise.all([
     prisma.user.count({ where: { tenantId } }),
     prisma.area.count({ where: { tenantId } }),
@@ -35,7 +37,11 @@ export async function adminOverview(tenantId: string): Promise<{ users: number; 
 export async function listDailySubjects(
   tenantId: string,
   contentDate: Date,
-): Promise<Prisma.DailyAreaSubjectGetPayload<{ include: { area: { include: { parent: { include: { parent: true } } } }; subject: true } }>[]> {
+): Promise<
+  Prisma.DailyAreaSubjectGetPayload<{
+    include: { area: { include: { parent: { include: { parent: true } } } }; subject: true };
+  }>[]
+> {
   return prisma.dailyAreaSubject.findMany({
     where: { tenantId, contentDate },
     include: { area: { include: { parent: { include: { parent: true } } } }, subject: true },
@@ -51,7 +57,8 @@ export async function overrideDailySubject(
     where: { id: input.areaId, tenantId: input.tenantId },
     include: { parent: { include: { parent: true } } },
   });
-  if (!area || !isAreaEffectivelyActive(area)) throw new Error("The selected area or topic is not currently active.");
+  if (!area || !isAreaEffectivelyActive(area))
+    throw new Error("The selected area or topic is not currently active.");
   const candidate = await prisma.areaSubjectCandidate.findFirst({
     where: {
       tenantId: input.tenantId,
@@ -65,18 +72,48 @@ export async function overrideDailySubject(
   });
   if (!candidate) throw new Error("The subject is not an active candidate for this area and date.");
   const daily = await prisma.dailyAreaSubject.upsert({
-    where: { contentDate_areaId_tenantId: { contentDate: input.contentDate, areaId: input.areaId, tenantId: input.tenantId } },
-    update: { subjectId: input.subjectId, selectedBy: `admin:${actorId}`, status: "PUBLISHED" },
+    where: {
+      contentDate_areaId_tenantId: {
+        contentDate: input.contentDate,
+        areaId: input.areaId,
+        tenantId: input.tenantId,
+      },
+    },
+    update: {
+      subjectId: input.subjectId,
+      selectedBy: `admin:${actorId}`,
+      status: "PUBLISHED",
+      curationStatus: "PENDING",
+      curatedText: null,
+      curatedHook: null,
+      curationProvider: null,
+      curationModel: null,
+      curationPromptVersion: null,
+      curationSourceRevisionId: null,
+      curatedAt: null,
+      curationError: null,
+    },
     create: {
       contentDate: input.contentDate,
       tenantId: input.tenantId,
       areaId: input.areaId,
       subjectId: input.subjectId,
       selectedBy: `admin:${actorId}`,
+      curationStatus: "PENDING",
     },
   });
-  await audit(actorId, "ADMIN_SUBJECT_OVERRIDDEN", "DailyAreaSubject", daily.id, input, input.tenantId);
-  await track(actorId, "ADMIN_SUBJECT_OVERRIDDEN", { areaId: input.areaId, subjectId: input.subjectId });
+  await audit(
+    actorId,
+    "ADMIN_SUBJECT_OVERRIDDEN",
+    "DailyAreaSubject",
+    daily.id,
+    input,
+    input.tenantId,
+  );
+  await track(actorId, "ADMIN_SUBJECT_OVERRIDDEN", {
+    areaId: input.areaId,
+    subjectId: input.subjectId,
+  });
   return daily;
 }
 
@@ -106,7 +143,10 @@ export async function resolveReport(
   tenantId: string,
   note?: string,
 ): Promise<Awaited<ReturnType<typeof prisma.inaccuracyReport.update>>> {
-  const existing = await prisma.inaccuracyReport.findFirst({ where: { id, tenantId }, select: { id: true } });
+  const existing = await prisma.inaccuracyReport.findFirst({
+    where: { id, tenantId },
+    select: { id: true },
+  });
   if (!existing) throw new Error("Report not found in the current tenant.");
   const report = await prisma.inaccuracyReport.update({
     where: { id: existing.id },
@@ -122,7 +162,10 @@ export async function dismissReport(
   actorId: string,
   tenantId: string,
 ): Promise<Awaited<ReturnType<typeof prisma.inaccuracyReport.update>>> {
-  const existing = await prisma.inaccuracyReport.findFirst({ where: { id, tenantId }, select: { id: true } });
+  const existing = await prisma.inaccuracyReport.findFirst({
+    where: { id, tenantId },
+    select: { id: true },
+  });
   if (!existing) throw new Error("Report not found in the current tenant.");
   const report = await prisma.inaccuracyReport.update({
     where: { id: existing.id },
@@ -149,9 +192,13 @@ export async function listCandidates(
   tenantId: string,
   areaId: string,
   contentDate: Date,
-): Promise<Prisma.AreaSubjectCandidateGetPayload<{
-  include: { subject: { select: { id: true; title: true; canonicalUrl: true; qualityScore: true } } };
-}>[]> {
+): Promise<
+  Prisma.AreaSubjectCandidateGetPayload<{
+    include: {
+      subject: { select: { id: true; title: true; canonicalUrl: true; qualityScore: true } };
+    };
+  }>[]
+> {
   return prisma.areaSubjectCandidate.findMany({
     where: { tenantId, areaId, generatedForDate: contentDate },
     include: {
@@ -168,12 +215,22 @@ export async function rejectCandidate(
   actorId: string,
   tenantId: string,
 ): Promise<Awaited<ReturnType<typeof prisma.areaSubjectCandidate.update>>> {
-  const existing = await prisma.areaSubjectCandidate.findFirst({ where: { id: candidateId, tenantId }, select: { id: true } });
+  const existing = await prisma.areaSubjectCandidate.findFirst({
+    where: { id: candidateId, tenantId },
+    select: { id: true },
+  });
   if (!existing) throw new Error("Candidate not found in the current tenant.");
   const candidate = await prisma.areaSubjectCandidate.update({
     where: { id: existing.id },
     data: { status: "REJECTED" },
   });
-  await audit(actorId, "CANDIDATE_REJECTED", "AreaSubjectCandidate", candidateId, undefined, tenantId);
+  await audit(
+    actorId,
+    "CANDIDATE_REJECTED",
+    "AreaSubjectCandidate",
+    candidateId,
+    undefined,
+    tenantId,
+  );
   return candidate;
 }

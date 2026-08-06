@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.7.4",
+    "@narau/ai-curation": "workspace:*",
     "@narau/analytics": "workspace:*",
     "@narau/database": "workspace:*",
     "@narau/email": "workspace:*",

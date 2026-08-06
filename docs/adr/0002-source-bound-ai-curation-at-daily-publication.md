@@ -1,0 +1,5 @@
+# Source-bound AI curation belongs to the daily publication
+
+Narau stores optional AI-curated text on `DailyAreaSubject`, after selection and before assignment. The derivative is shared by every user who receives that daily publication, while the underlying Wikipedia `Subject` remains unchanged and is always the fallback. This preserves the product rule that one selected thing is the same for all matching learners on a given day and avoids both per-user model calls and permanent mutation of sourced content.
+
+The global administrator configures an OpenAI-compatible endpoint, model, and encrypted API key. When enabled, the worker sends the canonical URL, title, language, source text, and reading-time budget to a fidelity-bound prompt. Structured output and application guards reject markup, overlong output, and numbers absent from the source. The publication records success or failure plus model, prompt version, source revision, and curation time. Curation failure never blocks selection, assignment, reading, or email delivery.

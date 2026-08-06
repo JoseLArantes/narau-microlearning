@@ -25,7 +25,12 @@ export type {
   LearningInterestSelectionInput,
 } from "./area";
 
-export { createUserSchema, assignLearningInterestsSchema, roleSchema, userStatusSchema } from "./user";
+export {
+  createUserSchema,
+  assignLearningInterestsSchema,
+  roleSchema,
+  userStatusSchema,
+} from "./user";
 export type { CreateUserInput, AssignLearningInterestsInput } from "./user";
 
 export { ratingSchema } from "./today";
@@ -39,6 +44,9 @@ export type { OverrideDailySubjectInput } from "./admin";
 
 export { appSettingsSchema } from "./admin";
 export type { AppSettingsInput } from "./admin";
+
+export { llmProviderSchema, llmSettingsSchema } from "./llm";
+export type { LlmProviderInput, LlmSettingsInput } from "./llm";
 
 export {
   createTenantSchema,

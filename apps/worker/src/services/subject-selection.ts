@@ -6,11 +6,36 @@ export interface SelectionAreaCandidate {
   candidateScore: number;
 }
 
+const CANDIDATE_POOL_DAYS = 180;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * A subject can be present in more than one ingestion day's pool. Keep the
+ * newest row so selection cannot treat the same subject as multiple options.
+ * Callers must provide candidates newest-first.
+ */
+export function dedupeCandidatePool(candidates: SelectionAreaCandidate[]): SelectionAreaCandidate[] {
+  const seenSubjectIds = new Set<string>();
+  return candidates.filter((candidate) => {
+    if (seenSubjectIds.has(candidate.subjectId)) return false;
+    seenSubjectIds.add(candidate.subjectId);
+    return true;
+  });
+}
+
 export interface SubjectSelectionRepository {
   loadActiveAreas(): Promise<Array<{ id: string; tenantId: string }>>;
-  loadCandidates(areaId: string, tenantId: string, contentDate: Date): Promise<SelectionAreaCandidate[]>;
+  loadCandidates(
+    areaId: string,
+    tenantId: string,
+    contentDate: Date,
+  ): Promise<SelectionAreaCandidate[]>;
   loadRecentlySelectedSubjectIds(areaId: string, tenantId: string, since: Date): Promise<string[]>;
-  findExisting(areaId: string, tenantId: string, contentDate: Date): Promise<{ id: string; selectedBy: string | null } | null>;
+  findExisting(
+    areaId: string,
+    tenantId: string,
+    contentDate: Date,
+  ): Promise<{ id: string; selectedBy: string | null } | null>;
   upsertDailySubject(input: {
     tenantId: string;
     contentDate: Date;
@@ -54,10 +79,18 @@ export const prismaSubjectSelectionRepository: SubjectSelectionRepository = {
   },
 
   async loadCandidates(areaId, tenantId, contentDate) {
-    return prisma.areaSubjectCandidate.findMany({
-      where: { areaId, tenantId, generatedForDate: contentDate, status: "CANDIDATE", subject: { status: "ACTIVE" } },
+    const since = new Date(contentDate.getTime() - CANDIDATE_POOL_DAYS * DAY_MS);
+    const candidates = await prisma.areaSubjectCandidate.findMany({
+      where: {
+        areaId,
+        tenantId,
+        generatedForDate: { gte: since, lte: contentDate },
+        subject: { status: "ACTIVE" },
+      },
       select: { id: true, subjectId: true, candidateScore: true },
+      orderBy: [{ generatedForDate: "desc" }, { candidateScore: "desc" }],
     });
+    return dedupeCandidatePool(candidates);
   },
 
   async loadRecentlySelectedSubjectIds(areaId, tenantId, since) {
@@ -79,24 +112,50 @@ export const prismaSubjectSelectionRepository: SubjectSelectionRepository = {
     return prisma.dailyAreaSubject.upsert({
       where: input.id
         ? { id: input.id }
-        : { contentDate_areaId_tenantId: { contentDate: input.contentDate, areaId: input.areaId, tenantId: input.tenantId } },
-      update: { subjectId: input.subjectId, selectedBy: input.selectedBy, status: "PUBLISHED" },
+        : {
+            contentDate_areaId_tenantId: {
+              contentDate: input.contentDate,
+              areaId: input.areaId,
+              tenantId: input.tenantId,
+            },
+          },
+      update: {
+        subjectId: input.subjectId,
+        selectedBy: input.selectedBy,
+        status: "PUBLISHED",
+        curationStatus: "PENDING",
+        curatedText: null,
+        curatedHook: null,
+        curationProvider: null,
+        curationModel: null,
+        curationPromptVersion: null,
+        curationSourceRevisionId: null,
+        curatedAt: null,
+        curationError: null,
+      },
       create: {
         tenantId: input.tenantId,
         contentDate: input.contentDate,
         areaId: input.areaId,
         subjectId: input.subjectId,
         selectedBy: input.selectedBy,
+        curationStatus: "PENDING",
       },
     });
   },
 
   markSelected(candidateId) {
-    return prisma.areaSubjectCandidate.update({ where: { id: candidateId }, data: { status: "SELECTED" } });
+    return prisma.areaSubjectCandidate.update({
+      where: { id: candidateId },
+      data: { status: "SELECTED" },
+    });
   },
 
   markRejected(candidateId) {
-    return prisma.areaSubjectCandidate.update({ where: { id: candidateId }, data: { status: "REJECTED" } });
+    return prisma.areaSubjectCandidate.update({
+      where: { id: candidateId },
+      data: { status: "REJECTED" },
+    });
   },
 };
 
@@ -107,7 +166,10 @@ const WORKER_ACTOR = "worker";
  * Selects one subject per active area for the given content date.
  * Admin overrides (selectedBy starting with "admin:") are never overwritten.
  */
-export async function selectDailySubjects(date: Date, repo: SubjectSelectionRepository): Promise<SelectionResult> {
+export async function selectDailySubjects(
+  date: Date,
+  repo: SubjectSelectionRepository,
+): Promise<SelectionResult> {
   const result: SelectionResult = { areas: 0, selected: 0, skipped: [] };
   const areas = await repo.loadActiveAreas();
   result.areas = areas.length;
@@ -120,7 +182,9 @@ export async function selectDailySubjects(date: Date, repo: SubjectSelectionRepo
       continue;
     }
 
-    const recentlyUsed = new Set(await repo.loadRecentlySelectedSubjectIds(area.id, area.tenantId, since));
+    const recentlyUsed = new Set(
+      await repo.loadRecentlySelectedSubjectIds(area.id, area.tenantId, since),
+    );
     const candidates = (await repo.loadCandidates(area.id, area.tenantId, date)).filter(
       (candidate) => !recentlyUsed.has(candidate.subjectId),
     );
@@ -148,7 +212,9 @@ export async function selectDailySubjects(date: Date, repo: SubjectSelectionRepo
     });
     await repo.markSelected(winner.id);
     await Promise.all(
-      candidates.filter((candidate) => candidate.id !== winner.id).map((candidate) => repo.markRejected(candidate.id)),
+      candidates
+        .filter((candidate) => candidate.id !== winner.id)
+        .map((candidate) => repo.markRejected(candidate.id)),
     );
     result.selected += 1;
   }

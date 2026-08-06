@@ -9,6 +9,7 @@ export interface DailyLearnEmailOptions {
   readingMinutes?: number;
   itemUrl: string;
   dateStr?: string;
+  aiCuratedLabel?: string;
 }
 
 export function renderDailyLearnEmail(options: DailyLearnEmailOptions): string {
@@ -21,18 +22,20 @@ export function renderDailyLearnEmail(options: DailyLearnEmailOptions): string {
     readingMinutes = 5,
     itemUrl,
     dateStr = "TODAY",
+    aiCuratedLabel,
   } = options;
 
   const greeting = userName ? `Hello ${userName},` : "Hello,";
 
-  const tagsHtml = userTags.length > 0
-    ? userTags
-        .map(
-          (tag) =>
-            `<span style="display:inline-block; font-family:'Courier New', Courier, monospace; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.12em; background-color:#E5E1D7; color:#1F1A14; border:1px solid #D3CBBB; border-radius:3px; padding:3px 8px; margin-right:6px; margin-bottom:6px;">${tag}</span>`
-        )
-        .join("")
-    : `<span style="display:inline-block; font-family:'Courier New', Courier, monospace; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.12em; background-color:#E5E1D7; color:#1F1A14; border:1px solid #D3CBBB; border-radius:3px; padding:3px 8px;">${areaName}</span>`;
+  const tagsHtml =
+    userTags.length > 0
+      ? userTags
+          .map(
+            (tag) =>
+              `<span style="display:inline-block; font-family:'Courier New', Courier, monospace; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.12em; background-color:#E5E1D7; color:#1F1A14; border:1px solid #D3CBBB; border-radius:3px; padding:3px 8px; margin-right:6px; margin-bottom:6px;">${tag}</span>`,
+          )
+          .join("")
+      : `<span style="display:inline-block; font-family:'Courier New', Courier, monospace; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.12em; background-color:#E5E1D7; color:#1F1A14; border:1px solid #D3CBBB; border-radius:3px; padding:3px 8px;">${areaName}</span>`;
 
   const contentHtml = `
     <!-- Header Tag & Date -->
@@ -50,6 +53,12 @@ export function renderDailyLearnEmail(options: DailyLearnEmailOptions): string {
     </table>
 
     <p style="margin: 0 0 16px 0; font-size: 15px; color:#6D6255;">${greeting}</p>
+
+    ${
+      aiCuratedLabel
+        ? `<p style="margin:0 0 14px 0; font-family:'Courier New', Courier, monospace; font-size:10px; font-weight:700; letter-spacing:0.12em; color:#6D6255;">${aiCuratedLabel}</p>`
+        : ""
+    }
 
     <!-- Main Title -->
     <h1 style="margin: 0 0 16px 0; font-family: Georgia, serif; font-size: 26px; font-weight: 400; line-height: 1.25; color: #1F1A14;">
