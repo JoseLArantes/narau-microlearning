@@ -33,6 +33,8 @@ assert.match(dockerfile, /FROM oven\/bun:1-alpine AS runner/);
 assert.match(dockerfile, /FROM oven\/bun:1-alpine AS migrator/);
 assert.match(dockerfile, /COPY docker\/migrator\/package\.json/);
 assert.match(dockerfile, /COPY --from=runtime-files \/runtime\/node_modules\/@prisma/);
+assert.match(dockerfile, /client_store_name/);
+assert.match(dockerfile, /COPY --from=runtime-files \/runtime\/node_modules\/\.bun/);
 assert.doesNotMatch(dockerfile, /COPY --from=prod-deps/);
 assert.match(workerPackage.scripts["job:ingest"], /^bun dist\/cli\.js/);
 assert.match(workerPackage.scripts["job:select"], /^bun dist\/cli\.js/);

@@ -47,6 +47,8 @@ ARG TARGETARCH
 RUN set -eux; \
     mkdir -p /runtime/node_modules/@prisma /runtime/node_modules/.prisma; \
     client_dir="$(find /app/node_modules/.bun -maxdepth 1 -type d -name '@prisma+client@*' | head -n 1)/node_modules/@prisma/client"; \
+    client_store_dir="$(dirname "$(dirname "$(dirname "$client_dir")")")"; \
+    client_store_name="$(basename "$client_store_dir")"; \
     cp -R "$client_dir" /runtime/node_modules/@prisma/client; \
     generated_dir="$(dirname "$(dirname "$client_dir")")/.prisma/client"; \
     cp -R "$generated_dir" /runtime/node_modules/.prisma/client; \
@@ -61,7 +63,11 @@ RUN set -eux; \
       rm -f /runtime/node_modules/.prisma/client/libquery_engine-linux-musl-openssl-3.0.x.so.node; \
     elif [ "$TARGETARCH" = "amd64" ]; then \
       rm -f /runtime/node_modules/.prisma/client/libquery_engine-linux-musl-arm64-openssl-3.0.x.so.node; \
-    fi
+    fi; \
+    mkdir -p "/runtime/node_modules/.bun/$client_store_name/node_modules/@prisma"; \
+    cp -R /runtime/node_modules/@prisma/client "/runtime/node_modules/.bun/$client_store_name/node_modules/@prisma/client"; \
+    mkdir -p "/runtime/node_modules/.bun/$client_store_name/node_modules/.prisma"; \
+    cp -R /runtime/node_modules/.prisma/client "/runtime/node_modules/.bun/$client_store_name/node_modules/.prisma/client"
 
 FROM oven/bun:1-alpine AS migrator
 ARG TARGETARCH
@@ -106,6 +112,7 @@ COPY --from=builder /app/apps/worker/dist ./apps/worker/dist
 # Restore only external packages omitted from Next's standalone trace.
 COPY --from=runtime-files /runtime/node_modules/@prisma ./node_modules/@prisma
 COPY --from=runtime-files /runtime/node_modules/.prisma ./node_modules/.prisma
+COPY --from=runtime-files /runtime/node_modules/.bun ./node_modules/.bun
 COPY --from=runtime-files /runtime/node_modules/nodemailer ./node_modules/nodemailer
 
 RUN find ./apps/worker/dist -type f -name '*.map' -delete
