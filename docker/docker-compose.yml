@@ -1,8 +1,6 @@
 name: narau
 
-x-app-image: &app-image
-  image: narau-web
-  build:
+x-app-build: &app-build
     context: ..
     dockerfile: docker/Dockerfile
 
@@ -68,9 +66,20 @@ services:
       exit 0;
       "
 
+  test:
+    image: narau-test
+    profiles: ["test"]
+    build:
+      <<: *app-build
+      target: dev-deps
+    command: ["bun", "run", "test"]
+
   migrate:
-    <<: *app-image
-    command: ["sh", "-c", "cd packages/database && bunx prisma migrate deploy && bun run prisma/seed.ts"]
+    image: narau-migrate
+    build:
+      <<: *app-build
+      target: migrator
+    command: ["sh", "-c", "bunx prisma migrate deploy && bun run prisma/seed.ts"]
     environment:
       DATABASE_URL: postgresql://app:app@db:5432/narau?schema=public
     depends_on:
@@ -79,7 +88,10 @@ services:
     restart: "no"
 
   web:
-    <<: *app-image
+    image: narau-web
+    build:
+      <<: *app-build
+      target: runner
     ports:
       - "3030:3030"
     environment:

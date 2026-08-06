@@ -13,6 +13,8 @@ COPY packages/email/package.json ./packages/email/package.json
 COPY packages/ui/package.json ./packages/ui/package.json
 COPY packages/validation/package.json ./packages/validation/package.json
 COPY packages/wikipedia-client/package.json ./packages/wikipedia-client/package.json
+
+FROM base AS dev-deps
 RUN bun install --frozen-lockfile
 COPY apps ./apps
 COPY packages ./packages
@@ -20,7 +22,7 @@ COPY docker ./docker
 COPY .dockerignore ./
 COPY tests ./tests
 
-FROM base AS builder
+FROM dev-deps AS builder
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV DATABASE_URL=postgresql://app:app@localhost:5432/narau?schema=public
@@ -36,6 +38,51 @@ ENV SMTP_SECURE=false
 ENV WIKIPEDIA_USER_AGENT="NarauBot/0.1 (https://localhost:3030; contact@example.com)"
 RUN bun run build
 
+FROM dev-deps AS runtime-files
+ARG TARGETARCH
+
+# Next standalone already contains the traced application runtime. Keep only
+# the external packages needed by Prisma and the worker CLI. The worker's
+# other dependencies are bundled by tsup.
+RUN set -eux; \
+    mkdir -p /runtime/node_modules/@prisma /runtime/node_modules/.prisma; \
+    client_dir="$(find /app/node_modules/.bun -maxdepth 1 -type d -name '@prisma+client@*' | head -n 1)/node_modules/@prisma/client"; \
+    cp -R "$client_dir" /runtime/node_modules/@prisma/client; \
+    generated_dir="$(dirname "$(dirname "$client_dir")")/.prisma/client"; \
+    cp -R "$generated_dir" /runtime/node_modules/.prisma/client; \
+    package_dir="$(find /app/node_modules/.bun -maxdepth 1 -type d -name 'nodemailer@*' | head -n 1)/node_modules/nodemailer"; \
+    mkdir -p /runtime/node_modules/nodemailer; \
+    cp -R "$package_dir"/. /runtime/node_modules/nodemailer/; \
+    find /runtime/node_modules/@prisma/client -type f \( -name '*.map' -o -name '*.d.ts' -o -name '*.md' \) -delete; \
+    find /runtime/node_modules/@prisma/client/runtime -type f -name '*wasm*' -delete; \
+    rm -rf /runtime/node_modules/@prisma/client/generator-build /runtime/node_modules/@prisma/client/scripts; \
+    find /runtime/node_modules/.prisma/client -type f \( -name '*.d.ts' -o -name '*.map' -o -name '*wasm*' \) -delete; \
+    if [ "$TARGETARCH" = "arm64" ]; then \
+      rm -f /runtime/node_modules/.prisma/client/libquery_engine-linux-musl-openssl-3.0.x.so.node; \
+    elif [ "$TARGETARCH" = "amd64" ]; then \
+      rm -f /runtime/node_modules/.prisma/client/libquery_engine-linux-musl-arm64-openssl-3.0.x.so.node; \
+    fi
+
+FROM oven/bun:1-alpine AS migrator
+ARG TARGETARCH
+WORKDIR /migration
+COPY docker/migrator/package.json ./package.json
+COPY packages/database/prisma ./prisma
+COPY packages/database/src ./src
+RUN bun install --no-save --exact && \
+    bunx prisma generate && \
+    find ./node_modules -type f \( -name '*.map' -o -name '*.d.ts' -o -name '*.md' \) -delete && \
+    find ./node_modules/@prisma/client/runtime -type f -name '*wasm*' -delete && \
+    find ./node_modules/.prisma/client -type f -name '*wasm*' -delete && \
+    rm -rf ./node_modules/@prisma/client/generator-build ./node_modules/@prisma/client/scripts && \
+    if [ "$TARGETARCH" = "arm64" ]; then \
+      rm -f ./node_modules/.prisma/client/libquery_engine-linux-musl-openssl-3.0.x.so.node ./node_modules/prisma/libquery_engine-linux-musl-openssl-3.0.x.so.node; \
+    elif [ "$TARGETARCH" = "amd64" ]; then \
+      rm -f ./node_modules/.prisma/client/libquery_engine-linux-musl-arm64-openssl-3.0.x.so.node ./node_modules/prisma/libquery_engine-linux-musl-arm64-openssl-3.0.x.so.node; \
+    fi; \
+    rm -rf /root/.bun/install/cache
+CMD ["sh", "-c", "bunx prisma migrate deploy && bun run prisma/seed.ts"]
+
 FROM oven/bun:1-alpine AS runner
 ENV NODE_ENV=production
 ENV PORT=3030
@@ -43,29 +90,25 @@ ENV HOSTNAME=0.0.0.0
 ENV NEXT_TELEMETRY_DISABLED=1
 WORKDIR /app
 
-COPY --from=builder /app/package.json /app/bun.lock /app/turbo.json /app/tsconfig.base.json /app/eslint.config.mjs /app/prettier.config.mjs ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/apps/web/package.json ./apps/web/package.json
-COPY --from=builder /app/apps/web/node_modules ./apps/web/node_modules
-COPY --from=builder /app/apps/web/.next ./apps/web/.next
-COPY --from=builder /app/apps/web/public ./apps/web/public
-COPY --from=builder /app/apps/web/src ./apps/web/src
-COPY --from=builder /app/apps/worker/package.json ./apps/worker/package.json
-COPY --from=builder /app/apps/worker/node_modules ./apps/worker/node_modules
-COPY --from=builder /app/apps/worker/src ./apps/worker/src
-COPY --from=builder /app/apps/worker/dist ./apps/worker/dist
-COPY --from=builder /app/packages ./packages
-COPY --from=builder /app/docker ./docker
-COPY --from=builder /app/.dockerignore ./.dockerignore
-COPY --from=builder /app/tests ./tests
+# Root workspace metadata used by the worker job commands.
+COPY --from=builder /app/package.json ./package.json
 
-# Copy Prisma query engine binaries for Next.js runtime.
-RUN mkdir -p ./apps/web/.prisma/client ./node_modules/.prisma/client && \
-    CLIENT_DIR=$(find ./node_modules -name "libquery_engine*.so.node" -exec dirname {} \; | head -n 1) && \
-    if [ -n "$CLIENT_DIR" ]; then \
-      cp -r "$CLIENT_DIR"/* ./apps/web/.prisma/client/ ; \
-      cp -r "$CLIENT_DIR"/* ./node_modules/.prisma/client/ ; \
-    fi
+# Copy Next.js standalone traced server and static assets.
+COPY --from=builder /app/apps/web/.next/standalone ./
+COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=builder /app/apps/web/public ./apps/web/public
+
+# Keep the compiled worker CLI available for operational jobs without its
+# development source tree and dependency graph.
+COPY --from=builder /app/apps/worker/package.json ./apps/worker/package.json
+COPY --from=builder /app/apps/worker/dist ./apps/worker/dist
+
+# Restore only external packages omitted from Next's standalone trace.
+COPY --from=runtime-files /runtime/node_modules/@prisma ./node_modules/@prisma
+COPY --from=runtime-files /runtime/node_modules/.prisma ./node_modules/.prisma
+COPY --from=runtime-files /runtime/node_modules/nodemailer ./node_modules/nodemailer
+
+RUN find ./apps/worker/dist -type f -name '*.map' -delete
 
 EXPOSE 3030
-CMD ["bun", "apps/web/node_modules/next/dist/bin/next", "start", "apps/web"]
+CMD ["bun", "apps/web/server.js"]
