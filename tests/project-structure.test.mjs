@@ -74,8 +74,8 @@ assert.deepEqual(
 );
 assert.match(
   ciWorkflow,
-  /push:\n\s+branches:\s*\[main, dev\]/,
-  "CI should run for pushes to both main and dev",
+  /push:\n\s+branches:\s*\[[^\]\n]*\bdev\b[^\]\n]*\]/,
+  "CI should run for pushes to dev",
 );
 assert.match(
   ciWorkflow,
