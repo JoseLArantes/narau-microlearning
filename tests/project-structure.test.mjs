@@ -13,6 +13,7 @@ assert.equal(existsSync(resolve(root, "docker-compose.yml")), false);
 
 const compose = readFileSync(resolve(dockerDirectory, "docker-compose.yml"), "utf8");
 const dockerfile = readFileSync(resolve(dockerDirectory, "Dockerfile"), "utf8");
+const ciWorkflow = readFileSync(resolve(root, ".github/workflows/ci.yml"), "utf8");
 const turbo = JSON.parse(readFileSync(resolve(root, "turbo.json"), "utf8"));
 const workerPackage = JSON.parse(readFileSync(resolve(root, "apps/worker/package.json"), "utf8"));
 const workerCli = readFileSync(resolve(root, "apps/worker/src/cli.ts"), "utf8");
@@ -70,6 +71,16 @@ assert.deepEqual(
   turbo.tasks["@narau/worker#build"].outputs,
   ["dist/**"],
   "the worker build should cache its bundled output",
+);
+assert.match(
+  ciWorkflow,
+  /push:\n\s+branches:\s*\[main, dev\]/,
+  "CI should run for pushes to both main and dev",
+);
+assert.match(
+  ciWorkflow,
+  /docker compose -f docker\/docker-compose\.yml --profile test run --rm test/,
+  "CI tests should run through Docker Compose",
 );
 
 console.log("Repository structure checks passed.");
