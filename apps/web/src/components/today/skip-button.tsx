@@ -30,7 +30,7 @@ export function SkipButton({ itemId }: { itemId: string }): React.ReactElement {
       >
         {pending ? "Skipping…" : "Skip this card"}
       </button>
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
     </div>
   );
 }

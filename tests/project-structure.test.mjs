@@ -13,6 +13,7 @@ assert.equal(existsSync(resolve(root, "docker-compose.yml")), false);
 
 const compose = readFileSync(resolve(dockerDirectory, "docker-compose.yml"), "utf8");
 const dockerfile = readFileSync(resolve(dockerDirectory, "Dockerfile"), "utf8");
+const turbo = JSON.parse(readFileSync(resolve(root, "turbo.json"), "utf8"));
 const workerPackage = JSON.parse(readFileSync(resolve(root, "apps/worker/package.json"), "utf8"));
 const workerCli = readFileSync(resolve(root, "apps/worker/src/cli.ts"), "utf8");
 assert.match(compose, /context:\s*\.\./);
@@ -54,5 +55,21 @@ const dockerignore = readFileSync(resolve(root, ".dockerignore"), "utf8");
 for (const pattern of ["node_modules", ".next", ".turbo", "dist", ".git"]) {
   assert.match(dockerignore, new RegExp(`^${pattern}/?$`, "m"));
 }
+
+assert.deepEqual(
+  turbo.tasks.build.outputs,
+  [],
+  "the default build task should not claim artifacts from typecheck-only packages",
+);
+assert.deepEqual(
+  turbo.tasks["@narau/web#build"].outputs,
+  [".next/**", "!.next/cache/**"],
+  "the web build should cache its Next.js output",
+);
+assert.deepEqual(
+  turbo.tasks["@narau/worker#build"].outputs,
+  ["dist/**"],
+  "the worker build should cache its bundled output",
+);
 
 console.log("Repository structure checks passed.");

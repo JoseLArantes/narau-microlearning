@@ -1,6 +1,6 @@
 import { prisma, type Prisma } from "@narau/database";
 import { track } from "@/server/tracking";
-import { getAreaBreadcrumb, isAreaEffectivelyActive } from "@/server/services/areas";
+import { isAreaEffectivelyActive } from "@/server/services/areas";
 
 export async function audit(
   actorId: string | null,

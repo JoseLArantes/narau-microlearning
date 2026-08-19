@@ -108,7 +108,7 @@ export function buildAreaTree(areas: AreaWithParents[]): AreaTreeNode[] {
     if (parent) parent.children.push(node);
   }
 
-  const sort = (items: AreaTreeNode[]) => {
+  const sort = (items: AreaTreeNode[]): void => {
     items.sort((a, b) => a.displayOrder - b.displayOrder || a.name.localeCompare(b.name));
     for (const item of items) sort(item.children);
   };
@@ -206,7 +206,10 @@ export function normalizeAreaSourceConfig(
   return sourceConfigForNode({ name: area.name, sourceConfig }, parentNames);
 }
 
-export async function createArea(tenantId: string, input: CreateAreaNodeInput) {
+export async function createArea(
+  tenantId: string,
+  input: CreateAreaNodeInput,
+): Promise<Awaited<ReturnType<typeof prisma.area.create>>> {
   const { level, parent, parentSlugs, parentNames } = await getParentAndLevel(tenantId, input.parentId);
   if (parent && !hasHierarchicalAreaSlug(input.slug, parentSlugs)) {
     throw new Error(`Child slugs must start with "${getChildAreaSlugPrefix(parentSlugs)}".`);
@@ -229,7 +232,11 @@ export async function createArea(tenantId: string, input: CreateAreaNodeInput) {
   });
 }
 
-export async function updateArea(id: string, tenantId: string, input: UpdateAreaNodeInput) {
+export async function updateArea(
+  id: string,
+  tenantId: string,
+  input: UpdateAreaNodeInput,
+): Promise<Awaited<ReturnType<typeof prisma.area.update>>> {
   const existing = await prisma.area.findFirst({
     where: { id, tenantId },
     include: { parent: { include: { parent: true } } },
@@ -260,7 +267,10 @@ export async function updateArea(id: string, tenantId: string, input: UpdateArea
   });
 }
 
-export async function activateArea(id: string, tenantId: string) {
+export async function activateArea(
+  id: string,
+  tenantId: string,
+): Promise<Awaited<ReturnType<typeof prisma.area.update>>> {
   const areas = await findAreas(tenantId);
   const area = areas.find((candidate) => candidate.id === id);
   if (!area) throw new Error("Area or topic not found in the current tenant.");
@@ -273,13 +283,19 @@ export async function activateArea(id: string, tenantId: string) {
   return prisma.area.update({ where: { id }, data: { status: "ACTIVE" } });
 }
 
-export async function disableArea(id: string, tenantId: string) {
+export async function disableArea(
+  id: string,
+  tenantId: string,
+): Promise<Awaited<ReturnType<typeof prisma.area.update>>> {
   const existing = await prisma.area.findFirst({ where: { id, tenantId }, select: { id: true } });
   if (!existing) throw new Error("Area or topic not found in the current tenant.");
   return prisma.area.update({ where: { id }, data: { status: "DISABLED" } });
 }
 
-export async function deleteDraftArea(id: string, tenantId: string) {
+export async function deleteDraftArea(
+  id: string,
+  tenantId: string,
+): Promise<Awaited<ReturnType<typeof prisma.area.delete>>> {
   const existing = await prisma.area.findFirst({ where: { id, tenantId, status: "DRAFT" }, select: { id: true } });
   if (!existing) throw new Error("Only an existing draft can be deleted.");
   return prisma.area.delete({ where: { id } });

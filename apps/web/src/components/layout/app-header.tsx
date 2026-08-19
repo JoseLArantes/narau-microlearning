@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { ReactElement } from "react";
 import { auth } from "@/server/auth";
 import { MobileNav } from "./mobile-nav";

@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: narau-app
+  namespace: narau
+  labels:
+    app: narau-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: narau-app
+  template:
+    metadata:
+      labels:
+        app: narau-app
+    spec:
+      imagePullSecrets:
+        - name: registry-cred    
+      containers:
+        - name: narau-app
+          image: registry.beakcloud.com/narau:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3030
+          envFrom:
+            - configMapRef:
+                name: narau-config
+            - secretRef:
+                name: narau-secrets
