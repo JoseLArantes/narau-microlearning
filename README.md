@@ -82,6 +82,32 @@ The web app runs at http://localhost:3030. Start the worker in a second terminal
 bun run worker:dev
 ```
 
+## Tests and quality checks
+
+Tests must run through Docker Compose, using the `test` service. Do not run `bun run test` directly on the host; the Compose service is the canonical local and CI environment.
+
+Build the test image after dependency changes, then run the complete repository suite:
+
+```bash
+docker compose -f docker/docker-compose.yml --profile test build test
+docker compose -f docker/docker-compose.yml --profile test run --rm test
+```
+
+To run only the web workspace while developing a test:
+
+```bash
+docker compose -f docker/docker-compose.yml --profile test run --rm test bun --filter @narau/web test
+```
+
+Linting and TypeScript checks also run through the same Compose service:
+
+```bash
+docker compose -f docker/docker-compose.yml --profile test run --rm test bun run lint
+docker compose -f docker/docker-compose.yml --profile test run --rm test bun run typecheck
+```
+
+The web tests use Vitest for server behavior and React Testing Library for accessible user interactions. They mock PostgreSQL, Auth.js, Wikipedia, SMTP, and LLM boundaries. Docker Compose starts an isolated test container but does not start the infrastructure services or make external requests for this suite.
+
 ## Daily content pipeline
 
 Narau creates the daily learning experience in stages. The worker first discovers Wikipedia pages, then publishes one page per active learning node, optionally curates that publication with AI, assigns one suitable publication to each user, and finally sends reminders for unread cards.
@@ -284,16 +310,9 @@ Use the stages in order; later stages cannot create data that an earlier stage d
 
 For a one-off command executed with `docker compose exec web`, the logs appear in the terminal running that command. They do not appear in `docker compose logs worker`, because that command starts a separate foreground process in the web container. Use worker logs for scheduled jobs and terminal output for manual jobs.
 
-## Quality checks
+## Production build check
 
-```bash
-bun run test       # repository-structure test plus workspace tests
-bun run lint
-bun run typecheck
-bun run build
-```
-
-The container build is also a required integration check:
+After the Compose-based tests, linting, and type checks pass, rebuild the complete stack as the required integration check:
 
 ```bash
 docker compose -f docker/docker-compose.yml up -d --build

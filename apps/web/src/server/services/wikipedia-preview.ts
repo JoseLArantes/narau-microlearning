@@ -1,5 +1,16 @@
 import { localizeWikipediaCategoryTitle, type AreaSourceConfig } from "@narau/validation";
 
+interface WikipediaApiResponse {
+  query?: {
+    pages?: Array<{
+      title?: string;
+      missing?: boolean;
+      categoryinfo?: { pages?: number; subcats?: number };
+    }>;
+    categorymembers?: Array<{ pageid?: string | number; title?: string }>;
+  };
+}
+
 function wikipediaLanguageCode(languageTag: string): string {
   const code = languageTag.trim().toLowerCase().split(/[-_]/)[0] ?? "";
   if (!/^[a-z]{2,3}$/.test(code)) throw new Error(`Invalid tenant language for Wikipedia: ${languageTag}`);
@@ -14,14 +25,17 @@ function userAgent(): string {
   return process.env.WIKIPEDIA_USER_AGENT ?? "NarauBot/0.1 (https://localhost:3030; contact@example.com)";
 }
 
-async function fetchWikipedia(language: string, params: Record<string, string>): Promise<any> {
+async function fetchWikipedia(
+  language: string,
+  params: Record<string, string>,
+): Promise<WikipediaApiResponse> {
   const query = new URLSearchParams({ ...params, format: "json", formatversion: "2" });
   const response = await fetch(`https://${language}.wikipedia.org/w/api.php?${query.toString()}`, {
     headers: { "User-Agent": userAgent(), Accept: "application/json" },
     signal: AbortSignal.timeout(15_000),
   });
   if (!response.ok) throw new Error(`Wikipedia preview returned HTTP ${response.status}.`);
-  return response.json();
+  return response.json() as Promise<WikipediaApiResponse>;
 }
 
 export interface WikipediaSourcePreview {

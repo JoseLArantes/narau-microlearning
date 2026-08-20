@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [dev]
   pull_request:
 
 concurrency:
@@ -12,26 +12,27 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    env:
-      DATABASE_URL: postgresql://app:app@localhost:5432/dailycurio?schema=public
-      REDIS_URL: redis://localhost:6379
-      AUTH_SECRET: ci-only-secret
-      AUTH_URL: http://localhost:3030
-      APP_URL: http://localhost:3030
-      WIKIPEDIA_USER_AGENT: dailycurio-ci/1.0
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9.0.0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm db:generate
-      - run: pnpm lint
-      - run: pnpm typecheck
-      - run: pnpm test
-      - run: pnpm build
+      - name: Build test image
+        run: docker compose -f docker/docker-compose.yml --profile test build test
+      - name: Lint
+        run: docker compose -f docker/docker-compose.yml --profile test run --rm test bun run lint
+      - name: Typecheck
+        run: docker compose -f docker/docker-compose.yml --profile test run --rm test bun run typecheck
+      - name: Test
+        run: docker compose -f docker/docker-compose.yml --profile test run --rm test
+      - name: Rebuild and start the complete stack
+        run: docker compose -f docker/docker-compose.yml up -d --build
+      - name: Verify web health
+        run: curl --fail --retry 20 --retry-delay 3 --retry-all-errors http://localhost:3030/api/health
+      - name: Show service state
+        if: always()
+        run: docker compose -f docker/docker-compose.yml ps
+      - name: Show logs after failure
+        if: failure()
+        run: docker compose -f docker/docker-compose.yml logs --no-color
+      - name: Stop stack
+        if: always()
+        run: docker compose -f docker/docker-compose.yml down -v

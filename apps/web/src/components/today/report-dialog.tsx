@@ -107,7 +107,7 @@ export function ReportDialog({ subjectId, itemId }: { subjectId: string; itemId?
                 placeholder="What's wrong, and where?"
               />
             </label>
-            {error ? <p className="text-sm text-destructive">{error}</p> : null}
+            {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
             <DialogFooter>
               <Button variant="ghost" onClick={() => setOpen(false)} disabled={pending}>
                 Cancel

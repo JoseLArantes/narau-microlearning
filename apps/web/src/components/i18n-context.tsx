@@ -25,22 +25,22 @@ export function I18nProvider({
   initialTenant: TenantInfo;
   tenants: TenantInfo[];
   children: ReactNode;
-}) {
+}): React.ReactElement {
   const pathname = usePathname();
   const [tenant, setTenant] = useState<TenantInfo>(initialTenant);
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     setTenant(initialTenant);
-  }, [initialTenant.id, initialTenant.slug, initialTenant.name, initialTenant.language]);
+  }, [initialTenant]);
 
   const locale = tenant.language || DEFAULT_LOCALE;
 
-  const t = (key: string, params?: Record<string, string | number>, fallback?: string) => {
+  const t = (key: string, params?: Record<string, string | number>, fallback?: string): string => {
     return translate(locale, key, params, fallback);
   };
 
-  const handleSwitchTenant = (newTenantSlug: string) => {
+  const handleSwitchTenant = (newTenantSlug: string): void => {
     const nextTenant = tenants.find((entry) => entry.slug === newTenantSlug);
     if (!nextTenant) return;
     startTransition(async () => {
@@ -56,7 +56,7 @@ export function I18nProvider({
   );
 }
 
-export function useI18n() {
+export function useI18n(): I18nContextType {
   const context = useContext(I18nContext);
   if (!context) {
     // Fallback if rendered outside provider

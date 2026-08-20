@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: narau-config
+  namespace: narau
+data:
+  REDIS_URL: "redis://redis.db.svc.cluster.local:6379"
+  REDIS_PORT: "6379"
+  NODE_ENV: "production"
+  APP_URL: "https://narau.beakcloud.com"
+  EMAIL_FROM: "Narau <no-reply@beakcloud.com>"
+  SMTP_HOST: "smtp.mailersend.net"
+  SMTP_PORT: "587"
+  SMTP_SECURE: "true"
+  WIKIPEDIA_USER_AGENT: "NarauBot/0.1 (local dev; contact@example.com)"
+  # STORAGE_ENABLED: "false"
+  # STORAGE_ENDPOINT: https://54f6d15a41f0acc9c00980b88502baf6.r2.cloudflarestorage.com
+  # STORAGE_BUCKET: tmqa-llm-contexts
+  # STORAGE_PUBLIC_BASE_URL: http://localhost:9000/narau
+
+
+# # Auth.js
+# AUTH_SECRET=change-me
+# AUTH_URL=http://localhost:3030
+# AUTH_TRUST_HOST=true
+
+# # OAuth Social Logins (Optional)
+# GOOGLE_CLIENT_ID=
+# GOOGLE_CLIENT_SECRET=
+# FACEBOOK_CLIENT_ID=
+# FACEBOOK_CLIENT_SECRET=
+# TWITTER_CLIENT_ID=
+# TWITTER_CLIENT_SECRET=
+# LINKEDIN_CLIENT_ID=
+# LINKEDIN_CLIENT_SECRET=
+
+# STORAGE_ACCESS_KEY=minioadmin
+# STORAGE_SECRET_KEY=minioadmin
+
+# # Wikipedia
+
+# # Sentry
+# SENTRY_DSN=

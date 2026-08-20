@@ -76,7 +76,7 @@ export function RatingDialog({ itemId }: { itemId: string }): React.ReactElement
                 placeholder="What worked, what didn't?"
               />
             </label>
-            {error ? <p className="text-sm text-destructive">{error}</p> : null}
+            {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
             <DialogFooter>
               <Button variant="ghost" onClick={() => setOpen(false)} disabled={pending}>
                 Cancel

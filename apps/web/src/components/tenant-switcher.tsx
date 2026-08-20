@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { Globe } from "lucide-react";
 import { useI18n } from "./i18n-context";
 
-export function TenantSwitcher({ className = "" }: { className?: string }) {
+export function TenantSwitcher({ className = "" }: { className?: string }): React.ReactElement {
   const { tenant, tenants, switchTenant, isPending } = useI18n();
   const { data: session } = useSession();
   const visibleTenants = session?.user?.role === "ADMIN" ? tenants : tenants.filter((entry) => entry.id === tenant.id);

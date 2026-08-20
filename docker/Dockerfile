@@ -20,6 +20,7 @@ RUN bun install --frozen-lockfile
 COPY apps ./apps
 COPY packages ./packages
 COPY docker ./docker
+COPY .github ./.github
 COPY .dockerignore ./
 COPY tests ./tests
 

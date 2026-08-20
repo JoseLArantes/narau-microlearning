@@ -13,7 +13,9 @@ export function OnboardingForm({ areas }: { areas: AreaTreeOption[] }): React.Re
   const { tenant, t } = useI18n();
   const { update } = useSession();
 
-  async function save(selectedNodeIds: string[]) {
+  async function save(
+    selectedNodeIds: string[],
+  ): Promise<Awaited<ReturnType<typeof selectOnboardingInterests>>> {
     const result = await selectOnboardingInterests(selectedNodeIds);
     if (result.ok) {
       await update({ hasAreas: true });

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: narau-app
+  namespace: narau
+  labels:
+    app: narau-app
+spec:
+  selector:
+    app: narau-app
+  type: ClusterIP
+  ports:
+    - port: 3030
+      name: narau-app

@@ -30,7 +30,7 @@ function buildAreaTree(rows: AreaRow[]): AreaTreeRow[] {
     if (parent) parent.children.push(node);
     else roots.push(node);
   }
-  const sort = (items: AreaTreeRow[]) => {
+  const sort = (items: AreaTreeRow[]): void => {
     items.sort((a, b) => a.displayOrder - b.displayOrder || a.name.localeCompare(b.name));
     for (const item of items) sort(item.children);
   };
