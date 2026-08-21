@@ -1,4 +1,5 @@
 import { prisma } from "@narau/database";
+import { areaSourceConfigSchema, localizeWikipediaCategoryTitle } from "@narau/validation";
 
 export interface SelectionAreaCandidate {
   id: string;
@@ -79,11 +80,23 @@ export const prismaSubjectSelectionRepository: SubjectSelectionRepository = {
   },
 
   async loadCandidates(areaId, tenantId, contentDate) {
+    const area = await prisma.area.findFirst({
+      where: { id: areaId, tenantId },
+      select: { sourceConfig: true, tenant: { select: { language: true } } },
+    });
+    const config = area ? areaSourceConfigSchema.safeParse(area.sourceConfig) : null;
+    const focusCategory = config?.success ? config.data.categories.at(-1) : undefined;
+    const researchCategory = focusCategory
+      ? localizeWikipediaCategoryTitle(focusCategory, area?.tenant.language ?? "en")
+      : undefined;
+    if (!researchCategory) return [];
+
     const since = new Date(contentDate.getTime() - CANDIDATE_POOL_DAYS * DAY_MS);
     const candidates = await prisma.areaSubjectCandidate.findMany({
       where: {
         areaId,
         tenantId,
+        researchCategory,
         generatedForDate: { gte: since, lte: contentDate },
         subject: { status: "ACTIVE" },
       },

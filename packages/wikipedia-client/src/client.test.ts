@@ -123,6 +123,46 @@ describe("WikipediaClient Rate Limiting & Spacing", () => {
     }
   });
 
+  it("counts distinct references from page revisions", async () => {
+    const originalFetch = globalThis.fetch;
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          query: {
+            pages: [
+              {
+                pageid: 1,
+                revisions: [
+                  {
+                    slots: {
+                      main: {
+                        content:
+                          "First claim.<ref name=source>Source A</ref> Second claim.<ref name=source/> Third claim.<ref>Source B</ref><ref name='source-c'/>",
+                      },
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+    globalThis.fetch = fetchMock;
+
+    try {
+      const client = createWikipediaClient({ userAgent: "TestBot/1.0", requestDelayMs: 0 });
+      await expect(client.getPageCitationCounts([1])).resolves.toEqual(new Map([[1, 3]]));
+      expect(fetchMock).toHaveBeenCalledWith(
+        expect.stringContaining("prop=revisions"),
+        expect.anything(),
+      );
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
   it("honors Retry-After before retrying a rate-limited request", async () => {
     const originalFetch = globalThis.fetch;
     const fetchMock = vi

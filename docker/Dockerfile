@@ -21,6 +21,7 @@ COPY apps ./apps
 COPY packages ./packages
 COPY docker ./docker
 COPY .github ./.github
+COPY deploy ./deploy
 COPY .dockerignore ./
 COPY tests ./tests
 

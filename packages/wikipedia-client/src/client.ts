@@ -56,6 +56,29 @@ const pageSummaryResponseSchema = z.object({
     .optional(),
 });
 
+const pageRevisionResponseSchema = z.object({
+  query: z
+    .object({
+      pages: z.array(
+        z.object({
+          pageid: z.number(),
+          revisions: z
+            .array(
+              z.object({
+                slots: z
+                  .object({
+                    main: z.object({ content: z.string().optional() }).optional(),
+                  })
+                  .optional(),
+              }),
+            )
+            .optional(),
+        }),
+      ),
+    })
+    .optional(),
+});
+
 const categoryInfoResponseSchema = z.object({
   query: z.object({
     pages: z.array(
@@ -104,6 +127,25 @@ function retryDelayMs(error: unknown): number {
 
 function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function countDistinctReferences(wikitext: string): number {
+  const referencePattern = /<ref\b([^>]*?)(?:\/>|>[\s\S]*?<\/ref\s*>)/gi;
+  const namedReferences = new Set<string>();
+  let count = 0;
+
+  for (const match of wikitext.matchAll(referencePattern)) {
+    const attributes = match[1] ?? "";
+    const nameMatch = attributes.match(/\bname\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s/>]+))/i);
+    const name = nameMatch?.slice(1).find(Boolean)?.trim().toLocaleLowerCase();
+    if (name) {
+      if (namedReferences.has(name)) continue;
+      namedReferences.add(name);
+    }
+    count += 1;
+  }
+
+  return count;
 }
 
 export function createWikipediaClient(options: WikipediaClientOptions): WikipediaClient {
@@ -259,6 +301,26 @@ export function createWikipediaClient(options: WikipediaClientOptions): Wikipedi
     return details;
   }
 
+  async function getPageCitationCounts(pageIds: number[]): Promise<Map<number, number>> {
+    const counts = new Map<number, number>();
+    const uniqueIds = [...new Set(pageIds)];
+    const batches = chunk(uniqueIds, PAGE_BATCH_SIZE);
+    await Promise.all(
+      batches.map(async (batch) => {
+        const url =
+          `${endpoint}/w/api.php?action=query&prop=revisions&pageids=${batch.join("|")}` +
+          "&rvprop=content&rvslots=main&rvlimit=1&format=json&formatversion=2";
+        const parsed = pageRevisionResponseSchema.safeParse(await fetchJson(url));
+        if (!parsed.success) return;
+        for (const page of parsed.data.query?.pages ?? []) {
+          const content = page.revisions?.[0]?.slots?.main?.content ?? "";
+          counts.set(page.pageid, countDistinctReferences(content));
+        }
+      }),
+    );
+    return counts;
+  }
+
   async function getPageSummary(title: string): Promise<PageSummary | null> {
     const url = `${endpoint}/api/rest_v1/page/summary/${encodeTitle(title)}`;
     const raw = await fetchJson(url);
@@ -274,5 +336,5 @@ export function createWikipediaClient(options: WikipediaClientOptions): Wikipedi
     };
   }
 
-  return { getCategoryInfo, getCategoryMembers, getPagesFromCategories, getPageDetails, getPageSummary };
+  return { getCategoryInfo, getCategoryMembers, getPagesFromCategories, getPageDetails, getPageCitationCounts, getPageSummary };
 }

@@ -54,5 +54,6 @@ export interface WikipediaClient {
   getCategoryMembers(categoryTitle: string, options?: CategoryOptions): Promise<CategoryMember[]>;
   getPagesFromCategories(categories: string[], options?: CategoryOptions): Promise<CategoryMember[]>;
   getPageDetails(pageIds: number[]): Promise<Map<number, PageDetails>>;
+  getPageCitationCounts(pageIds: number[]): Promise<Map<number, number>>;
   getPageSummary(title: string): Promise<PageSummary | null>;
 }

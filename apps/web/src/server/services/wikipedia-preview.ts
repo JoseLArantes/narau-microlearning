@@ -62,13 +62,13 @@ export async function previewWikipediaSource(languageTag: string, config: AreaSo
       subcategoryCount: page?.categoryinfo?.subcats ?? 0,
     };
   });
-  const usableCategories = categories.filter((category) => category.exists && category.pageCount > 0);
-  if (usableCategories.length === 0) {
-    throw new Error("At least one configured Wikipedia category must exist and contain articles before activation.");
+  const focusCategory = categories.at(-1);
+  if (!focusCategory || !focusCategory.exists || focusCategory.pageCount === 0) {
+    throw new Error("The most specific configured Wikipedia category must exist and contain articles before activation.");
   }
 
   const members = new Map<string, string>();
-  for (const category of usableCategories) {
+  for (const category of [focusCategory]) {
     const data = await fetchWikipedia(language, {
       action: "query",
       list: "categorymembers",

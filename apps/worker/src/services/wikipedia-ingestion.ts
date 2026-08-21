@@ -5,7 +5,13 @@ import { createWikipediaClient, type WikipediaClient } from "@narau/wikipedia-cl
 import { env } from "../lib/env";
 import { logger } from "../lib/logger";
 import { storeImage } from "../lib/storage";
-import { isDisambiguationLike, isListLike, scoreCandidate } from "./candidate-scoring";
+import {
+  isDisambiguationLike,
+  isListLike,
+  isPersonalityEligible,
+  isPersonalityLike,
+  scoreCandidate,
+} from "./candidate-scoring";
 import { wikipediaLanguageCode } from "./language";
 import { getWikipediaResearchCategories } from "./wikipedia-research";
 
@@ -94,23 +100,16 @@ export async function ingestAreaCandidates(
 
       const researchCategories = getWikipediaResearchCategories(config.data.categories)
         .map((category) => localizeWikipediaCategoryTitle(category, tenantLanguage));
-      const contextCategories = config.data.categories
-        .map((category) => localizeWikipediaCategoryTitle(category, tenantLanguage));
-      let members = await areaClient.getPagesFromCategories(researchCategories, {
+      const members = await areaClient.getPagesFromCategories(researchCategories, {
         includeSubcategories: config.data.includeSubcategories,
         depth: config.data.depth,
         maxMembers: config.data.maxCandidates,
       });
-      if (members.length === 0 && researchCategories.length < contextCategories.length) {
-        logger.warn("ingestion focus category empty, using context categories", {
+      if (members.length === 0) {
+        logger.warn("ingestion focus category empty, skipping area", {
           area: area.slug,
           tenant: area.tenant.slug,
           focusCategory: researchCategories[0],
-        });
-        members = await areaClient.getPagesFromCategories(contextCategories, {
-          includeSubcategories: config.data.includeSubcategories,
-          depth: config.data.depth,
-          maxMembers: config.data.maxCandidates,
         });
       }
       logger.info("ingestion area members fetched", {
@@ -123,6 +122,29 @@ export async function ingestAreaCandidates(
         area: area.slug,
         tenant: area.tenant.slug,
         details: details.size,
+      });
+
+      const personalityPageIds = [...details.values()]
+        .filter((page) => isPersonalityLike({ title: page.title, summary: page.extract, categories: page.categories }))
+        .map((page) => page.pageId);
+      let citationCounts = new Map<number, number>();
+      if (personalityPageIds.length > 0) {
+        try {
+          citationCounts = await areaClient.getPageCitationCounts(personalityPageIds);
+        } catch (error) {
+          logger.warn("ingestion personality citation lookup failed", {
+            area: area.slug,
+            tenant: area.tenant.slug,
+            pages: personalityPageIds.length,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      }
+      logger.info("ingestion personality filter prepared", {
+        area: area.slug,
+        tenant: area.tenant.slug,
+        personalityPages: personalityPageIds.length,
+        citedPersonalityPages: [...citationCounts.values()].filter((count) => count > 0).length,
       });
 
       const unsafeCategories = new Set(
@@ -138,6 +160,8 @@ export async function ingestAreaCandidates(
         const features = { title: page.title, summary: page.extract, categories: page.categories };
         if (isDisambiguationLike(features) || isListLike(features)) continue;
         if (page.categories.some((category) => unsafeCategories.has(category.toLowerCase()))) continue;
+        const citationCount = citationCounts.get(page.pageId) ?? 0;
+        if (!isPersonalityEligible({ ...features, citationCount }, researchCategories[0])) continue;
 
         const normalized = normalizeWikipediaContent({
           title: page.title,
@@ -150,6 +174,7 @@ export async function ingestAreaCandidates(
 
         let imageUrl = page.thumbnailUrl;
         const score = scoreCandidate({ ...features, hasImage: Boolean(imageUrl) });
+        const personality = isPersonalityLike(features);
         const subject = await prisma.subject.upsert({
           where: { canonicalUrl_tenantId: { canonicalUrl, tenantId: area.tenantId } },
           update: {
@@ -160,6 +185,7 @@ export async function ingestAreaCandidates(
             revisionId: page.lastRevisionId,
             qualityScore: score,
             contentHash,
+            raw: { categories: page.categories, citationCount, personality },
           },
           create: {
             tenantId: area.tenantId,
@@ -175,7 +201,7 @@ export async function ingestAreaCandidates(
             revisionId: page.lastRevisionId,
             license: WIKIPEDIA_LICENSE,
             qualityScore: score,
-            raw: { categories: page.categories },
+            raw: { categories: page.categories, citationCount, personality },
           },
         });
 
@@ -199,12 +225,13 @@ export async function ingestAreaCandidates(
               tenantId: area.tenantId,
             },
           },
-          update: { candidateScore: score },
+          update: { candidateScore: score, researchCategory: researchCategories[0] ?? null },
           create: {
             tenantId: area.tenantId,
             areaId: area.id,
             subjectId: subject.id,
             generatedForDate: date,
+            researchCategory: researchCategories[0] ?? null,
             candidateScore: score,
           },
         });

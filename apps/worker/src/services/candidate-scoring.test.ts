@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { scoreCandidate } from "./candidate-scoring";
+import {
+  isPersonalityEligible,
+  isPersonalityLike,
+  MIN_PERSONALITY_CITATIONS,
+  scoreCandidate,
+} from "./candidate-scoring";
 
 const base = {
   title: "Marie Curie",
@@ -81,5 +86,39 @@ describe("scoreCandidate", () => {
       categories: Array.from({ length: 20 }, (_, i) => `Category:C${i}`),
     });
     expect(maxed).toBeLessThanOrEqual(100);
+  });
+});
+
+describe("personality eligibility", () => {
+  const personality = {
+    title: "A scientist",
+    summary: "A scientist who contributed to the field.",
+    categories: ["Category:Scientists", "Category:Physics"],
+  };
+
+  it("recognizes personality-like category pages", () => {
+    expect(isPersonalityLike(personality)).toBe(true);
+    expect(isPersonalityLike({ ...personality, categories: ["Category:Physics"] })).toBe(false);
+  });
+
+  it("rejects a personality without multiple citations", () => {
+    expect(isPersonalityEligible({ ...personality, citationCount: MIN_PERSONALITY_CITATIONS - 1 }, "Category:Physics")).toBe(false);
+  });
+
+  it("rejects a well-cited personality unrelated to the research focus", () => {
+    expect(isPersonalityEligible({ ...personality, citationCount: MIN_PERSONALITY_CITATIONS }, "Category:History")).toBe(false);
+  });
+
+  it("accepts a well-cited personality with a matching research category", () => {
+    expect(isPersonalityEligible({ ...personality, citationCount: MIN_PERSONALITY_CITATIONS }, "Category:Physics")).toBe(true);
+  });
+
+  it("does not impose the personality citation gate on ordinary subjects", () => {
+    expect(
+      isPersonalityEligible(
+        { title: "Quantum mechanics", summary: "x".repeat(200), categories: ["Category:Physics"], citationCount: 0 },
+        "Category:Physics",
+      ),
+    ).toBe(true);
   });
 });

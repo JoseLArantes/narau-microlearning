@@ -17,7 +17,7 @@ spec:
           - name: migrator
             image: registry.beakcloud.com/narau:migrator
             imagePullPolicy: Always
-            command: ["sh", "-c", "bunx prisma migrate deploy"]
+            command: ["sh", "-c", "bunx prisma migrate deploy && bun run prisma/seed.ts"]
             envFrom:
               - configMapRef:
                   name: narau-config
