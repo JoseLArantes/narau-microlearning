@@ -10,7 +10,7 @@ export function renderEmailLayout(options: BaseLayoutOptions): string {
   const { title, previewText = "", headerMeta = "NARAU · DAILY DIGEST", contentHtml, footerNote } = options;
   const baseUrl = process.env.APP_URL ?? "http://localhost:3030";
 
-  const logoMarkup = `<img src="${baseUrl}/narau_logo.svg" alt="Narau" width="130" style="display:block; border:0; outline:none; max-width:130px; height:auto;" />`;
+  const logoMarkup = `<img src="${baseUrl}/narau_logo.png" alt="Narau" width="130" height="32" style="display:block; border:0; outline:none; max-width:130px; height:auto;" />`;
 
   return `<!DOCTYPE html>
 <html lang="en">

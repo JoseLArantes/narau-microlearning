@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+    name: narau-migration
+    namespace: app-narau
+spec:
+    ttlSecondsAfterFinished: 600
+    template:
+      metadata:
+        labels:
+          app: narau-migration
+      spec:
+        restartPolicy: Never
+        imagePullSecrets:
+          - name: registry-cred
+        containers:
+          - name: migrator
+            image: registry.beakcloud.com/narau:migrator
+            imagePullPolicy: Always
+            command: ["sh", "-c", "bunx prisma migrate deploy"]
+            envFrom:
+              - configMapRef:
+                  name: narau-config
+              - secretRef:
+                  name: narau-secrets

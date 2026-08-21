@@ -1,0 +1,32 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: narau-pipeline-manual
+  namespace: app-narau
+spec:
+  ttlSecondsAfterFinished: 600
+  template:
+    metadata:
+      labels:
+        app: narau-pipeline-manual
+    spec:
+      restartPolicy: Never
+      imagePullSecrets:
+        - name: registry-cred
+      containers:
+        - name: pipeline
+          image: registry.beakcloud.com/narau:latest
+          imagePullPolicy: Always
+          command:
+            - "sh"
+            - "-c"
+            - |
+              bun apps/worker/dist/cli.js ingest-area-candidates && \
+              bun apps/worker/dist/cli.js select-daily-subjects && \
+              bun apps/worker/dist/cli.js assign-user-daily-items && \
+              bun apps/worker/dist/cli.js send-daily-reminders
+          envFrom:
+            - configMapRef:
+                name: narau-config
+            - secretRef:
+                name: narau-secrets                  

@@ -39,8 +39,7 @@ describe("LoginPage", () => {
   });
 
   it("renders sent confirmation with logo, green stamp, and hides Mailpit disclaimer in production or when APP_URL is set", async () => {
-    const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = "production";
+    vi.stubEnv("NODE_ENV", "production");
 
     mocks.signIn.mockResolvedValue({ ok: true, error: null });
     const user = userEvent.setup();
@@ -59,6 +58,6 @@ describe("LoginPage", () => {
     expect(sentStamp.className).toContain("text-[#16A34A]");
     expect(sentStamp.className).toContain("border-[#16A34A]");
 
-    process.env.NODE_ENV = originalEnv;
+    vi.unstubAllEnvs();
   });
 });

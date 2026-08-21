@@ -46,6 +46,7 @@ assert.match(workerCli, /await main\(\)/);
 assert.match(dockerfile, /COPY --from=builder \/app\/apps\/worker\/dist/);
 assert.ok(existsSync(resolve(root, "apps/web/src/middleware.ts")));
 assert.ok(existsSync(resolve(root, "apps/web/src/server/tenant.ts")));
+assert.ok(existsSync(resolve(root, "apps/web/public/narau_logo.png")));
 assert.doesNotMatch(readFileSync(resolve(root, "apps/web/src/lib/i18n.ts"), "utf8"), /export const TENANTS/);
 assert.match(
   readFileSync(resolve(root, "apps/web/src/components/layout/logo.tsx"), "utf8"),

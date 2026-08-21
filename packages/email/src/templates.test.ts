@@ -20,6 +20,8 @@ describe("Email Templates", () => {
     });
 
     expect(html).toContain("NARAU");
+    expect(html).toContain('src="http://localhost:3030/narau_logo.png"');
+    expect(html).not.toContain("narau_logo.svg");
     expect(html).toContain("History");
     expect(html).toContain("Archaeology");
     expect(html).toContain("Linguistics");

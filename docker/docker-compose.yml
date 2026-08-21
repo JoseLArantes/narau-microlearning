@@ -17,7 +17,7 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U app -d narau"]
+      test: [ "CMD-SHELL", "pg_isready -U app -d narau" ]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -28,7 +28,7 @@ services:
     ports:
       - "6379:6379"
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -58,28 +58,22 @@ services:
     depends_on:
       - minio
     entrypoint: >
-      /bin/sh -c "
-      sleep 3;
-      mc alias set local http://minio:9000 minioadmin minioadmin;
-      mc mb --ignore-existing local/narau;
-      mc anonymous set download local/narau;
-      exit 0;
-      "
+      /bin/sh -c " sleep 3; mc alias set local http://minio:9000 minioadmin minioadmin; mc mb --ignore-existing local/narau; mc anonymous set download local/narau; exit 0; "
 
   test:
     image: narau-test
-    profiles: ["test"]
+    profiles: [ "test" ]
     build:
       <<: *app-build
       target: dev-deps
-    command: ["bun", "run", "test"]
+    command: [ "bun", "run", "test" ]
 
   migrate:
     image: narau-migrate
     build:
       <<: *app-build
       target: migrator
-    command: ["sh", "-c", "bunx prisma migrate deploy && bun run prisma/seed.ts"]
+    command: [ "sh", "-c", "bunx prisma migrate deploy && bun run prisma/seed.ts" ]
     environment:
       DATABASE_URL: postgresql://app:app@db:5432/narau?schema=public
     depends_on:
@@ -133,7 +127,7 @@ services:
 
   worker:
     image: narau-web
-    command: ["bun", "apps/worker/dist/index.js"]
+    command: [ "bun", "apps/worker/dist/index.js" ]
     environment:
       NODE_ENV: production
       APP_URL: http://localhost:3030
