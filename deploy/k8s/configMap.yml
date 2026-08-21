@@ -2,16 +2,18 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: narau-config
-  namespace: narau
+  namespace: app-narau
 data:
   REDIS_URL: "redis://redis.db.svc.cluster.local:6379"
   REDIS_PORT: "6379"
   NODE_ENV: "production"
   APP_URL: "https://narau.beakcloud.com"
+  AUTH_URL: "https://narau.beakcloud.com"
+  AUTH_TRUST_HOST: "true"
   EMAIL_FROM: "Narau <no-reply@beakcloud.com>"
-  SMTP_HOST: "smtp.mailersend.net"
+  SMTP_HOST: "smtp-relay.brevo.com"
   SMTP_PORT: "587"
-  SMTP_SECURE: "true"
+  SMTP_SECURE: "false"
   WIKIPEDIA_USER_AGENT: "NarauBot/0.1 (local dev; contact@example.com)"
   # STORAGE_ENABLED: "false"
   # STORAGE_ENDPOINT: https://54f6d15a41f0acc9c00980b88502baf6.r2.cloudflarestorage.com

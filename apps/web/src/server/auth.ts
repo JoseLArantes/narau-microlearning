@@ -13,6 +13,61 @@ import { resolveUserIdFromToken } from "./session";
 import { getRequestTenant } from "./tenant";
 import { attachTenantToAdapterUser } from "./tenant-auth";
 
+function getEffectiveBaseUrl(fallback?: string): string {
+  const envUrl = process.env.APP_URL ?? process.env.AUTH_URL ?? process.env.NEXTAUTH_URL;
+  const raw = envUrl || fallback || "http://localhost:3030";
+  return raw.replace(/\/+$/, "");
+}
+
+export function sanitizeAppUrl(rawUrl: string, fallbackBaseUrl?: string): string {
+  const effectiveBase = getEffectiveBaseUrl(fallbackBaseUrl);
+  try {
+    if (rawUrl.startsWith("/")) {
+      return `${effectiveBase}${rawUrl}`;
+    }
+    const base = new URL(effectiveBase);
+    const parsed = new URL(rawUrl);
+    if (
+      parsed.origin === base.origin ||
+      parsed.hostname === "0.0.0.0" ||
+      parsed.hostname === "127.0.0.1" ||
+      parsed.hostname === "localhost"
+    ) {
+      parsed.protocol = base.protocol;
+      parsed.host = base.host;
+      parsed.port = base.port;
+    }
+
+    const callbackUrlParam = parsed.searchParams.get("callbackUrl");
+    if (callbackUrlParam) {
+      if (callbackUrlParam.startsWith("/")) {
+        parsed.searchParams.set("callbackUrl", `${effectiveBase}${callbackUrlParam}`);
+      } else {
+        try {
+          const parsedCallback = new URL(callbackUrlParam);
+          if (
+            parsedCallback.origin === base.origin ||
+            parsedCallback.hostname === "0.0.0.0" ||
+            parsedCallback.hostname === "127.0.0.1" ||
+            parsedCallback.hostname === "localhost"
+          ) {
+            parsedCallback.protocol = base.protocol;
+            parsedCallback.host = base.host;
+            parsedCallback.port = base.port;
+            parsed.searchParams.set("callbackUrl", parsedCallback.toString());
+          }
+        } catch {
+          // Keep callbackUrl unchanged if not a valid URL
+        }
+      }
+    }
+
+    return parsed.toString();
+  } catch {
+    return rawUrl;
+  }
+}
+
 function smtpSettings(): { host: string; port: number; auth?: { user: string; pass: string } } {
   return {
     host: process.env.SMTP_HOST ?? "localhost",
@@ -40,7 +95,8 @@ export const authConfig: NextAuthConfig = {
       server: smtpSettings(),
       from: getEmailFrom(),
       async sendVerificationRequest({ identifier, url }) {
-        const html = renderMagicLinkEmail({ email: identifier, url });
+        const magicLinkUrl = sanitizeAppUrl(url);
+        const html = renderMagicLinkEmail({ email: identifier, url: magicLinkUrl });
         await sendEmail({
           to: identifier,
           subject: "Sign In to Narau",
@@ -69,6 +125,9 @@ export const authConfig: NextAuthConfig = {
     signIn: "/login",
   },
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      return sanitizeAppUrl(url, baseUrl);
+    },
     async jwt({ token, user, trigger, session }) {
       if (user?.id) {
         const dbUser = await prisma.user.findUnique({

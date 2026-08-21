@@ -7,11 +7,10 @@ import {
 } from "./templates";
 
 describe("Email Templates", () => {
-  it("renders daily learn email with subject, area, user tags, and logo", () => {
+  it("renders daily learn email with link to app and without card content/summary", () => {
     const html = renderDailyLearnEmail({
       userName: "Alice",
       subjectTitle: "The Rosetta Stone",
-      subjectSummary: "An ancient Egyptian granodiorite stele inscribed with a decree...",
       areaName: "History",
       userTags: ["History", "Archaeology", "Linguistics"],
       readingMinutes: 4,
@@ -21,13 +20,14 @@ describe("Email Templates", () => {
     });
 
     expect(html).toContain("NARAU");
-    expect(html).toContain("The Rosetta Stone");
     expect(html).toContain("History");
     expect(html).toContain("Archaeology");
     expect(html).toContain("Linguistics");
     expect(html).toContain("http://localhost:3030/today");
     expect(html).toContain("AUG 4, 2026");
     expect(html).toContain("TEXT CURATED BY AI");
+    expect(html).toContain("READ TODAY'S CARD");
+    expect(html).not.toContain("An ancient Egyptian granodiorite stele");
   });
 
   it("renders welcome email with editorial greeting and action link", () => {
@@ -39,6 +39,23 @@ describe("Email Templates", () => {
     expect(html).toContain("Welcome to Narau");
     expect(html).toContain("Bob");
     expect(html).toContain("http://localhost:3030/onboarding");
+  });
+
+  it("renders welcome email with default action link derived from APP_URL", () => {
+    const originalAppUrl = process.env.APP_URL;
+    process.env.APP_URL = "https://narau.beakcloud.com";
+
+    const html = renderWelcomeEmail({
+      userName: "Bob",
+    });
+
+    expect(html).toContain("https://narau.beakcloud.com/onboarding");
+
+    if (originalAppUrl) {
+      process.env.APP_URL = originalAppUrl;
+    } else {
+      delete process.env.APP_URL;
+    }
   });
 
   it("renders password reset email with secure magic link", () => {

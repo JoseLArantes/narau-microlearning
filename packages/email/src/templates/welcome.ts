@@ -6,7 +6,8 @@ export interface WelcomeEmailOptions {
 }
 
 export function renderWelcomeEmail(options: WelcomeEmailOptions): string {
-  const { userName, actionUrl = "http://localhost:3030/onboarding" } = options;
+  const baseUrl = process.env.APP_URL ?? "http://localhost:3030";
+  const { userName, actionUrl = `${baseUrl}/onboarding` } = options;
   const displayName = userName ?? "Learner";
 
   const contentHtml = `

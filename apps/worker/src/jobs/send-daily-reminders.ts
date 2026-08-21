@@ -67,9 +67,6 @@ export const sendDailyRemindersProcessor = async (): Promise<ReminderResult> => 
       const html = renderDailyLearnEmail({
         userName: item.user.name ?? undefined,
         subjectTitle: item.subject.title,
-        subjectSummary: isAiCurated
-          ? (item.dailyAreaSubject?.curatedText ?? item.subject.summary)
-          : item.subject.summary,
         areaName: item.area.name,
         userTags: userTags.length > 0 ? userTags : [item.area.name],
         readingMinutes: appSettings.defaultReadingMinutes,

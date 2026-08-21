@@ -2,8 +2,7 @@ import { renderEmailLayout } from "./layout";
 
 export interface DailyLearnEmailOptions {
   userName?: string;
-  subjectTitle: string;
-  subjectSummary?: string;
+  subjectTitle?: string;
   areaName: string;
   userTags?: string[];
   readingMinutes?: number;
@@ -16,7 +15,6 @@ export function renderDailyLearnEmail(options: DailyLearnEmailOptions): string {
   const {
     userName,
     subjectTitle,
-    subjectSummary,
     areaName,
     userTags = [],
     readingMinutes = 5,
@@ -60,19 +58,14 @@ export function renderDailyLearnEmail(options: DailyLearnEmailOptions): string {
         : ""
     }
 
-    <!-- Main Title -->
+    <!-- Main Title / Headline -->
     <h1 style="margin: 0 0 16px 0; font-family: Georgia, serif; font-size: 26px; font-weight: 400; line-height: 1.25; color: #1F1A14;">
-      ${subjectTitle}
+      Your daily card is ready in ${areaName}
     </h1>
 
-    <!-- Summary / Preview -->
-    ${
-      subjectSummary
-        ? `<p style="margin: 0 0 24px 0; font-size: 15px; line-height: 1.7; color: #34220A; background-color:#FAF8F3; border-left:3px solid #1F1A14; padding:12px 16px;">
-            ${subjectSummary}
-          </p>`
-        : ""
-    }
+    <p style="margin: 0 0 24px 0; font-size: 15px; line-height: 1.7; color: #34220A;">
+      Your personalized reading for today is waiting in your library. Open today's card to complete your daily learning ritual.
+    </p>
 
     <!-- Assigned User Tags -->
     <div style="margin-bottom: 24px;">
@@ -94,8 +87,8 @@ export function renderDailyLearnEmail(options: DailyLearnEmailOptions): string {
   `;
 
   return renderEmailLayout({
-    title: `${subjectTitle} · Today's Card`,
-    previewText: `Your reading for today is ready: ${subjectTitle} (${readingMinutes} min read).`,
+    title: subjectTitle ? `${subjectTitle} · Today's Card` : `Today's Card in ${areaName}`,
+    previewText: `Your reading for today is ready in ${areaName} (${readingMinutes} min read).`,
     headerMeta: `DAILY CARD · ${areaName.toUpperCase()}`,
     contentHtml,
   });

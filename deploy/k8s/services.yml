@@ -2,13 +2,15 @@ apiVersion: v1
 kind: Service
 metadata:
   name: narau-app
-  namespace: narau
+  namespace: app-narau
   labels:
     app: narau-app
 spec:
   selector:
     app: narau-app
-  type: ClusterIP
+  type: LoadBalancer
   ports:
     - port: 3030
-      name: narau-app
+      name: http
+      targetPort: 3030
+      protocol: TCP

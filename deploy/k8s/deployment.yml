@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: narau-app
-  namespace: narau
+  namespace: app-narau
   labels:
     app: narau-app
 spec:
