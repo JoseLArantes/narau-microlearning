@@ -1,0 +1,32 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: narau-job-remind
+  namespace: app-narau
+  labels:
+    app: narau-remind
+spec:
+  schedule: "0 11 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: narau-remind
+        spec:
+          restartPolicy: OnFailure
+          imagePullSecrets:
+            - name: registry-cred
+          containers:
+            - name: job-remind
+              image: registry.beakcloud.com/narau:latest
+              imagePullPolicy: Always
+              command: ["bun", "apps/worker/dist/cli.js", "send-daily-reminders"]
+              envFrom:
+                - configMapRef:
+                    name: narau-config
+                - secretRef:
+                    name: narau-secrets

@@ -57,27 +57,36 @@ export default function LoginPage(): React.ReactElement {
   }
 
   if (sent) {
+    const isLocalDev = process.env.NODE_ENV !== "production" && !process.env.NEXT_PUBLIC_APP_URL;
+
     return (
       <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-6">
         <div className="index-card relative px-8 py-10">
-          <span className="mono-meta text-muted-foreground">SIGN-IN SLIP</span>
-          <h1 className="mt-3 font-serif text-3xl tracking-tight">Check your inbox</h1>
+          <div className="space-y-2">
+            <span className="mono-meta text-muted-foreground">SIGN-IN SLIP</span>
+            <div className="mt-2">
+              <Logo className="w-[80%] max-w-[200px] h-auto" />
+            </div>
+          </div>
+          <h1 className="mt-4 font-serif text-3xl tracking-tight">Check your inbox</h1>
           <p className="mt-4 text-muted-foreground">
             We sent a sign-in link to <strong className="text-foreground">{email}</strong>. It
             expires shortly, so use it soon.
           </p>
-          <p className="mt-3 font-mono text-xs text-muted-foreground">
-            In local development, open{" "}
-            <a
-              href="http://localhost:8025"
-              target="_blank"
-              rel="noreferrer"
-              className="underline underline-offset-4 hover:text-foreground"
-            >
-              Mailpit
-            </a>{" "}
-            to see the message.
-          </p>
+          {isLocalDev ? (
+            <p className="mt-3 font-mono text-xs text-muted-foreground">
+              In local development, open{" "}
+              <a
+                href="http://localhost:8025"
+                target="_blank"
+                rel="noreferrer"
+                className="underline underline-offset-4 hover:text-foreground"
+              >
+                Mailpit
+              </a>{" "}
+              to see the message.
+            </p>
+          ) : null}
           <div className="mt-6 border-t border-border pt-6">
             <Button variant="ghost" onClick={() => setSent(false)}>
               Send again
@@ -85,7 +94,7 @@ export default function LoginPage(): React.ReactElement {
           </div>
           <span
             aria-hidden
-            className="pointer-events-none absolute right-6 top-6 -rotate-6 rounded-[3px] border-[3px] border-[hsl(var(--accent))] px-2.5 py-1 font-mono text-[0.7rem] font-bold uppercase tracking-[0.14em] text-[hsl(var(--accent))]"
+            className="pointer-events-none absolute right-6 top-6 -rotate-6 rounded-[3px] border-[3px] border-[#16A34A] px-2.5 py-1 font-mono text-[0.7rem] font-bold uppercase tracking-[0.14em] text-[#16A34A]"
           >
             SENT
           </span>
