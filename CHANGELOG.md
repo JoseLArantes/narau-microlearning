@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.2](https://github.com/JoseLArantes/narau-microlearning/compare/v0.1.1...v0.1.2) (2026-08-21)
+
+
+### Features
+
+* **web,k8s:** enhance login confirmation view and add daily reminder cronjob ([e81ece8](https://github.com/JoseLArantes/narau-microlearning/commit/e81ece87e2c050c5cc01c7797205254522c0c7a8))
+
+
+### Miscellaneous Chores
+
+* adjust logo ([7568a80](https://github.com/JoseLArantes/narau-microlearning/commit/7568a801a73f7610f3787888470ff1851d45e6a6))
+
 ## [0.1.1](https://github.com/JoseLArantes/narau-microlearning/compare/v0.1.0...v0.1.1) (2026-08-20)
 
 
