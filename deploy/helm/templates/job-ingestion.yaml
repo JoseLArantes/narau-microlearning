@@ -1,0 +1,36 @@
+{{- if .Values.manualPipelineJob.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-pipeline-manual
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Release.Name }}-pipeline-manual
+spec:
+  ttlSecondsAfterFinished: 600
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-pipeline-manual
+    spec:
+      restartPolicy: Never
+      imagePullSecrets:
+        {{- toYaml .Values.image.pullSecrets | nindent 8 }}
+      containers:
+        - name: pipeline
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - "sh"
+            - "-c"
+            - |
+              bun apps/worker/dist/cli.js ingest-area-candidates && \
+              bun apps/worker/dist/cli.js select-daily-subjects && \
+              bun apps/worker/dist/cli.js assign-user-daily-items && \
+              bun apps/worker/dist/cli.js send-daily-reminders
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-config
+            - secretRef:
+                name: {{ .Values.secrets.existingSecret }}
+{{- end }}

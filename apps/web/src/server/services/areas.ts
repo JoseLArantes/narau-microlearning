@@ -45,13 +45,23 @@ export type AdminAreaRow = Prisma.AreaGetPayload<{
   };
 }>;
 
-const parentInclude = { include: { parent: true } } as const;
+const parentInclude = {
+  include: {
+    parent: {
+      include: {
+        parent: true,
+      },
+    },
+  },
+} as const;
 
 export function isAreaEffectivelyActive(area: ActiveAreaHierarchy): boolean {
-  if (area.status !== "ACTIVE") return false;
-  if (area.level === "AREA") return true;
-  if (!area.parent || area.parent.status !== "ACTIVE") return false;
-  return area.level !== "SPECIALTY" || Boolean(area.parent.parent && area.parent.parent.status === "ACTIVE");
+  let current: typeof area | null | undefined = area;
+  while (current) {
+    if (current.status !== "ACTIVE") return false;
+    current = current.parent;
+  }
+  return true;
 }
 
 type AreaHierarchy = {
@@ -264,6 +274,19 @@ export async function updateArea(
       sourceConfig: sourceConfig as unknown as AreaSourceConfig | undefined,
       ...(input.sourceConfig ? { status: "DRAFT" as const } : {}),
     },
+  });
+}
+
+export async function replaceAreaSourceConfig(
+  id: string,
+  tenantId: string,
+  sourceConfig: AreaSourceConfig,
+): Promise<Awaited<ReturnType<typeof prisma.area.update>>> {
+  const existing = await prisma.area.findFirst({ where: { id, tenantId }, select: { id: true } });
+  if (!existing) throw new Error("Area or topic not found in the current tenant.");
+  return prisma.area.update({
+    where: { id },
+    data: { sourceConfig: sourceConfig as unknown as AreaSourceConfig },
   });
 }
 

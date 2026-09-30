@@ -13,6 +13,7 @@ import {
   scoreCandidate,
 } from "./candidate-scoring";
 import { wikipediaLanguageCode } from "./language";
+import { isCardLengthEligible, readingTimeWordBounds } from "./reading-time";
 import { getWikipediaResearchCategories } from "./wikipedia-research";
 
 export interface IngestionResult {
@@ -47,25 +48,38 @@ export async function ingestAreaCandidates(
   clientFactory?: (language: string) => WikipediaClient,
 ): Promise<IngestionResult> {
   const result: IngestionResult = { areas: 0, candidatesCreated: 0, errors: [] };
-  const areas = await prisma.area.findMany({
+  const appSettings = await prisma.appSettings.findUnique({
+    where: { id: 1 },
+    select: { defaultReadingMinutes: true },
+  });
+  const targetReadingMinutes = appSettings?.defaultReadingMinutes ?? 5;
+  const readingBounds = readingTimeWordBounds(targetReadingMinutes);
+  const rawAreas = await prisma.area.findMany({
     where: {
       status: "ACTIVE",
       tenant: { status: "ACTIVE" },
-      OR: [
-        { level: "AREA" },
-        { level: "TOPIC", parent: { status: "ACTIVE", level: "AREA" } },
-        {
-          level: "SPECIALTY",
+    },
+    include: {
+      tenant: true,
+      parent: {
+        include: {
           parent: {
-            status: "ACTIVE",
-            level: "TOPIC",
-            parent: { status: "ACTIVE", level: "AREA" },
+            include: {
+              parent: true,
+            },
           },
         },
-      ],
+      },
     },
-    include: { tenant: true },
     orderBy: [{ tenant: { slug: "asc" } }, { displayOrder: "asc" }, { slug: "asc" }],
+  });
+  const areas = rawAreas.filter((area) => {
+    let current: typeof area | null | undefined = area;
+    while (current) {
+      if (current.status !== "ACTIVE") return false;
+      current = current.parent;
+    }
+    return true;
   });
   result.areas = areas.length;
 
@@ -96,6 +110,7 @@ export async function ingestAreaCandidates(
             userAgent: env.WIKIPEDIA_USER_AGENT,
             language: wikipediaLanguage,
             requestDelayMs: env.WIKIPEDIA_REQUEST_DELAY_MS,
+            concurrency: 5,
           });
 
       const researchCategories = getWikipediaResearchCategories(config.data.categories)
@@ -109,19 +124,24 @@ export async function ingestAreaCandidates(
         logger.warn("ingestion focus category empty, skipping area", {
           area: area.slug,
           tenant: area.tenant.slug,
-          focusCategory: researchCategories[0],
+          categories: researchCategories,
         });
+        continue;
       }
       logger.info("ingestion area members fetched", {
         area: area.slug,
         tenant: area.tenant.slug,
         members: members.length,
       });
-      const details = await areaClient.getPageDetails(members.map((member) => member.pageId));
+      const details = await areaClient.getPageDetails(members.map((member) => member.pageId), {
+        maxExtractChars: Math.max(12_000, readingBounds.targetWords * 10),
+      });
       logger.info("ingestion area details fetched", {
         area: area.slug,
         tenant: area.tenant.slug,
         details: details.size,
+        targetReadingMinutes,
+        minimumReadingWords: readingBounds.minimumWords,
       });
 
       const personalityPageIds = [...details.values()]
@@ -169,6 +189,7 @@ export async function ingestAreaCandidates(
           locale: tenantLanguage,
           imageUrl: page.thumbnailUrl,
         });
+        if (!isCardLengthEligible(normalized.summary, targetReadingMinutes, tenantLanguage)) continue;
         const contentHash = createContentHash({ title: normalized.title, summary: normalized.summary });
         const canonicalUrl = `https://${wikipediaLanguage}.wikipedia.org/wiki/${page.title.replace(/ /g, "_")}`;
 
@@ -185,7 +206,13 @@ export async function ingestAreaCandidates(
             revisionId: page.lastRevisionId,
             qualityScore: score,
             contentHash,
-            raw: { categories: page.categories, citationCount, personality },
+            raw: {
+              categories: page.categories,
+              citationCount,
+              personality,
+              sourceWordCount: normalized.wordCount,
+              targetReadingMinutes,
+            },
           },
           create: {
             tenantId: area.tenantId,
@@ -201,7 +228,13 @@ export async function ingestAreaCandidates(
             revisionId: page.lastRevisionId,
             license: WIKIPEDIA_LICENSE,
             qualityScore: score,
-            raw: { categories: page.categories, citationCount, personality },
+            raw: {
+              categories: page.categories,
+              citationCount,
+              personality,
+              sourceWordCount: normalized.wordCount,
+              targetReadingMinutes,
+            },
           },
         });
 

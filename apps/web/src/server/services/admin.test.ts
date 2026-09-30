@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
+  userFindUnique: vi.fn(),
   areaFindFirst: vi.fn(),
   candidateFindFirst: vi.fn(),
   dailyUpsert: vi.fn(),
@@ -12,6 +13,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@narau/database", () => ({
   prisma: {
+    user: { findUnique: mocks.userFindUnique },
     area: { findFirst: mocks.areaFindFirst },
     areaSubjectCandidate: { findFirst: mocks.candidateFindFirst },
     dailyAreaSubject: { upsert: mocks.dailyUpsert },
@@ -24,7 +26,7 @@ vi.mock("@narau/database", () => ({
 }));
 vi.mock("@/server/tracking", () => ({ track: mocks.track }));
 
-import { overrideDailySubject, resolveReport } from "./admin";
+import { audit, overrideDailySubject, resolveReport } from "./admin";
 
 const CONTENT_DATE = new Date("2026-08-19T00:00:00.000Z");
 
@@ -132,5 +134,39 @@ describe("admin service tenant boundaries", () => {
       "Report not found in the current tenant",
     );
     expect(mocks.reportUpdate).not.toHaveBeenCalled();
+  });
+
+  it("sets actorId when user exists in database", async () => {
+    mocks.userFindUnique.mockResolvedValue({ id: "admin-1" });
+
+    await audit("admin-1", "TEST_ACTION", "Area", "area-1", undefined, "tenant-en");
+
+    expect(mocks.auditCreate).toHaveBeenCalledWith({
+      data: {
+        actorId: "admin-1",
+        tenantId: "tenant-en",
+        action: "TEST_ACTION",
+        entityType: "Area",
+        entityId: "area-1",
+        metadata: undefined,
+      },
+    });
+  });
+
+  it("safely falls back to null actorId with metadata when user is not found in database", async () => {
+    mocks.userFindUnique.mockResolvedValue(null);
+
+    await audit("stale-user-id", "ADMIN_AREA_NODE_DISABLED", "Area", "area-1", undefined, "tenant-en");
+
+    expect(mocks.auditCreate).toHaveBeenCalledWith({
+      data: {
+        actorId: null,
+        tenantId: "tenant-en",
+        action: "ADMIN_AREA_NODE_DISABLED",
+        entityType: "Area",
+        entityId: "area-1",
+        metadata: { actorId: "stale-user-id" },
+      },
+    });
   });
 });

@@ -1,7 +1,16 @@
 import pLimit from "p-limit";
 import pRetry from "p-retry";
 import z from "zod";
-import type { CategoryInfo, CategoryMember, CategoryOptions, PageDetails, PageSummary, WikipediaClient, WikipediaClientOptions } from "./types";
+import type {
+  CategoryInfo,
+  CategoryMember,
+  CategoryOptions,
+  PageDetails,
+  PageDetailsOptions,
+  PageSummary,
+  WikipediaClient,
+  WikipediaClientOptions,
+} from "./types";
 import { chunk, encodeTitle, toCanonicalUrl } from "./utils";
 
 const categoryMembersResponseSchema = z.object({
@@ -151,10 +160,10 @@ function countDistinctReferences(wikitext: string): number {
 export function createWikipediaClient(options: WikipediaClientOptions): WikipediaClient {
   const endpoint =
     options.endpoint ?? (options.language ? `https://${options.language}.wikipedia.org` : DEFAULT_ENDPOINT);
-  const concurrency = options.concurrency ?? 1; // Default concurrency 1 to respect strict sequential rate limits
+  const concurrency = options.concurrency ?? 5;
   const retries = options.retries ?? 3;
   const timeoutMs = options.timeoutMs ?? 15_000;
-  const requestDelayMs = options.requestDelayMs ?? 10_000; // 10 seconds between API calls by default
+  const requestDelayMs = options.requestDelayMs ?? 0;
   const limit = pLimit(concurrency);
   const headers = { "User-Agent": options.userAgent, Accept: "application/json" };
 
@@ -163,17 +172,18 @@ export function createWikipediaClient(options: WikipediaClientOptions): Wikipedi
 
   async function fetchJson(url: string): Promise<unknown> {
     return limit(async () => {
-      // Chain rate limit queue so all calls respect min delay sequentially
-      rateLimitPromise = rateLimitPromise.then(async () => {
-        const now = Date.now();
-        const elapsed = now - lastRequestTime;
-        if (lastRequestTime > 0 && elapsed < requestDelayMs) {
-          const waitTime = requestDelayMs - elapsed;
-          await new Promise((resolve) => setTimeout(resolve, waitTime));
-        }
-        lastRequestTime = Date.now();
-      });
-      await rateLimitPromise;
+      if (requestDelayMs > 0) {
+        rateLimitPromise = rateLimitPromise.then(async () => {
+          const now = Date.now();
+          const elapsed = now - lastRequestTime;
+          if (lastRequestTime > 0 && elapsed < requestDelayMs) {
+            const waitTime = requestDelayMs - elapsed;
+            await new Promise((resolve) => setTimeout(resolve, waitTime));
+          }
+          lastRequestTime = Date.now();
+        });
+        await rateLimitPromise;
+      }
 
       return pRetry(
         async () => {
@@ -222,10 +232,13 @@ export function createWikipediaClient(options: WikipediaClientOptions): Wikipedi
 
     if (options.includeSubcategories && depth > 0 && seen.size < maxMembers) {
       const subcategories = await fetchSubcategories(categoryTitle);
-      for (const sub of subcategories) {
-        if (seen.size >= maxMembers) return;
-        await fetchCategoryMembersRecursive(sub, { ...options, depth: depth - 1 }, seen);
-      }
+      const subBatch = subcategories.slice(0, 25);
+      await Promise.all(
+        subBatch.map(async (sub) => {
+          if (seen.size >= maxMembers) return;
+          await fetchCategoryMembersRecursive(sub, { ...options, depth: depth - 1 }, seen);
+        }),
+      );
     }
   }
 
@@ -272,15 +285,19 @@ export function createWikipediaClient(options: WikipediaClientOptions): Wikipedi
     return [...seen.values()];
   }
 
-  async function getPageDetails(pageIds: number[]): Promise<Map<number, PageDetails>> {
+  async function getPageDetails(
+    pageIds: number[],
+    options: PageDetailsOptions = {},
+  ): Promise<Map<number, PageDetails>> {
     const details = new Map<number, PageDetails>();
     const uniqueIds = [...new Set(pageIds)];
     const batches = chunk(uniqueIds, PAGE_BATCH_SIZE);
+    const maxExtractChars = Math.min(50_000, Math.max(1_000, Math.floor(options.maxExtractChars ?? 16_000)));
     await Promise.all(
       batches.map(async (batch) => {
         const url =
           `${endpoint}/w/api.php?action=query&prop=extracts|pageimages|info|revisions|categories` +
-          `&pageids=${batch.join("|")}&explaintext=1&exintro=1&exlimit=max&cllimit=max&rvprop=ids` +
+          `&pageids=${batch.join("|")}&explaintext=1&exchars=${maxExtractChars}&exlimit=max&cllimit=max&rvprop=ids` +
           `&pithumbsize=1200&format=json&formatversion=2&redirects=1`;
         const parsed = pageQueryResponseSchema.safeParse(await fetchJson(url));
         if (!parsed.success) return;

@@ -112,7 +112,7 @@ services:
       LINKEDIN_CLIENT_SECRET: "${LINKEDIN_CLIENT_SECRET:-}"
       STORAGE_ENABLED: "false"
       WIKIPEDIA_USER_AGENT: "${WIKIPEDIA_USER_AGENT:-NarauBot/0.1 (https://localhost:3030; contact@example.com)}"
-      WIKIPEDIA_REQUEST_DELAY_MS: "${WIKIPEDIA_REQUEST_DELAY_MS:-10000}"
+      WIKIPEDIA_REQUEST_DELAY_MS: "${WIKIPEDIA_REQUEST_DELAY_MS:-0}"
       LLM_SETTINGS_ENCRYPTION_KEY: "${LLM_SETTINGS_ENCRYPTION_KEY:-local-development-llm-key-change-me}"
     volumes:
       - ../apps/web/public:/app/apps/web/public
@@ -141,7 +141,7 @@ services:
       SMTP_SECURE: "false"
       STORAGE_ENABLED: "false"
       WIKIPEDIA_USER_AGENT: "${WIKIPEDIA_USER_AGENT:-NarauBot/0.1 (https://localhost:3030; contact@example.com)}"
-      WIKIPEDIA_REQUEST_DELAY_MS: "${WIKIPEDIA_REQUEST_DELAY_MS:-10000}"
+      WIKIPEDIA_REQUEST_DELAY_MS: "${WIKIPEDIA_REQUEST_DELAY_MS:-0}"
       LLM_SETTINGS_ENCRYPTION_KEY: "${LLM_SETTINGS_ENCRYPTION_KEY:-local-development-llm-key-change-me}"
     depends_on:
       db:

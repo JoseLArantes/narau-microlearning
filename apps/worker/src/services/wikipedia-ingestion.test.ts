@@ -2,8 +2,9 @@ import { describe, expect, it } from "vitest";
 import { getWikipediaResearchCategories } from "./wikipedia-research";
 
 describe("Wikipedia research categories", () => {
-  it("uses the most specific category as the primary crawl context", () => {
+  it("returns all research categories configured for an area", () => {
     expect(getWikipediaResearchCategories(["Category:Physics", "Category:Quantum mechanics"])).toEqual([
+      "Category:Physics",
       "Category:Quantum mechanics",
     ]);
   });

@@ -180,7 +180,7 @@ bun run job:remind
 For every active area, topic, and specialty in every active tenant, ingestion:
 
 1. Reads the node's Wikipedia category configuration.
-2. Keeps the most specific configured category as the primary research category.
+2. Uses the deepest configured category that exists and contains articles as the primary research category, so an invalid child-name suggestion can fall back to a valid ancestor category.
 3. Converts the category to the tenant's Wikipedia language.
 4. Fetches category members and page details from the correct Wikipedia project.
 5. Removes non-article pages, short extracts, lists, disambiguation pages, and excluded categories.

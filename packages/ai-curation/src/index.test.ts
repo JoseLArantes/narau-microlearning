@@ -12,7 +12,8 @@ import {
 const source = {
   title: "Apollo 11",
   url: "https://en.wikipedia.org/wiki/Apollo_11",
-  text: "Apollo 11 was the American spaceflight that first landed humans on the Moon in 1969. Neil Armstrong and Buzz Aldrin landed the Apollo Lunar Module Eagle on July 20, 1969, while Michael Collins flew the command module Columbia in lunar orbit. Armstrong became the first person to step onto the lunar surface.",
+  text: "Apollo 11 was the American spaceflight that first landed humans on the Moon in 1969. Neil Armstrong and Buzz Aldrin landed the Apollo Lunar Module Eagle on July 20, 1969, while Michael Collins flew the command module Columbia in lunar orbit. Armstrong became the first person to step onto the lunar surface. " +
+    "The documented mission account describes the planning, flight, landing, experiments, communications, recovery, and scientific observations in detail. ".repeat(25),
   language: "en",
   readingMinutes: 3,
 };
@@ -27,13 +28,14 @@ describe("AI curation prompt", () => {
     expect(prompt).toContain("untrusted source material");
     expect(prompt).toContain("Never add");
     expect(prompt).toContain("600 words");
+    expect(prompt).toContain("between 400 and 800 words");
     expect(prompt).toContain(PROMPT_VERSION);
   });
 
   it("rejects numbers absent from the source and content over the time budget", () => {
     expect(() =>
       validateCuratedText(
-        { text: "Apollo 11 landed in 1972. " + "Reliable source sentence. ".repeat(30) },
+        { text: "Apollo 11 landed in 1972. " + "Reliable source sentence. ".repeat(140) },
         source,
       ),
     ).toThrow(/number/i);
@@ -41,6 +43,22 @@ describe("AI curation prompt", () => {
     expect(() =>
       validateCuratedText({ text: `${"Apollo mission text ".repeat(601)}` }, source),
     ).toThrow(/reading-time/i);
+  });
+
+  it("requires curated text to stay within the configured reading window", () => {
+    expect(() =>
+      validateCuratedText(
+        { text: "A short source-faithful reading. ".repeat(20) },
+        source,
+      ),
+    ).toThrow(/reading-time/i);
+
+    expect(() =>
+      validateCuratedText(
+        { text: "A source-faithful reading with enough documented detail. ".repeat(100) },
+        source,
+      ),
+    ).not.toThrow();
   });
 });
 
