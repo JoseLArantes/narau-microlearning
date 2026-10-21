@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: narau
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: narau
+  source:
+    repoURL: git@github.com:JoseLArantes/narau-microlearning
+    targetRevision: main
+    path: deploy/helm
+    helm:
+      releaseName: narau
+      valueFiles: 
+        - values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: app-narau
+  ignoreDifferences:
+    - group: argoproj.io
+      kind: Rollout
+      name: narau
+      namespace: app-narau
+      jsonPointers:
+        - /metadata/annotations/rollout.argoproj.io~1revision
+    - group: ""
+      kind: Service
+      jsonPointers:
+        - /spec/selector
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    # Tip: Start with automated sync disabled to verify adoption safely.
+    # Enable once initial sync is verified green.
+    # automated:
+    #   prune: true
+    #   selfHeal: true
