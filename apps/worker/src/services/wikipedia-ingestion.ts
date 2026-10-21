@@ -73,8 +73,9 @@ export async function ingestAreaCandidates(
     },
     orderBy: [{ tenant: { slug: "asc" } }, { displayOrder: "asc" }, { slug: "asc" }],
   });
+  type AreaNode = { status: string; parent?: AreaNode | null };
   const areas = rawAreas.filter((area) => {
-    let current: typeof area | null | undefined = area;
+    let current: AreaNode | null | undefined = area;
     while (current) {
       if (current.status !== "ACTIVE") return false;
       current = current.parent;

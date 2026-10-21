@@ -1,5 +1,3 @@
-import { readingTimeWordBounds } from "@narau/ai-curation";
-
 export { readingTimeWordBounds } from "@narau/ai-curation";
 
 function countWords(text: string, locale: string): number {

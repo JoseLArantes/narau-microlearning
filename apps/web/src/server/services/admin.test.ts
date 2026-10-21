@@ -41,6 +41,7 @@ describe("admin service tenant boundaries", () => {
       parent: null,
     });
     mocks.candidateFindFirst.mockResolvedValue({ subjectId: "subject-1" });
+    mocks.userFindUnique.mockResolvedValue({ id: "admin-1" });
     mocks.dailyUpsert.mockResolvedValue({ id: "daily-1" });
     mocks.auditCreate.mockResolvedValue({});
     mocks.track.mockResolvedValue(undefined);
