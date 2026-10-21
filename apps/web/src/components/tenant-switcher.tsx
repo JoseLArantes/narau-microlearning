@@ -17,7 +17,7 @@ export function TenantSwitcher({ className = "" }: { className?: string }): Reac
         value={tenant.slug}
         onChange={(e) => switchTenant(e.target.value)}
         disabled={isPending}
-        className="bg-transparent py-1 pr-2 text-xs font-medium text-foreground cursor-pointer outline-none transition-colors hover:text-accent-foreground disabled:opacity-50"
+        className="bg-transparent py-1 pr-2 text-xs font-medium text-foreground cursor-pointer outline-none transition-colors hover:text-foreground disabled:opacity-50"
         aria-label="Select Tenant Language"
       >
         {visibleTenants.map((tInfo) => {

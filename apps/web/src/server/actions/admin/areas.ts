@@ -2,9 +2,9 @@
 
 import { areaSourceConfigSchema, createAreaNodeSchema, updateAreaNodeSchema } from "@narau/validation";
 import { requireTenantAdmin } from "@/server/guards";
-import { activateArea, createArea, deleteDraftArea, disableArea, listAllAreas, normalizeAreaSourceConfig, updateArea } from "@/server/services/areas";
+import { activateArea, createArea, deleteDraftArea, disableArea, listAllAreas, normalizeAreaSourceConfig, replaceAreaSourceConfig, updateArea } from "@/server/services/areas";
 import { audit } from "@/server/services/admin";
-import { previewWikipediaSource } from "@/server/services/wikipedia-preview";
+import { previewWikipediaSource, previewWikipediaSourceConfig } from "@/server/services/wikipedia-preview";
 import { track } from "@/server/tracking";
 import { errorResult, type ActionResult } from "../types";
 
@@ -76,10 +76,11 @@ export async function adminActivateArea(areaId: string): Promise<ActionResult> {
     const config = areaSourceConfigSchema.safeParse(draft.sourceConfig);
     if (!config.success) return { ok: false, error: "The node has an invalid Wikipedia source configuration." };
     const normalizedConfig = normalizeAreaSourceConfig(draft, config.data);
-    if (JSON.stringify(normalizedConfig) !== JSON.stringify(config.data)) {
-      await updateArea(areaId, tenant.id, { sourceConfig: normalizedConfig });
+    const preview = await previewWikipediaSource(tenant.language, normalizedConfig);
+    const effectiveConfig = previewWikipediaSourceConfig(normalizedConfig, preview);
+    if (JSON.stringify(effectiveConfig) !== JSON.stringify(config.data)) {
+      await replaceAreaSourceConfig(areaId, tenant.id, effectiveConfig);
     }
-    await previewWikipediaSource(tenant.language, normalizedConfig);
     const area = await activateArea(areaId, tenant.id);
     await audit(session.user.id, "ADMIN_AREA_NODE_ACTIVATED", "Area", areaId, undefined, tenant.id);
     return { ok: true, data: area };

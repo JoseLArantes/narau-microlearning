@@ -1,0 +1,43 @@
+replicaCount: 1
+
+image:
+  repository: registry.beakcloud.com/narau
+  pullPolicy: Always
+  tag: latest
+  pullSecrets:
+    - name: registry-cred
+
+migratorImage:
+  repository: registry.beakcloud.com/narau
+  tag: migrator
+  pullPolicy: Always
+  pullSecrets:
+    - name: registry-cred
+  command: "bunx prisma migrate deploy && bun run prisma/seed.ts"
+
+service:
+  type: LoadBalancer
+  port: 3030
+  targetPort: 3030
+
+config:
+  nodeEnv: production
+  appUrl: "https://narau.beakcloud.com"
+  authUrl: "https://narau.beakcloud.com"
+  authTrustHost: "true"
+  emailFrom: "Narau <no-reply@beakcloud.com>"
+  smtpHost: "smtp-relay.brevo.com"
+  smtpPort: "587"
+  smtpSecure: "false"
+  redisUrl: "redis://redis.db.svc.cluster.local:6379"
+  wikipediaUserAgent: "NarauBot/0.1 (contact@example.com)"
+
+secrets:
+  existingSecret: "narau-secrets"
+
+cronjob:
+  enabled: true
+  schedule: "0 5 * * *"
+
+manualPipelineJob:
+  enabled: false

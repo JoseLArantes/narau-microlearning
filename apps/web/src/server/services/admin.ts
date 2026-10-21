@@ -10,14 +10,28 @@ export async function audit(
   metadata?: Record<string, unknown>,
   tenantId?: string,
 ): Promise<void> {
+  let validActorId: string | null = null;
+  if (actorId) {
+    const user = await prisma.user.findUnique({
+      where: { id: actorId },
+      select: { id: true },
+    });
+    validActorId = user?.id ?? null;
+  }
+
+  const effectiveMetadata =
+    !validActorId && actorId
+      ? { ...(metadata ?? {}), actorId }
+      : metadata;
+
   await prisma.auditLog.create({
     data: {
-      actorId,
+      actorId: validActorId,
       tenantId,
       action,
       entityType,
       entityId,
-      metadata: metadata as Prisma.InputJsonValue | undefined,
+      metadata: effectiveMetadata as Prisma.InputJsonValue | undefined,
     },
   });
 }

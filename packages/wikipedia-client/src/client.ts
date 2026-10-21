@@ -1,7 +1,16 @@
 import pLimit from "p-limit";
 import pRetry from "p-retry";
 import z from "zod";
-import type { CategoryInfo, CategoryMember, CategoryOptions, PageDetails, PageSummary, WikipediaClient, WikipediaClientOptions } from "./types";
+import type {
+  CategoryInfo,
+  CategoryMember,
+  CategoryOptions,
+  PageDetails,
+  PageDetailsOptions,
+  PageSummary,
+  WikipediaClient,
+  WikipediaClientOptions,
+} from "./types";
 import { chunk, encodeTitle, toCanonicalUrl } from "./utils";
 
 const categoryMembersResponseSchema = z.object({
@@ -56,6 +65,29 @@ const pageSummaryResponseSchema = z.object({
     .optional(),
 });
 
+const pageRevisionResponseSchema = z.object({
+  query: z
+    .object({
+      pages: z.array(
+        z.object({
+          pageid: z.number(),
+          revisions: z
+            .array(
+              z.object({
+                slots: z
+                  .object({
+                    main: z.object({ content: z.string().optional() }).optional(),
+                  })
+                  .optional(),
+              }),
+            )
+            .optional(),
+        }),
+      ),
+    })
+    .optional(),
+});
+
 const categoryInfoResponseSchema = z.object({
   query: z.object({
     pages: z.array(
@@ -106,13 +138,32 @@ function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function countDistinctReferences(wikitext: string): number {
+  const referencePattern = /<ref\b([^>]*?)(?:\/>|>[\s\S]*?<\/ref\s*>)/gi;
+  const namedReferences = new Set<string>();
+  let count = 0;
+
+  for (const match of wikitext.matchAll(referencePattern)) {
+    const attributes = match[1] ?? "";
+    const nameMatch = attributes.match(/\bname\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s/>]+))/i);
+    const name = nameMatch?.slice(1).find(Boolean)?.trim().toLocaleLowerCase();
+    if (name) {
+      if (namedReferences.has(name)) continue;
+      namedReferences.add(name);
+    }
+    count += 1;
+  }
+
+  return count;
+}
+
 export function createWikipediaClient(options: WikipediaClientOptions): WikipediaClient {
   const endpoint =
     options.endpoint ?? (options.language ? `https://${options.language}.wikipedia.org` : DEFAULT_ENDPOINT);
-  const concurrency = options.concurrency ?? 1; // Default concurrency 1 to respect strict sequential rate limits
+  const concurrency = options.concurrency ?? 5;
   const retries = options.retries ?? 3;
   const timeoutMs = options.timeoutMs ?? 15_000;
-  const requestDelayMs = options.requestDelayMs ?? 10_000; // 10 seconds between API calls by default
+  const requestDelayMs = options.requestDelayMs ?? 0;
   const limit = pLimit(concurrency);
   const headers = { "User-Agent": options.userAgent, Accept: "application/json" };
 
@@ -121,17 +172,18 @@ export function createWikipediaClient(options: WikipediaClientOptions): Wikipedi
 
   async function fetchJson(url: string): Promise<unknown> {
     return limit(async () => {
-      // Chain rate limit queue so all calls respect min delay sequentially
-      rateLimitPromise = rateLimitPromise.then(async () => {
-        const now = Date.now();
-        const elapsed = now - lastRequestTime;
-        if (lastRequestTime > 0 && elapsed < requestDelayMs) {
-          const waitTime = requestDelayMs - elapsed;
-          await new Promise((resolve) => setTimeout(resolve, waitTime));
-        }
-        lastRequestTime = Date.now();
-      });
-      await rateLimitPromise;
+      if (requestDelayMs > 0) {
+        rateLimitPromise = rateLimitPromise.then(async () => {
+          const now = Date.now();
+          const elapsed = now - lastRequestTime;
+          if (lastRequestTime > 0 && elapsed < requestDelayMs) {
+            const waitTime = requestDelayMs - elapsed;
+            await new Promise((resolve) => setTimeout(resolve, waitTime));
+          }
+          lastRequestTime = Date.now();
+        });
+        await rateLimitPromise;
+      }
 
       return pRetry(
         async () => {
@@ -180,10 +232,13 @@ export function createWikipediaClient(options: WikipediaClientOptions): Wikipedi
 
     if (options.includeSubcategories && depth > 0 && seen.size < maxMembers) {
       const subcategories = await fetchSubcategories(categoryTitle);
-      for (const sub of subcategories) {
-        if (seen.size >= maxMembers) return;
-        await fetchCategoryMembersRecursive(sub, { ...options, depth: depth - 1 }, seen);
-      }
+      const subBatch = subcategories.slice(0, 25);
+      await Promise.all(
+        subBatch.map(async (sub) => {
+          if (seen.size >= maxMembers) return;
+          await fetchCategoryMembersRecursive(sub, { ...options, depth: depth - 1 }, seen);
+        }),
+      );
     }
   }
 
@@ -230,15 +285,19 @@ export function createWikipediaClient(options: WikipediaClientOptions): Wikipedi
     return [...seen.values()];
   }
 
-  async function getPageDetails(pageIds: number[]): Promise<Map<number, PageDetails>> {
+  async function getPageDetails(
+    pageIds: number[],
+    options: PageDetailsOptions = {},
+  ): Promise<Map<number, PageDetails>> {
     const details = new Map<number, PageDetails>();
     const uniqueIds = [...new Set(pageIds)];
     const batches = chunk(uniqueIds, PAGE_BATCH_SIZE);
+    const maxExtractChars = Math.min(50_000, Math.max(1_000, Math.floor(options.maxExtractChars ?? 16_000)));
     await Promise.all(
       batches.map(async (batch) => {
         const url =
           `${endpoint}/w/api.php?action=query&prop=extracts|pageimages|info|revisions|categories` +
-          `&pageids=${batch.join("|")}&explaintext=1&exintro=1&exlimit=max&cllimit=max&rvprop=ids` +
+          `&pageids=${batch.join("|")}&explaintext=1&exchars=${maxExtractChars}&exlimit=max&cllimit=max&rvprop=ids` +
           `&pithumbsize=1200&format=json&formatversion=2&redirects=1`;
         const parsed = pageQueryResponseSchema.safeParse(await fetchJson(url));
         if (!parsed.success) return;
@@ -259,6 +318,26 @@ export function createWikipediaClient(options: WikipediaClientOptions): Wikipedi
     return details;
   }
 
+  async function getPageCitationCounts(pageIds: number[]): Promise<Map<number, number>> {
+    const counts = new Map<number, number>();
+    const uniqueIds = [...new Set(pageIds)];
+    const batches = chunk(uniqueIds, PAGE_BATCH_SIZE);
+    await Promise.all(
+      batches.map(async (batch) => {
+        const url =
+          `${endpoint}/w/api.php?action=query&prop=revisions&pageids=${batch.join("|")}` +
+          "&rvprop=content&rvslots=main&rvlimit=1&format=json&formatversion=2";
+        const parsed = pageRevisionResponseSchema.safeParse(await fetchJson(url));
+        if (!parsed.success) return;
+        for (const page of parsed.data.query?.pages ?? []) {
+          const content = page.revisions?.[0]?.slots?.main?.content ?? "";
+          counts.set(page.pageid, countDistinctReferences(content));
+        }
+      }),
+    );
+    return counts;
+  }
+
   async function getPageSummary(title: string): Promise<PageSummary | null> {
     const url = `${endpoint}/api/rest_v1/page/summary/${encodeTitle(title)}`;
     const raw = await fetchJson(url);
@@ -274,5 +353,5 @@ export function createWikipediaClient(options: WikipediaClientOptions): Wikipedi
     };
   }
 
-  return { getCategoryInfo, getCategoryMembers, getPagesFromCategories, getPageDetails, getPageSummary };
+  return { getCategoryInfo, getCategoryMembers, getPagesFromCategories, getPageDetails, getPageCitationCounts, getPageSummary };
 }

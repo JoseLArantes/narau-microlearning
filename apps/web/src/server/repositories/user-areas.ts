@@ -1,20 +1,61 @@
 import { prisma, type Prisma } from "@narau/database";
 
 type SelectionArea = Prisma.AreaGetPayload<{
-  include: { parent: { include: { parent: true } } };
+  include: { parent: { include: { parent: { include: { parent: true } } } } };
 }>;
 
-const areaInclude = { parent: { include: { parent: true } } } as const;
+const areaInclude = {
+  parent: {
+    include: {
+      parent: {
+        include: {
+          parent: true,
+        },
+      },
+    },
+  },
+} as const;
 
-function isEffectivelyActive(area: SelectionArea): boolean {
-  if (area.status !== "ACTIVE") return false;
-  if (area.level === "AREA") return true;
-  if (!area.parent || area.parent.status !== "ACTIVE") return false;
-  return area.level !== "SPECIALTY" || Boolean(area.parent.parent && area.parent.parent.status === "ACTIVE");
+export function isEffectivelyActive(area: {
+  status: string;
+  parent?: {
+    status: string;
+    parent?: {
+      status: string;
+      parent?: {
+        status: string;
+      } | null;
+    } | null;
+  } | null;
+}): boolean {
+  let current: typeof area | null | undefined = area;
+  while (current) {
+    if (current.status !== "ACTIVE") return false;
+    current = current.parent;
+  }
+  return true;
 }
 
-function hasSelectedAncestor(area: SelectionArea, selected: Set<string>): boolean {
-  return Boolean(area.parent && (selected.has(area.parent.id) || (area.parent.parent && selected.has(area.parent.parent.id))));
+function hasSelectedAncestor(
+  area: {
+    parent?: {
+      id: string;
+      parent?: {
+        id: string;
+        parent?: {
+          id: string;
+        } | null;
+      } | null;
+    } | null;
+  },
+  selected: Set<string>,
+): boolean {
+  let current = area.parent;
+  while (current) {
+    if (selected.has(current.id)) return true;
+    current = current.parent;
+  }
+  return false;
 }
 
 export async function getUserAreas(

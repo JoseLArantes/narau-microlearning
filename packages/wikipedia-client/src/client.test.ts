@@ -92,7 +92,7 @@ describe("WikipediaClient Rate Limiting & Spacing", () => {
 
   it("does not deadlock page detail requests with the default concurrency", async () => {
     const originalFetch = globalThis.fetch;
-    globalThis.fetch = vi.fn().mockResolvedValue(
+    const fetchMock = vi.fn().mockResolvedValue(
       new Response(
         JSON.stringify({
           query: {
@@ -102,6 +102,7 @@ describe("WikipediaClient Rate Limiting & Spacing", () => {
         { status: 200, headers: { "Content-Type": "application/json" } },
       ),
     );
+    globalThis.fetch = fetchMock;
 
     try {
       const client = createWikipediaClient({
@@ -111,13 +112,57 @@ describe("WikipediaClient Rate Limiting & Spacing", () => {
       });
 
       const details = await Promise.race([
-        client.getPageDetails([1]),
+        client.getPageDetails([1], { maxExtractChars: 12_000 }),
         new Promise<never>((_, reject) => {
           setTimeout(() => reject(new Error("page detail request deadlocked")), 500);
         }),
       ]);
 
       expect(details.get(1)?.title).toBe("Test Page 1");
+      expect(fetchMock).toHaveBeenCalledWith(
+        expect.stringContaining("exchars=12000"),
+        expect.anything(),
+      );
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it("counts distinct references from page revisions", async () => {
+    const originalFetch = globalThis.fetch;
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          query: {
+            pages: [
+              {
+                pageid: 1,
+                revisions: [
+                  {
+                    slots: {
+                      main: {
+                        content:
+                          "First claim.<ref name=source>Source A</ref> Second claim.<ref name=source/> Third claim.<ref>Source B</ref><ref name='source-c'/>",
+                      },
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+    globalThis.fetch = fetchMock;
+
+    try {
+      const client = createWikipediaClient({ userAgent: "TestBot/1.0", requestDelayMs: 0 });
+      await expect(client.getPageCitationCounts([1])).resolves.toEqual(new Map([[1, 3]]));
+      expect(fetchMock).toHaveBeenCalledWith(
+        expect.stringContaining("prop=revisions"),
+        expect.anything(),
+      );
     } finally {
       globalThis.fetch = originalFetch;
     }

@@ -85,6 +85,18 @@ describe("user area selection repository", () => {
     );
   });
 
+  it("accepts valid active child topics and specialties", async () => {
+    const root = node({ id: "area-1", status: "ACTIVE" });
+    const topic = node({ id: "topic-1", level: "TOPIC", parentId: root.id, parent: root, status: "ACTIVE" });
+    const topic2 = node({ id: "topic-2", level: "TOPIC", parentId: root.id, parent: root, status: "ACTIVE" });
+    const specialty = node({ id: "spec-1", level: "SPECIALTY", parentId: topic2.id, parent: topic2, status: "ACTIVE" });
+
+    mocks.areaFindMany.mockResolvedValue([topic, specialty]);
+
+    const result = await validateSelectedAreaIds("tenant-en", ["topic-1", "spec-1"]);
+    expect(result).toHaveLength(2);
+  });
+
   it("deduplicates ids and replaces selections transactionally", async () => {
     mocks.areaFindMany.mockResolvedValue([node({ id: "area-1" })]);
 

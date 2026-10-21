@@ -4,6 +4,7 @@ export type {
   CategoryInfo,
   CategoryOptions,
   PageDetails,
+  PageDetailsOptions,
   PageSummary,
   WikipediaClient,
   WikipediaClientOptions,

@@ -1,0 +1,34 @@
+{{- if .Values.cronjob.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ .Release.Name }}-job-remind
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Release.Name }}-remind
+spec:
+  schedule: {{ .Values.cronjob.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: {{ .Release.Name }}-remind
+        spec:
+          restartPolicy: OnFailure
+          imagePullSecrets:
+            {{- toYaml .Values.image.pullSecrets | nindent 12 }}
+          containers:
+            - name: job-remind
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              command: ["bun", "apps/worker/dist/cli.js", "send-daily-reminders"]
+              envFrom:
+                - configMapRef:
+                    name: {{ .Release.Name }}-config
+                - secretRef:
+                    name: {{ .Release.Name }}-secrets
+{{- end }}

@@ -1,22 +1,25 @@
+{{- if .Values.manualPipelineJob.enabled }}
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: narau-pipeline-manual
-  namespace: app-narau
+  name: {{ .Release.Name }}-pipeline-manual
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Release.Name }}-pipeline-manual
 spec:
   ttlSecondsAfterFinished: 600
   template:
     metadata:
       labels:
-        app: narau-pipeline-manual
+        app: {{ .Release.Name }}-pipeline-manual
     spec:
       restartPolicy: Never
       imagePullSecrets:
-        - name: registry-cred
+        {{- toYaml .Values.image.pullSecrets | nindent 8 }}
       containers:
         - name: pipeline
-          image: registry.beakcloud.com/narau:latest
-          imagePullPolicy: Always
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           command:
             - "sh"
             - "-c"
@@ -27,6 +30,7 @@ spec:
               bun apps/worker/dist/cli.js send-daily-reminders
           envFrom:
             - configMapRef:
-                name: narau-config
+                name: {{ .Release.Name }}-config
             - secretRef:
-                name: narau-secrets                  
+                name: {{ .Values.secrets.existingSecret }}
+{{- end }}

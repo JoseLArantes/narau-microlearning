@@ -49,10 +49,16 @@ export interface WikipediaClientOptions {
   requestDelayMs?: number;
 }
 
+export interface PageDetailsOptions {
+  /** Maximum number of extract characters returned per page. */
+  maxExtractChars?: number;
+}
+
 export interface WikipediaClient {
   getCategoryInfo(categoryTitles: string[]): Promise<CategoryInfo[]>;
   getCategoryMembers(categoryTitle: string, options?: CategoryOptions): Promise<CategoryMember[]>;
   getPagesFromCategories(categories: string[], options?: CategoryOptions): Promise<CategoryMember[]>;
-  getPageDetails(pageIds: number[]): Promise<Map<number, PageDetails>>;
+  getPageDetails(pageIds: number[], options?: PageDetailsOptions): Promise<Map<number, PageDetails>>;
+  getPageCitationCounts(pageIds: number[]): Promise<Map<number, number>>;
   getPageSummary(title: string): Promise<PageSummary | null>;
 }

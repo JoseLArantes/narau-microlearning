@@ -1,0 +1,29 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-migration
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": post-install, post-upgrade
+    "helm.sh/hook-weight": "1"
+    "helm.sh/hook-delete-policy": before-hook-creation, hook-succeeded
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-migration
+    spec:
+      restartPolicy: Never
+      imagePullSecrets:
+        {{- toYaml .Values.image.pullSecrets | nindent 8 }}
+      containers:
+        - name: migrator
+          image: "{{ .Values.migratorImage.repository }}:{{ .Values.migratorImage.tag }}"
+          imagePullPolicy: {{ .Values.migratorImage.pullPolicy }}
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-config
+            - secretRef:
+                name: {{ .Values.secrets.existingSecret }}
+          command: [ "sh", "-c", "{{ .Values.migratorImage.command }}" ]

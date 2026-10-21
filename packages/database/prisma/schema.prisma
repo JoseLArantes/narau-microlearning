@@ -270,6 +270,7 @@ model AreaSubjectCandidate {
   areaId           String
   subjectId        String
   generatedForDate DateTime        @db.Date
+  researchCategory String?
   candidateScore   Float           @default(0)
   status           CandidateStatus @default(CANDIDATE)
   createdAt        DateTime        @default(now())

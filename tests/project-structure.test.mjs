@@ -14,6 +14,8 @@ assert.equal(existsSync(resolve(root, "docker-compose.yml")), false);
 const compose = readFileSync(resolve(dockerDirectory, "docker-compose.yml"), "utf8");
 const dockerfile = readFileSync(resolve(dockerDirectory, "Dockerfile"), "utf8");
 const ciWorkflow = readFileSync(resolve(root, ".github/workflows/ci.yml"), "utf8");
+const migrationJob = readFileSync(resolve(root, "deploy/helm/templates/job-migration.yaml"), "utf8");
+const helmValues = readFileSync(resolve(root, "deploy/helm/values.yaml"), "utf8");
 const turbo = JSON.parse(readFileSync(resolve(root, "turbo.json"), "utf8"));
 const workerPackage = JSON.parse(readFileSync(resolve(root, "apps/worker/package.json"), "utf8"));
 const workerCli = readFileSync(resolve(root, "apps/worker/src/cli.ts"), "utf8");
@@ -43,6 +45,16 @@ assert.match(workerPackage.scripts["job:select"], /^bun dist\/cli\.js/);
 assert.match(workerPackage.scripts["job:assign"], /^bun dist\/cli\.js/);
 assert.match(workerPackage.scripts["job:remind"], /^bun dist\/cli\.js/);
 assert.match(workerCli, /await main\(\)/);
+assert.match(
+  migrationJob,
+  /command:\s*\[\s*"sh",\s*"-c",\s*"\{\{\s*\.Values\.migratorImage\.command\s*\}\}"\s*\]/,
+  "the Kubernetes migration job should run the configured migrator command",
+);
+assert.match(
+  helmValues,
+  /command:\s*"bunx prisma migrate deploy && bun run prisma\/seed\.ts"/,
+  "the Helm migrator command should seed after applying migrations",
+);
 assert.match(dockerfile, /COPY --from=builder \/app\/apps\/worker\/dist/);
 assert.ok(existsSync(resolve(root, "apps/web/src/middleware.ts")));
 assert.ok(existsSync(resolve(root, "apps/web/src/server/tenant.ts")));
